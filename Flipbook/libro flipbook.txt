@@ -1,0 +1,87 @@
+Procedimiento libro flipbook
+
+1. Tener a la mano una foto (una selfie es una opción)
+2. Usar esta foto para el cómic o un avatar de la foto (En Gemini o ChatGPT, herramienta imágenes, subir foto y el prompt "Crea un avatar estilo cartoon 3D")
+3. En ChatGPT, herramienta "Crea una imagen", subir foto o avatar y escribir uno de estos prompt: 
+
+Cómic dominical retro (años 80, color)
+
+Crea una tira cómica usando el protagonista de la imagen subida. Dale un estilo llamativo de tira cómica dominical, con contornos gruesos, texturas de semitono y colores brillantes de los años 80. Elige un elemento visual claro y exagerado de la foto y construye la historia sobre  "[TEMA]", hasta llegar a un remate divertido o inesperado. Mantén los diálogos cortos, naturales y fáciles de leer y asegúrate de que el chiste se entienda de un vistazo, sin elementos aleatorios ni confusos.
+Usa la relación de aspecto 3:4
+
+Cómic estilo manga minimalista (educativo)
+
+Crea una tira cómica totalmente original, simple, en blanco y negro, con un estilo manga retro entintado a mano. Usa 2-3 viñetas horizontales. Toma la imagen subida como referencia del personaje; redibújalo por completo en estilo manga, con un trazo y sombreado consistentes en todas las viñetas. Interpreta a la persona como protagonista y  construye la historia sobre   "[TEMA]": la primera viñeta establece el contexto, la segunda desarrolla la situación y la tercera da un giro sorpresa. Mantén los diálogos breves, naturales y optimistas. Sin tecnología.
+Usa la relación de aspecto 3:4
+
+Cómic noir (blanco y negro dramático)
+
+Diseña una tira cómica de 3 viñetas en estilo noir, con alto contraste, sombras intensas y atmósfera misteriosa. Redibuja al protagonista como un detective. Construye una narrativa donde investiga un problema relacionado con “[TEMA]”. Usa narración en off y diálogos breves, terminando con una revelación impactante.
+Usa la relación de aspecto 3:4
+
+Cómic estilo caricatura infantil (didáctico)
+
+Crea una tira cómica de 3–4 viñetas en estilo caricatura infantil, con formas simples, colores suaves y expresiones exageradas. Usa al protagonista como guía amigable que enseña “[TEMA]” a otro personaje. El tono debe ser claro, accesible y con un cierre positivo o moraleja.
+Usa la relación de aspecto 3:4
+
+Cómic futurista sci-fi (tecnológico)
+
+Genera una tira cómica de 3 viñetas ambientada en un entorno futurista con estética sci-fi (neones, interfaces holográficas). Redibuja al protagonista como un experto en tecnología. Explica “[TEMA]” como si fuera una innovación del futuro. Incluye un giro final sorprendente o irónico.
+Usa la relación de aspecto 3:4
+
+Cómic estilo meme moderno
+
+Crea una tira cómica de 2–3 viñetas en estilo meme contemporáneo, con expresiones exageradas y humor rápido. Usa al protagonista como personaje central. Relaciona “[TEMA]” con una situación cotidiana absurda o relatable. Mantén los textos muy breves y remata con un punchline claro.
+Usa la relación de aspecto 3:4
+
+Cómic estilo grabado vintage
+
+Diseña una tira cómica de 2–3 viñetas en estilo grabado antiguo (líneas finas, textura de tinta, estética editorial clásica). Representa al protagonista como un académico o explorador. Explica “[TEMA]” como si fuera un descubrimiento histórico. Usa lenguaje ligeramente formal con un toque irónico al final.
+Usa la relación de aspecto 3:4
+
+Cómic surrealista (conceptual)
+
+Crea una tira cómica de 3 viñetas en estilo surrealista, con escenarios abstractos y transformaciones visuales inesperadas. Usa al protagonista en situaciones simbólicas para representar “[TEMA]”. Minimiza el texto y deja que las imágenes comuniquen la idea, cerrando con una interpretación abierta o reflexiva.
+Usa la relación de aspecto 3:4
+
+Cómic estilo anime dinámico (acción)
+
+Genera una tira cómica de 3 viñetas en estilo anime dinámico, con líneas de acción, expresiones intensas y composición dramática. El protagonista enfrenta un “conflicto” relacionado con “[TEMA]”. Cada viñeta debe aumentar la tensión hasta un desenlace energético o humorístico.
+Usa la relación de aspecto 3:4
+
+Cómic infográfico (visual + conceptual)
+
+Diseña una tira cómica de 3 viñetas con estilo híbrido entre cómic e infografía. Usa al protagonista como narrador que explica “[TEMA]” apoyándose en elementos visuales como diagramas, flechas o símbolos. Mantén claridad conceptual y termina con una síntesis visual contundente.
+Usa la relación de aspecto 3:4
+
+Cómic estilo expresionismo alemán
+
+Diseña una tira cómica de 3 viñetas en estilo expresionista alemán, con perspectivas distorsionadas, sombras angulares y estética inquietante. Redibuja al protagonista como un personaje atrapado en un mundo psicológico. Representa “[TEMA]” como un conflicto interno o una realidad deformada. Usa narración en off poética y termina con una revelación simbólica.
+Usa la relación de aspecto 3:4
+
+Cómic estilo acuarela narrativa
+
+Diseña una tira cómica de 3 viñetas en estilo acuarela, con colores suaves, bordes difusos y atmósfera emocional. Redibuja al protagonista con un enfoque más artístico. Construye una historia introspectiva sobre “[TEMA]”, usando pocos diálogos y priorizando la carga visual. Termina con una reflexión abierta.
+Usa la relación de aspecto 3:4
+
+Cómic estilo pixel art retro
+
+Crea una tira cómica de 3 viñetas en estilo pixel art (8-bit o 16-bit), con paleta limitada y estética de videojuego clásico. Representa al protagonista como un personaje jugable que enfrenta un reto relacionado con “[TEMA]”. Usa textos breves tipo videojuego y cierra con un mensaje tipo “nivel completado” o giro humorístico.
+Usa la relación de aspecto 3:4
+
+Cómic estilo propaganda vintage
+
+Diseña una tira cómica de 2–3 viñetas en estilo cartel de propaganda vintage (colores planos, tipografía fuerte, composición gráfica). Usa al protagonista como figura central que “promueve” o explica “[TEMA]”. El tono debe ser persuasivo o irónico, con un cierre contundente tipo eslogan.
+Usa la relación de aspecto 3:4
+
+Cómic estilo collage digital
+
+Diseña una tira cómica de 3 viñetas en estilo collage (recortes, texturas, tipografías mixtas). Integra al protagonista como parte del collage. Representa “[TEMA]” combinando elementos visuales simbólicos. Usa pocos diálogos y apuesta por una interpretación visual creativa, cerrando con una imagen impactante.
+Usa la relación de aspecto 3:4
+
+Cómic estilo documental gráfico
+
+Diseña una tira cómica de 3 viñetas en estilo documental, combinando ilustración con elementos informativos (etiquetas, gráficos, notas). El protagonista actúa como narrador que explica “[TEMA]” con precisión. Mantén claridad conceptual y termina con una conclusión visual fuerte.
+Usa la relación de aspecto 3:4
+
+4. Generar el libro tipo flipbook (herramienta 165)
