@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Chatbot Estatuto General</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Chatbot Estatuto General</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                Código: GJ - FR - 06                                                                                                                                Versión  03                ACUERDO  DIRECTIVO   015    (22 de  diciembre   de 2017)         P or  medio de l cual se expide el Estatuto General de   l a   Institu ción   Universitaria   Pascual Bravo   ( Modificado  por el Acuerdo Directivo   0 07   del  16   de febrero   de   201 8 ) .       El Consejo Directivo  de la  Institución Universitaria Pascual Bravo, en ejercicio de sus   funciones legales y en especial de las que le confiere el Artículo 65, literal d, de la   Ley 30 de 1992.          ACUERDA       ARTÍCULO  1.     Expedir,  con  sujeción  a  las  disposiciones  de  la  Ley  30  de  1992  y  la   Ley  489  de 1998,  el Estatuto  General de  la Institución  Universitaria Pascual Bravo,   contenido en los siguientes artículos:          TÍTULO PRIMERO       IDENTIDAD, MISIÓN Y PRINCIPIOS INSTITUCIONALES       CAPÍTULO I       NATURALEZA JURÍDICA, NOMBRE Y DOMICILIO       ARTÍCULO  2.  NA TURALEZA  JURÍDICA .   La  Institución  Universitaria  Pascual   Bravo,  fue  creada  por  el  Decreto  108  de  1950,     y  reorganizada     por  la  Ley  52  de   1982 e  incorporada   al Municipio de Medellín mediante  Acuerdo  28 de 2008, como   un  establecimiento  público  de  Educación  Supe rior,  del  orden  Municipal,  con   Personería  Jurídica,  autonomía  administrativa  y  patrimonio  independiente  y  con   carácter académico de Institución Universitaria.       NOMBRE:   Se denomina Institución Universitaria Pascual Bravo        DOMICILIO:   Para  todos  los  efectos  jurídicos  el  domicilio  de  la  Institución   Universitaria  Pascual  Bravo,  será  el  Municipio  de  Medellín    -     Departamento  de   Antioquia.   \n2    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   PARÁGRAFO PRIMERO .   La Institución podrá establecer dependencias seccionales   o  sedes  en  cualquier  lugar  del  territorio  nacional     y  participar  en  programas  de   descentralización  o  de  Educación  Abierta  y  a  Distancia,  de  manera  conjunta  o  en   convenio  con  otras  instituciones,  previo  el  cumplimiento  de  los  requisitos  legales   señalados para el efecto.        PARÁGRAFO   SEGUNDO .   La Institución t ambién podrá conformar corporaciones o   fundaciones,  previo  el  cumplimiento  de  los  requisitos  legales  señalados  para  el   efecto y autorización del Consejo Directivo.          CAPÍTULO II       OBJETO       ARTÍCULO  3.   La  Institución  Universitaria  Pascual  Bravo  tiene  por  obje to  la   búsqueda,  desarrollo  y  difusión  del  conocimiento  en  los  campos  de  las   humanidades,  la  ciencia,  las  artes,  la  técnica  y  la  tecnología,  mediante  las   actividades  de  Docencia,  Investigación  y  de  E xtensión  y  Proyección  S ocial   realizadas en los programas d e Educación Superior de pregrado y de posgrado, con   metodologías presencial, abierta y a distancia, incluyendo educación virtual, puestas   al servicio de una concepción integral del hombre y de la sociedad.       Como  que  hacer  fundamental,  y  en  virtud  de  su  car ácter  transformador,  la   Institución  busca:  influir  en  todos  los  sectores  sociales;  estar  presente  en  la  vida   cotidiana  de  la  sociedad  por  medio de  la  actividad  profesional  de sus  egresados;   promover  la  formación  de  hábitos  científicos  y  la  creación  de  estr ategias   pedagógicas  que  desarrollen  la  inteligencia  y  la  creatividad,  orientadas  al   mejoramiento  de  la  vida,  al  respeto  de  la  dignidad  del  hombre  y  a  la  armonía  de   éste con sus semejantes y con la naturaleza.          CAPÍTULO III       MISIÓN, PRINCIPIOS, OBJETI VOS Y   FUNCIONES DE LA INSTITUCIÓ N       ARTÍCULO  4.     MISIÓN .     Somos  una  Institución  Universitaria  líder  en  Educación   Superior  Tecnológica,  comprometida  socialmente  con  la  formación  de   profesionales  íntegros,  con  certificación  de  calidad  en  nuestros  procesos,   realizamo s  una  búsqueda  constante  de  la  excelencia  académica,  a  través  de   modelos pedagógicos dinámicos que respondan a las necesidades de la región y  \n3    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                del  país  que  consolidan  a  la  Institución  Universitaria  Pascual  Bravo   en  un   patrimonio científico, cultural e histó rico de la comunidad regional y nacional.       A RTÍCULO 5. PRINCIPIOS .   La Institución adopta como sus principios generales los   contenidos  en  el  Título  Primero  de  la  Ley  30  de  1992,  y  los  actos  legales  que  la   reformen  o  complementen  y  define  en  forma  expresa  ot ros  concordantes  con  su   misión:          La  Institución  Universitaria  Pascual  Bravo  orienta  sus  esfuerzos  hacia  la   consolidación  como  centro  de  cultura,  de  ciencia  y  tecnología  que  por  su   naturaleza  tiene  una  especial  responsabilidad  con  la  sociedad  a  la  cual  se   d ebe;  se  compromete  en  la  búsqueda  de  nuevos  conocimientos  y  de  las   soluciones  a  los  problemas  de  la  sociedad, con alto  sentido  humanístico  en  el   marco de una concepción universal.          La  Institución  Universitaria  Pascual  Bravo  se  reconoce  como  espacio  de   cont roversia  racional,  regida  por  el  respeto  a  las  libertades  de  conciencia,   opinión,  información,  enseñanza,  aprendizaje,  investigación  y  cátedra.   Orientadas  todas  por  las  exigencias  de  los  criterios  éticos  que  se  traducen  en   una real convivencia universitari a y con una alta vocación de servicio orientada   prioritariamente hacia los sectores más vulnerables de la sociedad.          La  Institución  Universitaria  Pascual  Bravo  tiene  un  carácter  democrático  y   pluralista,  por  lo  cual  no  limita  ni  restringe  los  derechos,  lib ertades  y   oportunidades por consideraciones sociales, económicas, políticas, ideológicas,   de  raza,  sexo  o  credo.  Está  siempre  abierta  a  quienes  en  igualdad  de   oportunidades  demuestren  tener  las  capacidades  requeridas  y  cumplir  las   condiciones académicas y  administrativas exigidas.          La  Institución,  permeable  a  todas  las  manifestaciones  del  pensamiento,  está   abierta  a  todos  los  saberes  científicos  y  expresiones  culturales  y  propicia  la   comunicación con todos los pueblos del mundo, particularmente con los país es   de América Latina y en especial con universidades, institutos de investigación,   entidades  públicas  y  privadas,  para  incorporar  en  los  programas  académicos   propios los adelantos de la investigación.          La  Institución  Universitaria  Pascual  Bravo  y  quienes  l a  conformen,  además  de   los  principios  anteriores,  se  comprometen  a  actuar  acorde  con  aquellos    definidos en el Código de Buen Gobierno de la misma.        ARTÍCULO  6.  OBJETIVOS.     En  desarrollo  de  los  principios  a  que  se  refiere  el   artículo anterior, la Institució n tendrá los siguientes objetivos:      \n4    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                a.   Formar profesionales integrales, de acuerdo con las exigencias del desarrollo   de la región y del país.       b.     Preparar recurso humano, técnico, tecnológico y científico indispensable para   el desarrollo socioeconómico del munic ipio de Medellín, del departamento de   Antioquia y del país.       c.   Ampliar las oportunidades de ingreso a la Educación Superior, especialmente   de las personas con mayores dificultades económicas.       d.     Adelantar  programas  que  propicien  la  integración  al  sistema  de  Ed ucación   Superior de aspirantes provenientes de las zonas urbanas deprimidas, rurales   y de grupos vulnerables, marginados del desarrollo económico y social.       e.   Fomentar la investigación científica y tecnológica en el campo de las áreas del   conocimiento  propia s  de  su  actividad  académica,  de  los  recursos  y   necesidades  del  municipio  de  Medellín,  del  Área  Metropolitana,  del   departamento  de  Antioquia  y  del  país  para  identificar  sus  potencialidades  y   recursos  y  proponer  medios  científicos  de  explotación  y  conservaci ón  que   permitan articularlos al desarrollo del país.       f.   Articular  su  actuación  en  todos  los  campos  con  la  red  de  instituciones  del   municipio de Medellín y de la región.        g.     Liderar  el  desarrollo  científico,  técnico,  tecnológico,  artístico,  económico  y   político , y ser paradigma ético en la región y en el país.       h.     Contribuir  al  mejoramiento  de  la  calidad  de  los  niveles  precedentes  de  la   educación, formales o no, mediante procesos de investigación, actualización y   profesionalización.       i.   Apoyar  los  procesos  de  acercami ento,  coordinación  y  acción  conjunta  con   otras sociedades y naciones.       j.   Formar  y  consolidar  comunidades  académicas  y  científicas  capaces  de   articularse con sus homólogas nacionales e internacionales.       k.   Impulsar  por  medio  de  acciones  investigativas,  docentes    y  de  extensión,  la   preservación  y  racional  utilización  del  medio  ambiente  y  fomentar  la   consolidación de una adecuada cultura ecológica.      \n5    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                l.   Promover el conocimiento, la investigación y la difusión del patrimonio cultural   de  la  región  y  del  país;  y  contribuir     a  su  enriquecimiento,  conservación  y   defensa.       m.   Propiciar el desarrollo investigativo del país y su integración con las corrientes   científicas mundiales.       n.     Desarrollar e implantar métodos pedagógicos que fomenten el razonamiento,   el  pensamiento  crítico  y  cr eativo,  y  que  propicien  hábitos  de  disciplina  y  de   trabajo productivo.       o.     Adelantar  programas  y  proyectos  orientados  a  impulsar  el  desarrollo   innovador y un espíritu emprendedor y empresarial con clara conciencia de su   responsabilidad social, tanto en el sec tor público como en el privado.       p.     Evaluar  de  manera  continua  los  múltiples  elementos  de  la  vida  académica  y   administrativa,  teniendo  en  cuenta  el  interés  social,  los  objetivos  de   planeación regional y nacional, y la pertinencia científica y pedagógica de lo s   diversos programas.       q.     Fortalecer y mantener actualizada la gestión institucional.       r.   Generar y difundir una cultura de respeto por los derechos humanos mediante   la adopción de actitudes y prácticas que favorezcan la formación y el progreso   de la sociedad ci vil.       ARTÍCULO  7 .     ATRIBUCIONES.     La  Institución  está  facultada  legalmente  para   ofrecer  programas  de  pregrado  y  posgrado  en  el  marco  de  la  legislación  vigente   para  el  efecto.  Así  mismo  podrá  ofrecer  programas  bajo  la  modalidad  de   extensión, cuidando en cada  caso el cumplimiento de la normatividad vigente para   las  distintas  modalidades.  Igualmente,  la  Institución  podrá  ofrecer  programas  de   formación para el trabajo y el desarrollo humano, con el previo cumplimiento de los   requisitos legales.       ARTÍCULO 8. FUNCI ONES.   Para el logro de sus objetivos, la institución cumplirá las   siguientes funciones:       a.   Adelantar  programas  académicos  en  las  áreas  del  conocimiento  que   consulten las características sociales y económicas de la región y del país.       b.     Realizar  actividades  de    D ocencia,    I nvestigación  y    E xtensión  y    P royección   S ocial.       \n6    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                c.   Suscitar en el estudiante una conciencia crítica y actitud científica frente a los   problemas sociales y económicos de la sociedad colombiana, de manera que   le permitan actuar como agente promotor d el desarrollo.       d.     Ejercer liderazgo en la comunidad a través de la identificación y análisis de los   problemas  sociales  y  la  prestación  de  servicios  para  la  solución  de  los   mismos.       e.   Ofrecer  orientación  profesional  a  los  aspirantes  a  cursar  las  carreras  que  se    sirven.       f.   Promover la cualificación de su personal docente.       g.     Proporcionar  los  medios  y  condiciones  necesarias  para  el  ejercicio  de  la   investigación  científica,  orientada  hacia  los  diferentes  estamentos   institucionales.          CAPÍTULO IV       DEL PATRIMONIO Y FUENT ES DE FINANCIACIÓN       A RTÍCULO 9 . Los ingresos y el patrimonio de la Institución serán constituidos por:       a.     Las  partidas  que  le  sean  asignadas  dentro  del  Presupuesto  Nacional,   Departamental, o Municipal.       b.     Los  bienes  muebles  e  inmuebles  que  actualmente  posea  y  que  sean  de   propiedad de  la Institución  Universitaria Pascual  Bravo  y  los  que adquiera  como   persona jurídica posteriormente a cualquier título.       c.     Las  rentas  o  bienes  que  reciba  por  concepto  de  donaciones,  legados,   transferencias, convenios, matrículas, insc ripciones y demás ingresos generados   de sus propios recursos.        d.     Los  distintos  ingresos  que  perciba  como  producto  de  su  labor  de  docencia,   investigación y  de extensión y proyección social.       La  Institución  no  podrá  destinar  los  bienes  o  recursos  para  fines  d iferentes  de  los   establecidos en la Ley o en el presente Estatuto General.            \n7    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                TÍ TULO SEGUNDO       GOBIERNO   DE LA INSTITUCIÓ N       CAPÍTULO I       DE LA DIRECCIÓN ACADÉMICA Y ADMINSTRATIVA DE LA INSTITUCIÓN       ARTÍCULO  10.    La  dirección  de  la  Institución  corresponde  al  C onsejo  Directivo,  al   Consejo Académico   y al Rector , quienes ejercen el Gobierno de la Institución.          ARTÍCULO  11.     EL  CONSEJO  DIRECTIVO.    El  Consejo  Directivo  es  el  máximo   órgano de gobierno la Institución y estará integrado por:       a.   El Alcalde del municipio de   Medellín o  su delegado, quien lo presidirá.       b.   Un  miembro  designado  por  el  Presidente  de  la  República,  que  haya  tenido   vínculos con el sector universitario.       c.   El Ministro de Educación Nacional o su delegado.       d.   Un representante de las directivas académicas .       e.   U n representante de los docentes.       f.   Un representante de los estudiantes de la Institución.        g.   Un representante de los egresados.       h.   Un representante del sector productivo.       i.   Un representante de los exrectores universitarios.       j.   El Rector de la Institución, con voz   y sin voto.       Actuará como Secretario del Consejo Directivo el Secretario General de la Institución   o aquel a quien el Consejo le asigne dicha función.       PARÁGRAFO  PRIMERO .     En  caso  de  que  alguno  de  los  miembros  incurra  en   cualquier  condición  que  conlleva  la     pérdida  de  su  carácter,  el  Rector  procederá  a   convocar  nueva  elección,  o  a  solicitar  a  quien  corresponda  estatutariamente  la   designación de un nuevo representante , designado o delegado .   \n8    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   PARÁGRAFO  SEGUNDO .    La  vacancia  definitiva  ocurre  cuando  alguno  de  lo s   miembros  renuncia  a  su  elección,  cuando  se  incurre  en  una  inhabilidad  o   incompatibilidad declarada en debida forma por la autoridad competente, o cuando   un  miembro  deje  de  asistir  a  tres  (3)  sesiones  ordinarias  en  el  año  por  causas   diferentes  al  caso  for tuito  o  fuerza  mayor.  En  caso  que  exista  suplente,  éste   entrará a relevar definitivamente al principal por el periodo faltante. En el caso de   los miembros sin suplente, una vez declarada la vacancia por el Consejo Directivo,   éste  solicitará  a  quien  le  corr esponda  designar,  elegir  o  delegar  el  respectivo   miembro, o convocar a elecciones para un nuevo periodo. Igual procedimiento se   adoptará cuando esté próximo a vencerse el período de uno de los miembros del   Consejo Directivo.       PARÁGRAFO  TERCERO.  Los  miembro s  del  Consejo  Directivo  como   representantes  de  los  estamentos  que  lo  conforman,  dejarán  de  pertenecer  al   organismo en los siguientes eventos: I)    Cuando  no asistan a tres (3) sesiones en   el  transcurso  del  año,  sin  justa  causa;  II)    Por    renuncia,  III)    Por    hab er  sido   sancionados  disciplinariamente  por  faltas  graves  dolosas  o  gravísimas,  IV)    Por   haber  sido  condenados  judicialmente,  excepto  por  delitos  culposos,    o,    V)  por   perder la calidad en virtud de la cual forman parte de este Consejo.       PARÁGRAFO  CUARTO .   A  la s  sesiones  del  Consejo  Directivo  podrán  ser   invitados,  con  voz  y  sin  voto,  los  funcionarios  de  la  Institución  que  los  miembros   del  Consejo  o  el  Rector  determinen;  sin  perjuicio  de  hacerlo  con  personas  del   sector público o privado.       ARTÍCULO  12.   CALIDADES  Y   PERÍODO  DE  MIEMBROS  NO   GUBERNAMENTALES  DEL  CONSEJO  DIRECTIVO    ( Modificado  por  el    Artículo   Primero del   Acuerdo  Directivo  007 del 16 de febrero de 2018 )   Las calidades para ser   elegidos y el período en el Consejo Directivo de los miembros a que se refieren lo s   literales d) al i) del artículo anterior, son los siguientes:        a)   La  representación  de  los  directivos  académicos  será  a  través  de  un   directivo  vinculado  en  propiedad  o  en  comisión  de  cargo  que  se   encuentre ocupando un cargo directivo académico de la Instit ución, que   no  haya  sido  sancionado  disciplinariamente;  será  designado  por  el   Consejo Académico de la Institución.       b)   La  representación  de  los  docentes  será  a  través  de  un  principal  y  un   suplente,  vinculado  mediante  una  relación  legal  y  reglamentaria,  de   tiem po  completo  o  medio  tiempo  con  la  Institución,  elegido  mediante   votación  universal,  directa  y  secreta  por  los  docentes  de  tiempo  \n9    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                completo  y  medio  tiempo  de  la  Institución;  ninguno  podrá  haber  sido   sancionado en el ejercicio de sus funciones.        c)   El  represent ante  de  los  egresados  será  a  través  de  un  principal  y  un   suplente,  egresados  de  programas  de  educación  superior  titulado  en   cualquiera de los programas de pregrado o posgrado de la Institución y   será  designado  por  el  Consejo  Directivo  de  terna  presentada  p or  la   Oficina de Egresados de la Institución; no podrán tener al momento de la   elección ninguna relación laboral o contractual con la Institución.       d)   La  representación  de  los  estudiantes  será  a través  de  un  principal y  un   suplente,  quienes,  para  ser  electos    y  mantener  esta  representación,   deben  tener  la  condición  de  estudiantes  activos  en  un  programa  de   educación superior y tener un promedio crédito igual o superior a 3.5; no   podrán  tener  al  momento  de  la  elección  ni  durante  el  periodo  de   representación, rela ción laboral o contractual con la Institución, ni haber   sido  sancionado  disciplinariamente  por  faltas  graves  dolosas.  La   elección  de  estos  se hará  por  votación  secreta  y  universal  por  parte  de   los  estudiantes  de  los  programas  académicos  de  educación  superi or,   bien  sea  de  pregrado  o  de  posgrado,  con  matrícula  vigente  en  la   Institución.        e)   El  representante  del  sector  productivo  será  elegido  por  el  Consejo   Directivo  de  terna  personas  pertenecientes  al  sector,  con  experiencia   mínima  de  cinco  (5)  años  en  este  sec tor,  presentada  por  el  Comité   Intergremial  de  Antioquia  a  solicitud  del  mismo  Consejo;  no  podrán   haber  tenido  desde  un  año  antes  a  la  fecha  de  la  elección,  ni  tener   durante  el  período  de  representación,  vínculo  laboral  o  relación   contractual con la Institu ción.        f)     El  Exrector  Universitario  será  elegido por  el Consejo  Directivo,  de terna   presentada  por  el  Presidente  del  Consejo.  Dicha  terna  deberá  estar   conformada  por  Exrectores  de  Instituciones  de  Educación  Superior   colombianas  registradas  y  avaladas  por  el  Ministeri o  de  Educación   Nacional.       PARÁGRAFO  PRIMERO :  El  representante  de  las  Directivas  Académicas,   el  Exrector  Universitario  y  los  representantes  de  los  Docentes,  de  los   Estudiantes, de  los  Egresados  y  del Sector Productivo  tendrán un  período   de  dos  (2)    años  contados  a  partir  de  su  posesión.  Esta  deberá  hacerse   efectiva  en  un  término  no  superior  a  30  días  calendario,  contados  a  partir   de  la  notificación  de  su  designación  o  elección.  Todos  estos  podrán  ser  \n10    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                reelegidos  siempre  y  cuando  conserven  las  calidade s  que  ameritaron  su   primera elección.        PARÁGRAFO  SEGUNDO :  En  caso  de  presentarse  situaciones  de  fuerza   mayor  o  caso  fortuito  que  impidan  tomar  posesión  en  los  términos  del   presente  artículo,  el  representante  podrá  tomar  posesión  dentro  de  un   plazo  igual  a l  inicialmente  establecido  y  solamente  por  una  única  vez,  el   cual  comienza  a  contarse  a  partir  del  vencimiento  del  primer  término.  Lo   anterior,  siempre  y  cuando  se  manifieste  la  existencia  de  la  situación  de   fuerza mayor o caso fortuito en la que se encuen tra, antes del vencimiento   del primer término.       PARÁGRAFO  TERCERO :  Los  representantes  no  gubernamentales  serán   elegidos con sus respectivos suplentes, quienes deberán tener las mismas   calidades,  no  podrán  tener  impedimentos,  inhabilidades  e   incompatibilida des  al  igual  que  los  titulares  y  los  remplazarán  en  sus   ausencias temporales o definitivas.       PARÁGRAFO  CUARTO :  Son  directivos  académicos  de  la  Institución:  el   Vicerrector  de  Docencia,  el  Vicerrector  de  Investigación  y  Extensión,  y  los   Decanos.        PARÁGRAFO  QUINTO :  El  Consejo  Directivo  reglamentará  el   procedimiento  para  la  elección  de  los  miembros  no  gubernamentales  del   Consejo Directivo.          ARTÍCULO  13.  QUÓRUM .     El  Consejo  Directivo  sesionará  de  manera  ordinaria   mensualmente, y será convocado por el Presidente   de la Corporación, por el Rector   o  extraordinariamente  cuando  sea  requerido  por  el  Presidente  directamente  o  a   solicitud del Rector o por solicitud al Presidente por parte de la mitad más uno de los   miembros estatutarios.        Constituye quórum para delibera r y decidir la presencia de la mitad más uno de los   miembros estatutarios del Consejo. Las decisiones se toman con el voto favorable de   la  mayoría  de  los  miembros  presentes,  exceptuando  las  decisiones  sobre   nombramiento  de  Rector  y  expedición  y  reforma  est atutaria,  para  las  cuales  se   requiere  la  votación  aprobatoria  de  la  mitad  más  uno  de  los  miembros  estatutarios   con voz y voto.        En  ausencia  del  Presidente  del  Consejo  Directivo,  presidirá  las  sesiones  el   designado del Presidente de la República o ,   en su d efecto, el delegado del Ministro   de Educación  Nacional  y  en  ausencia de  éste, presidirá  quien  defina  los miembros  \n11    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                presentes.       PARÁGRAFO  PRIMERO.    El  Consejo  Directivo  o  alguno  de  sus  miembros    podrán    sesionar  y  decidir  en  forma  no  presencial  por  diferentes  m edios  tecnológicos  en   aquellos casos en que se determinen, según los mecanismos que se establezcan en   reglamentación que para el efecto expida el mismo Consejo.         PARÁGRAFO  SEGUNDO.    Para  las  decisiones  del  Consejo  Directivo  no  podrá   existir  el  voto  delega do,  excepto  aquellos  miembros  que  actuarán  por  disposición   estatutaria en calidad de delegados.        PARÁGRAFO  TERCERO .  Ningún  miembro  podrá  tener  doble  represent ación  ante   el Consejo Directivo.        ARTÍCULO  14.  DE  LAS  INHABILIDADES,  INCOMPATIBILIDADES  Y   RESPON SABILIDADES  DE  LOS  MIEMBROS  DEL  CONSEJO  DIRECTIVO.    Todas  las  personas  que  hagan  parte  del  Consejo  Directivo  de  la  Institución  o   pretendan hacerlo, deberán observar el régimen de inhabilidades, prohibiciones e   incompatibilidades que consagran la Constitució n, la ley, el presente estatuto, las   norma s  aplicables  a  los  miembros  de  J untas  o  Consejos  Directivos  de  las   Instituciones  de Educación Superior ,  y demás normas reglamentarias, en atención a   las  funciones  públicas  que  desempeñan.  Ser  miembro  del  Consejo  Di rectivo  es   incompatible con la calidad de empleado o contratista de la institución. Se excluyen   de esta incompatibilidad a los miembros del Consejo que hacen parte de él en razón   de  su  vinculación  laboral  o  contractual  con  la  Institución,  es  decir,  el  Rect or,  el   representante de las directivas académicas y el representante de los docentes.       Los  miembros  del  Consejo  Directivo,  en  tal  condició n,  así  se  llamen   representantes,  delegados   o designados  están en la obligación de actuar y decidir   en beneficio de la  Institución y en función exclusiva del bienestar y del progreso de   la misma, aunque ejercen funciones públicas no adquieren por este solo hecho el   carácter de empleados públicos.         Todos  los  integrantes  del  Consejo  Directivo,  en  razón  de  las  funciones  públ icas   que desempeñan, son responsables de las decisiones que adopten.        ARTÍCULO 15. FUNCIONES.   Funciones del Consejo Directivo:       a.   Definir la planeación institucional.        b.     Aprobar  el  Plan  de  Desarrollo  de  la  Institución,  y  las  modificaciones  que   presente el Re ctor para su cumplimiento.      \n12    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                c.   Aprobar  la  creación,  suspensión  o  supresión  de  los  programas  académicos  y   facultades con base en propuestas presentadas previo concepto favorable del   Consejo Académico.       d.     Aprobar  el  proyecto  de  presupuesto  anual  de  la  entidad,  as í  como  los   proyectos de modificación, y autorizar  las adiciones y traslados presupuestales   que en el curso de la vigencia fiscal se requieran, de acuerdo con las normas   orgánicas  de  presupuesto  y  conforme  a  la  reglamentación  que  expida  el   Consejo .        e.   Expedi r  o  modificar  tanto  el  Estatuto  General  de  la  Institución,  el  Reglamento   Estudiantil,  el  Estatuto  Docente,  el  Reglamento  de  Extensión,  el  Estatuto  de   Personal  Administrativo,  así  como  los  reglamentos  internos  y  políticas   institucionales  que  se requieran  pa ra  el buen funcionamiento de  la  Institución.   La función de expedir reglamentos y políticas es propia del Consejo Directivo y   podrá  delegar  para  aspectos  específicos  en  el  Rector,  en  el  Consejo   Académico  o  en  los  Consejos  de  Facultad.  Toda  modificación  de  l as  normas   estatutarias requiere ser aprobada en dos (2) sesiones del Consejo.       f.   Aprobar,  a  propuesta  del  Rector,  las  modificaciones  de  la  estructura  orgánica   que  consideren  pertinentes  y  aprobar  la  creación  o  supresión  de  cargos   docentes y administrativos,  acorde con la disponibilidad presupuestal.        g.     Expedir,  a  propuesta  del  Rector,  con  arreglo  al  presupuesto,  las  normas   legales  y  reglamentarias,  la  planta  de  cargos  de  la  Institución  y  fijarles  las   asignaciones salariales.       h.     Designar  al  Rector,  evaluar  su  ges tión  y  removerlo,  según  convocatoria  y   reglamento que expida el Consejo Directivo.       i.   Examinar y aprobar anualmente, o cuando lo considere necesario, los estados   financieros de la Institución.        j.   Evaluar  el  informe  semestral  de  la  Rectoría,  sobre  el  Plan  de  D esarrollo,   Inversión, Operativo y Académico y dar las recomendaciones pertinentes.       k.   Aprobar  los derechos pecuniarios que, de conformidad con la ley, pueda cobrar   la  Institución,  relacionados  con  los  programas  formales  de  pregrado  y   posgrado.       l.   Aprobar  las  d istinciones  al  personal  académico,  administrativo,  así  como   personal externo, de acuerdo con reglamentación que para el efecto se expida.      \n13    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                m.   Aprobar las comisiones del Rector en el exterior que sean superiores a 15 días   calendario.  Las  de  duración  inferior  s e  deben  informar  al  Presidente  del   Consejo Directivo antes de la salida.       n.     Autorizar  comisiones  al  exterior  y  las  de  estudio  en  el  interior  o  por  fuera  del   país,  cuya  duración  sea  superior  a  seis  (6)  meses  tanto  para  el  personal   docente como para el persona l administrativo, de acuerdo con los Estatutos, el   programa  de  capacitación  institucional  y  el  concepto  previo  del  Consejo   Académico o de la Gestión de Talento Humano, respectivamente.        o.     Otorgar  o  aceptar  las  donaciones  o  legados  de  bienes  muebles  e  inmueb les   que  superen  los  200    SMLMV ,  conforme  a  la  reglamentación  que  expida  el   Consejo para tal efecto.        p.     Resolver por vía de autoridad, las dudas que se presenten en la interpretación   de este Estatuto y de los reglamentos que expida la corporación.       q.     Darse su p ropio reglamento.       r.   Autorizar  la  conformación  de  corporaciones  y  fundaciones  por  parte  de  la   Institución.        s.   Autorizar la celebración de los contratos o convenios con gobiernos extranjeros   o instituciones internacionales.       t.   En general, el Consejo Directivo es   competente para tomar todas las medidas   que tiendan a la realización del objeto de la Institución. Se entiende que es el   órgano  general  de  gobierno,  con  facultades  para  la  ejecución  de  todos  los   actos tendientes al cumplimiento de los objetivos.       u.     Las demá s que le asignen las normas específicas.       ARTÍCULO 16. ACTOS.  Los actos emitidos por el Consejo Directivo ,  cuando versen   sobre materias generales, se   denominarán “Acuerdos” y cuando se refieran a casos   específicos, se denominarán “Resoluciones”.       ARTÍCULO  17.   La calidad de miembro del Consejo Directivo de la Institución es  ad   honorem,   por lo cual no genera ningún tipo de contraprestación económica para los   miembros.       ARTÍCULO    18 .     CONSEJO  ACADÉMICO.     ( Modificado  por  el  Artículo    Segundo     del   Acuerdo  Directivo  0 07  del  16  de  febrero  de  2018 )    El  Consejo  Académico  es  la  \n14    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                máxima  autoridad  académica  de  la  institución  y  órgano  asesor  del  Rector.  Está   integrado por:       a.   El Rector, quien lo presidirá.       b.   El Vicerrector de Docencia, quien lo presidirá en ausencia del Rector.        c.   Lo s Vicerrectores Administrativo y de Investigación y Extensión .       d.   Los decanos de la Institución.       e.   Un  profesor,  un  estudiante  y  sus  respectivos  suplentes,  elegidos   mediante votación universal y secreta.       El  Secretario  General,  o  quien  el  Consejo  defina,  de  la  In stitución  actúa   como secretario del Consejo Académico, sin voz y sin voto.       PARÁGRAFO     PRIMERO:     Los  representantes  suplentes  actuarán  en  caso   de  faltas  absolutas  o  temporales  de  los  representantes  principales.  En  el   evento  de  faltas  absolutas  del  representa nte  principal,  el  suplente  actuará   hasta el vencimiento del respectivo período.       PARÁGRAFO     SEGUNDO:     El  representante  de  los  estudiantes  y  el  de  los   profesores  tendrán  un  período  de  dos  (2)  años,  contados  a  partir  de  su   posesión,  la  que  deberá  hacerse  efect iva  en  un  término  no  superior  a  30   días calendario, contados a partir de la notificación de su elección, siempre y   cuando conserven las calidades con las que fueron elegidos.         PARÁGRAFO  TERCERO:     En  caso  de  presentarse  situaciones  de  fuerza   mayor  o  caso  f ortuito  que  impidan  tomar  posesión  en  los  términos  del   presente artículo, el representante podrá tomar posesión dentro de un plazo   igual  al  inicialmente  establecido  y  solamente  por  una  única  vez,  el  cual   comienza a contarse a partir del vencimiento del pri mer término. Lo anterior,   siempre y cuando se manifieste la existencia de la situación de fuerza mayor   o  caso  fortuito  en  la  que  se  encuentra,  antes  del  vencimiento  del  primer   término.       PARÁGRAFO  CUARTO:     El  representante  de  los  estudiantes  y  el  de  los   prof esores deben acreditar los mismos requisitos y calidades que se exigen   para ser miembro del Consejo Directivo.       A RTÍCULO  19 .    Corresponden al Consejo Académico, como autoridad académica y   órgano de dirección de la Institución, las siguientes funciones:   \n15    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   a.   Rec omendar  y  conceptuar  sobre  la    creación,  suspensión  o  supresión  de  los   programas académicos y facultades.       b.   Diseñar y proponer las políticas, estatutos y reglamentos de carácter académico   y de evaluación en lo referente a personal docente y estudiantil.       c.   Dec idir sobre el desarrollo académico de la Institución en lo relativo a docencia,   especialmente  en  cuanto  se  refiere  a  programas  académicos,  investigación,   extensión y bienestar universitario.       d.   Conceptuar  ante  el  Consejo  Directivo,  a  petición  de  este,  en  asu ntos   relacionados  con  el Estatuto  General  de  la  Institución,  el  Estatuto  Docent e  y el   Reglamento Estudiantil.       e.   Recomendar al Consejo Directivo la política de admisiones.       f.   Modificar  los  planes  de  estudio  de  los  diferentes  programas  académicos,  sin   alterar  l a  estructura  básica  de  los  mismos,  de  acuer do  con  la  normatividad   vigente.       g.   Rendir informes académicos bimestrales al Consejo Directivo.       h.   Ser  órgano  superior  de  apelación  en  asuntos  académicos  cuando  le   corresponda, de conformidad con las disposiciones y r eglamentación vigentes.       i.   Expedir y modificar el calendario académico.       j.   Designar  el  representante  de  las  directivas  académicas  ante  el  Consejo   Directivo.       k.   Recomendar  las  distinciones  al  personal  académico,  así  como  personal   académico  externo,  de  acuerdo  con     reglamentación  que  para  el  efecto  se   expida.       l.   Recomendar  las  comisiones  al  exterior  y  las  de  estudio  en  el  interior  o  por   fuera  del  país,  cuya  duración  sea  superior  a  seis  (6)  meses  para el  personal   docente,  de  acuerdo  con  los  Estatutos  y  el  programa  de  c apacitación   institucional.        m.   Resolver las consultas que le formule el Rector y sean de su competencia.       n.   Darse su propio reglamento interno.   \n16    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   o.   Las demás que le sean explícitamente asignadas y correspondan a la naturaleza   de sus funciones.       ARTÍCULO  2 0 .     REUNI ONES,  QUÓRUM  Y  MAYORÍA.    El  Consejo  Académico  se   reunirá en forma ordinaria una vez por mes y extraordinariamente cuando el Rector   lo  cite  de  acuerdo  a  la  reglamentación  que  para  el  efecto  se  expida.    Constituye   quórum para decidir  la mayoría  de  los miembro s  que  lo  conforman. Las decisiones   se toman con el voto favorable de la mayoría de los miembros presentes.         Los actos administrativos que expida se denominarán “ Acuerdos ”.       PARÁGRAFO PRIMERO.  El Consejo Académico o alguno de sus miembros  podrán    sesionar    y  decidir  en  forma  no  presencial  por  diferentes  medios  tecnológicos  en   aquellos casos en que se determinen, según los mecanismos que se establezcan en   reglamentación que para el efecto expida el Consejo Directivo.         PARÁGRAFO  SEGUNDO.    Para  las  decisiones    del  Consejo  Académico  no  podrá   existir el voto delegado.       PARÁGRAFO  TERCERO.     A  las  sesiones  del  Consejo  Académico  podrán  ser   invitados,  con  voz  y  sin  voto,  los  funcionarios  de  la  Institución  que  el  Rector   determine; sin perjuicio de hacerlo con personas de l sector público o privado.        ARTÍCULO    21 .  EL  RECTOR.     El  Rector  es  el  representante  legal  y  la  primera   autoridad  ejecutiva  de  la  Institución ,  en  tal  carácter,  y  en  el  ámbito  de  su   competencia,  es  responsable  de  la  gestión  académica  y  administrativa,  y  debe    adoptar  las  decisiones  necesarias para el  desarrollo  y  buen funcionamiento  de  la   Institución.  El cargo de Rector es incompatible con el ejercicio profesional y con el   desempeño  de  cualquier  otro  cargo  público  o  privado.  El  Rector  toma  posesión   ante el Pr esidente del Consejo Directivo.       ARTÍCULO  22 .   CALIDADES .  Para  ser  Rector  se  requiere:  Poseer  título  de   profesional  universitario  y  de  posgrado,  y  cumplir  al menos  una de  las  siguientes   calidades:       a.   Haber sido profesor de tiempo completo o su equivalente por   lo menos durante   cinco  (5)  años,  tres  (3)  de  los  cuales  deben  acreditarse  en  funciones  de   dirección en una Institución de Educación Superior, o       b.     Haber  desempeñado,  en  propiedad,  cargos  de  Rector  o  Vicerrector  o  decano   por un tiempo superior a un año, o      \n17    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                c.   H aber  ejercido  con  buen  crédito  la  profesión  durante  cinco  (5)  años  y  poder   demostrar que, de estos, por lo menos durante tres (3) años ha ejercido cargos   de dirección.       ARTÍCULO 2 3 .    ELECCIÓN Y PERÍODO.    El Rector será designado por el Consejo   Directivo  para     un  período  de  cuatro  (4)  años,  de  acuerdo  con  reglamentación  que   para el efecto expida el Consejo Directivo, y podrá ser reelegido solo por una vez.       ARTÍCULO 2 4 .   FUNCIONES.  Son funciones del Rector, además de las contenidas   en las disposiciones legales y   reglamentarias vigentes, las siguientes:       a.   Cumplir y hacer cumplir la Constitución, la ley y los reglamentos.       b.     Dirigir,  evaluar,  coordinar,  vigilar  y  controlar  técnica,  financiera  y   administrativamente  el  funcionamiento  de  la  Institución  y  la  ejecución  de    sus   planes, programas y proyectos, y presentar los informes que solicite el Consejo   Directivo.       c.   Ejecutar  las  decisiones  del  Consejo  Directivo,  conforme  a  la  Constitución,  la   ley, los reglamentos y el Estatuto General.       d.     Someter  a  aprobación  del  Consejo  Dire ctivo  la  creación,  suspensión  o   supresión de programas académicos de acuerdo con las disposiciones legales,   previa recomendación del Consejo Académico         e.   Celebrar y suscribir los contratos y convenios, expedir los actos administrativos   que  sean  necesarios  p ara  el  cumplimiento  de  los  objetivos  de  la  Institución,   conforme a las disposiciones legales y estatuarias vigentes.       f.   Someter  el  proyecto  de  presupuesto  a  consideración  del  Consejo  Directivo  y   ejecutarlo una vez expedido por Acuerdo del Concejo Municipal y   aprobada su   apropiación por parte del Consejo Directivo.       g.     Someter  al  Consejo  Directivo  anualmente  los  estados  financieros  de  la   Institución y presentar mensualmente a este la ejecución presupuestal.       h.     Autorizar las adiciones y traslados presupuestales que    en curso de la vigencia   fiscal  se  requieran,  de  acuerdo  con  las  normas  orgánicas  de  presupuesto   vigentes.        i.   Nombrar y remover al personal de la Institución, con arreglo a las disposiciones   legales vigentes.      \n18    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                j.   Expedir  los  manuales  de  funciones  y  requisitos,  y  los  de  procedimientos   administrativos.       k.   Expedir,  de  acuerdo  con  reglamentación  que  expida  el  Consejo  Directivo,  los   actos  administrativos  necesarios  para  la  convocatoria  a    la  elección  de  los   representantes  de  las  corporaciones  que  tienen  asiento  en  los  c onsejos  y   comités que hacen parte del estamento académico de la Entidad, exceptuando   la  convocatoria  para  elección  del  Rector,  competencia  que  corresponde  al   Consejo Directivo.       l.   Presentar  anualmente  al  Consejo  Directivo,  los  estados  financieros  de  la   Insti tución, con corte a 31 de diciembre, dentro de los tres (3) primeros meses   del año siguiente, para su aprobación.       m.   Rendir  informes  cada  seis  (6)  meses  al  Consejo  Directivo  con  respecto  a  la   gestión de las decanaturas.       n.     Proponer  ante  el  Consejo  Directivo  pa ra  su  aprobación  el  Reglamento   Estudiantil,  el  Estatuto  de  Personal  Administrativo,  el  Estatuto  Docente,  el   Reglamento  de  Extensión  y  las  demás  que  conforme  a  la  ley  sean  de   competencia de ese estamento.       o.     Aceptar  las  donaciones  y  legados  de  bienes  muebles    e  inmuebles  para  la   Institución, cuya cuantía sea igual o inferior a doscientos (200) SMLMV.       p.     Autorizar  las  comisiones  de  servicio  y  de  estudios,    tanto  para  el  personal   docente  como  para  el  personal  administrativo ,  de  los  funcionarios  de  la   Institución,  cu ya duración no sea superior a seis (6) meses.       q.     Asistir a las reuniones del Consejo Directivo, con  voz,   pero sin voto y llevar a él   las  iniciativas  que  considere  conducentes  para  asegurar  y  mejorar  el   funcionamiento de la institución.       r.   Crear los Comités que   sean necesarios para el funcionamiento de la Institución.       s.   Someter  a  consideración  del  Consejo  Directivo  los  proyectos  de  planta  de   personal.       t.   Aplicar las sanciones disciplinarias que le correspondan por ley o reglamento.       u.     Presidir  la  ceremonia  de  grado  y     autorizar  con  su  firma  los  títulos  que  la   Institución confiera.      \n19    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                v.   Designar  mandatarios  que  representen  judicial  y  extrajudicialmente  a  la   Institución.       w.     Las que sean delegadas por el Consejo Directivo en el Rector.       x.   Las  demás  que  señalen  las  disposiciones  v igentes  y  las  que  no  estén   expresamente atribuidas a otra autoridad.       ARTÍCULO 2 5 .   El Rector podrá delegar  en un funcionario del nivel directivo con las   calidades  de  Vicerrector  o  Secretario  General     por  medio  de  Resolución     aquellas   funciones  que  considere    necesarias,  con  excepción  de  la  imposición  de  sanciones   de destitución y de suspensión mayor de quince (15) días y de las funciones que le   hayan sido delegadas por el Consejo Directivo.       ARTÍCULO  26 .     Los  actos  administrativos  que  expide  el  Rector  se  denomi narán   “Resoluciones Rectorales”.       ARTÍCULO  27 .  DE  LAS  FALTAS  DEFINITIVAS  DEL  RECTOR.   Son  faltas   definitivas  del  Rector:  su  muerte,  su  renuncia  aceptada,  la  destitución,  la   incapacidad permanente para ejercer sus funciones y el abandono del cargo.       ARTÍCULO     2 8 .    RECTOR  ENCARGADO.    El  Rector  será  reemplazado  ante  la   ausencia  temporal  por  un  funcionario  del  nivel  directivo,  con  las  calidades  de   Vicerrector  o  Secretario  General.  La  designación  y  encargo  la  efectuará   directamente  el  Rector,  siempre  que  reúnan  las    calidades  del  titular,  o  ante  la   imposibilidad de este lo hará el Consejo Directivo.        Cuando  se  presenten  faltas  definitivas,  el  Consejo  Directivo  convocará  a   elecciones,  en  forma  inmediata,  y  procederá  al  nombramiento  en  encargo  a   alguien  que  reúna   los  r equisitos  para  ser  Rector   hasta  que  se  provea   definitivamente.       El  Rector  encargado  deberá  reunir  las  mismas  calidades  y  tendrá  iguales   impedimentos,  inhabilidades,  incompatibilidades,  deberes  y  atribuciones  que  el   titular.          CAPÍTULO I I       DEL SECRETARIO GE NERAL Y DE LOS VICERRECTORES       A RTÍCULO  29.     EL  SECRETARIO  GENERAL .     Es  la  conciencia  jurídica  de  la   Institución  y  depende  directamente  del  Rector.  Tendrá  como  calidades  las  de  título  \n20    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                Universitario  y  experiencia  Directiva  o  administrativa  en  Institución  de  Ed ucación   Superior mínima de dos (2) años, y tiene las siguientes funciones:       a.   Actuar como Secretario de los  Consejos  Directivo y Académico.       b.   Refrendar con su firma los acuerdos y demás actos expedidos por los Consejos   Directivo  y  Académico,  los  cuales  deberá n  ser  suscritos  por  el  respectivo   Presidente.       c.   Elaborar las actas correspondientes a las sesiones de los Consejos Directivo y   Académico y firmarlas, conjuntamente con los respectivos Presidentes.       d.   Conservar  y  custodiar,  en  condiciones  adecuadas,  los  archiv os   correspondientes al Consejo Directivo y demás corporaciones de las cuales sea   Secretario, conforme a lo dispuesto en el presente Estatuto.       e.   Certificar  la  autenticidad  de  las  firmas  de  los  Presidentes  de  los  Consejos   Directivo y Académico, del Rector, lo s  Vicerrectores , de los  Decanos  y del Jefe   de Admisiones y Registro.       f.   Notificar, dentro de los términos legales y reglamentarios, los actos que expidan   el Rector y los organismos de los cuales sea Secretario.       g.   Suscribir  los  títulos  otorgados  por  la  Institu ción,  las  actas  de  grado  y  los   demás certificados que lo requieran.       h.   Las demás que le correspondan de acuerdo con la naturaleza de su cargo, de   conformidad con la Ley, los Estatutos y los reglamentos de la entidad.       ARTÍCULO  30.   LOS  VICERRECTORES .   Ejercerá n,  además  de  las  funciones   propias de sus cargos, las que les delegue el Rector y las de coordinación, fomento y   administración de la academia .        PARÁGRAFO PRIMERO .  Los  Vicerrectores  serán nombrados por el Rector y son   funcionarios de libre nombramiento y  remoción.       PARÁGRAFO  SEGUNDO .    Para  ser  Vicerrector  de  la  Institución  se  requieren  las   mismas calidades exigidas para ser Rector.          CAPÍTULO I II      \n21    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                DE LA FACULTAD, SU ESTRUCTURA INTERNA ,   LOS DECANOS, LOS   CONSEJOS DE FACULTAD  Y LOS COMITÉS CURRICULARES       ARTÍCU LO  31.  LA  FACULTAD.    Es  la  dependencia  básica  y  fundamental  de  la   estructura  académico  administrativa  de  la  Institución  que  agrupa  campos  y   disciplinas afines del conocimiento, profesores y personal administrativo, bienes y   recursos , con la autonomía que lo s estatutos y reglamentos le confieren para darse   su organización interna, administrar sus recursos, planificar y promover su desarrollo,   con  el  objeto  de  planificar,  ofrecer  y  administrar  programas  curriculares,  de   investigación y de extensión y proyecció n social, de conformidad con las políticas   y criterios emanados de los órganos de gobierno de la Institución.   Es dirigida por el   D ecano y el Consejo de la Facultad.       Las  Facultades  colaboran  entre  sí  y  se  prestan  servicios  en  forma  solidaria  para   desarroll ar la misión, los principios y los objetivos de la Institución, y para cumplir   sus propios objetivos.       ARTÍ CULO 32. ORGANIZACIÓN.  En su organización interna, la Institución contará   con  Facultades,  a  su  vez,  éstas  podrán  contar  con  es tructuras  como:   Departa mentos,  I nstitutos  o    E scuelas  para  coordinar  las  actividades  de  docencia,   investigación  e  innovación,  o  extensión  y  proyección  social,  según    el  caso.    Las   facultades  y  los  D epartamentos,  I nstitutos  o  E scuelas  podrán  ser  creados  o   suprimidos  por  el  Consejo  Directivo  a  propuesta  del  Rector  o  del  Consejo   Académico.       ARTÍCULO  33.  LOS  DECANOS.  Los  decanos  son  los  líderes  académicos  y   máximas autoridades ejecutivas de su  respectiva  Facultad,  y  representan  al  Rector   en ella.        Para  ser  Decano  de  la  Institución  se    requiere  ser  ciudadano  colombiano  en   ejercicio; no estar inmerso en las inhabilidades descritas en la Constitución Política   o  en  la  ley;  no  haber  sido  sancionado  en  el  ejercicio  de  su  profesión,  ni   disciplinariamente por faltas graves dolosas o gravísimas;   tener título profesional y   de  Maestría  o  Doctorado,  el  primero  afín  con  el  área  de  conocimiento  a  la  que   están adscritos  los  programas  de  la  Facultad,  según  los  sistemas  de  información   del Ministerio de Educación Nacional; acreditar mínimo tres (3) años d e docencia   en Instituciones de Educación Superior en calidad de docente de tiempo completo   o su equivalente ,   o haber ejercido la profesión por cinco  (5)  años. Será funcionario   de  libre nombramiento  y  remoción del  Rector     y    sus  funciones  serán  las  definidas   por el manual de funciones expedido por la Institución.      \n22    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                ARTÍCULO 34. CONSEJOS DE FACULTAD.   En cada Facultad habrá un Consejo,   el  cual  tendrá  capacidad  decisoria  en  los  asuntos  académicos  de  su  competencia,   asignada por los estatutos y reglamentos.        PARÁG RAFO  PRIMERO .   Los  actos  emanados  del  Consejo  de  Facultad  se   denominarán    “ Resoluciones  de  Facultad ”     y  serán  suscritos  por  el  respectivo   Decano.       ARTÍCULO 35.   ( Modificado por el Artículo  Tercero   del Acuerdo Directivo 007 del 16   de febrero de 2018 )   Cada Conse jo Facultad estará integrado por:       a.   El Decano, quien lo presidirá.        b.   Los jefes de departamento de la respectiva Facultad.       c.   Un egresado graduado de la respectiva Facultad, sin vínculo laboral y/o   contractual  con  la  Institución,  designado  por  el  Rector  de  terna    presentada  por  dicho  Consejo,  previa  consulta  con  la  Oficina  de   Egresados  o  con  grupos  representativos  de  los  mismos,  según   reglamento que expida el Consejo Directivo.          d.   Un  profesor  de  la  respectiva  Facultad,  elegido  mediante  votación   universal, directa y   secreta por el cuerpo profesoral de la misma, según   reglamento que expida el Consejo Directivo.         e.   Un  estudiante  de  la  respectiva  Facultad,  elegido  mediante  votación   universal,  directa  y  secreta  por  los  estudiantes  de  la  misma,  según   reglamento que expida  el Consejo Directivo.         PARÁGRAFO  PRIMERO:     La  representación  del  Decano,  en  calidad  de   Presidente de cada Consejo de Facultad, es indelegable       PARÁGRAFO  SEGUNDO:    La  designación y  elección  del  represente de  los   egresados, de los docentes y de los estudiant es ante el Consejo de Facultad   será por un período de dos (2) años, contados a partir de su posesión, la que   deberá  hacerse  efectiva  en  un  término  no  superior  a  treinta  (30)  días   calendario, contados a partir de la notificación de su designación o elección .       PARÁGRAFO  TERCERO     En  caso  de  presentarse  situaciones  de  fuerza   mayor  o  caso  fortuito  que  impidan  tomar  posesión  en  los  términos  del   presente artículo, el representante podrá tomar posesión dentro de un plazo   igual  al  inicialmente  establecido  y  solamente     por  una  única  vez,  el  cual   comienza a contarse a partir del vencimiento del primer término. Lo anterior,  \n23    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                siempre y cuando se manifieste la existencia de la situación de fuerza mayor   o  caso  fortuito  en  la  que  se  encuentra,  antes  del  vencimiento  del  primer   término.       PARÁGRAFO  CUARTO.    Para  ser  representante  de  los  estudiantes  ante el   Consejo de Facultad se deberá acreditar matrícula vigente, no tener ningún   tipo  de  sanción  académica  y/o  disciplinaria  en  el  momento  de  la  elección  y   tener un promedio crédito ac umulado mayor a 3.5.         ARTÍCULO 36. SESIONES.   El Consejo de Facultad se reunirá al menos una vez al   mes por convocatoria del Decano y actuará como Secretario el funcionario que éste   designe.  Constituye  quórum  para  decidir  más  de  la  mitad  de  los  miembros  q ue   hayan acreditado ante el Secretario del Consejo su condición de tales.       ARTÍCULO 37. FUNCIONES.   Al Consejo de Facultad ,   como órgano con capacidad   de toma de decisiones ,   le corresponden las siguientes funciones:       a.   Programar,  controlar  y  evaluar  el  cumplim iento  de  los  programas  académicos,   de investigación y de extensión y proyección social adoptados por la Institución.       b.   Asesorar del Decano en los demás aspectos de la Facultad.       c.   Recomendar al Consejo Académico la creación o supresión de Departamentos,   insti tutos o escuelas al interior de la Institución.        d.   Elaborar el  Reglamento  Interno de  la Facultad  y  someterlo a  la  aprobación  del   Consejo Académico.       e.   Proponer al Consejo Académico, a través del Decano, la creación, suspensión o   supresión de  los  programas  aca démicos  y  de  investigación de  la  Facultad. Así   mismo, recomendar al mismo Consejo la modificación de los planes de estudio.       f.   Prestar asesoría en el proceso de selección del personal docente de la Facultad,   por solicitud del Rector a través del respectivo D ecano.       g.   Proponer los candidatos a distinciones al Consejo Académico.       h.   Proponer el calendario de las actividades académicas al Consejo Académico.       i.   Conceptuar sobre la selección del personal docente de la Facultad y sobre la   renovación o no de la vinculación .      \n24    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                j.   Brindar  las  condiciones  para  los  procesos  de  autoevaluación  y  acreditación  de   los programas académicos.       k.   Las  demás  que  le  sean  específicamente  asignadas  y  correspondan  a  la   naturaleza de sus funciones.       ARTÍCULO 38. COMITÉS CURRICULARES.   ( Modificado por   el Artículo  Cuarto   del   Acuerdo Directivo 007 del 16 de febrero de 2018 )   En   cada Departamento, Instituto o   Escuela habrá un Comité Curricular como órgano asesor del Decano de la Facultad,   y estará integrado por:       a.   El Jefe de Departamento, quien lo presidirá .        b.   Dos  (2)  docentes  de  tiempo  completo  de  la Institución  designados por   el Decano de la respectiva Facultad.        c.   Un  (1)  representante  de  los  docentes  de  planta,  ocasionales  o  de   cátedra,  que  presten  sus  servicios  al  programa,  elegido  por  votación   universal, d irecta y secreta por los docentes que prestan sus servicios   al  programa  respectivo,  de  acuerdo  con  reglamentación  que  para  el   efecto expida el Consejo Directivo.        d.   Un representante de los estudiantes del programa, elegido por votación   universal,  directa  y  s ecreta  de  los  estudiantes  del  mismo  programa   académico,  de  acuerdo  con  reglamentación  que  para  el  efecto  expida   el Consejo Directivo.       ARTÍCULO  39.  PERÍODO  DEL  REPRESENTANTE  ESTUDIANTIL  Y   DOCENTE.     ( Modificado  por  el Artículo    Quinto     del  Acuerdo  Directivo  00 7 del   16  de  febrero  de  2018 )     El  período  de  los  representantes  estudiantil  y   docente  en  el  Comité  Curricular  será  de  un  (1)  año  contado  a  partir  de  la   fecha  de  su  posesión,  la  cual  deberá  hacerse  efectiva  en  un  término  no   superior  a  quince  (15)  días  calenda rio,  contados  a  partir  de  la  notificación   de su elección.       PARÁGRAFO  PRIMERO:    En  caso  de  presentarse  situaciones  de  fuerza   mayor  o  caso  fortuito  que  impidan  tomar  posesión  en  los  términos  del   presente  artículo,  el  representante  podrá  tomar  posesión  dentro    de  un   plazo  igual  al  inicialmente  establecido  y  solamente  por  una  única  vez,  el   cual  comienza  a  contarse  a  partir  del  vencimiento  del  primer  término.  Lo   anterior,  siempre  y  cuando  se  manifieste  la  existencia  de  la  situación  de   fuerza mayor o caso fortuito  en la que se encuentra, antes del vencimiento   del primer término.   \n25    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   PARÁGRAFO  SEGUNDO:     El  representante  de  los  estudiantes  ante  el   Comité Curricular de cada Departamento, Instituto o Escuela debe acreditar   al  momento  de  la  inscripción  tener  la  condición  de    estudiante  activo  en   programas  de  educación  superior,  tener  un  promedio  crédito  acumulado   igual  o  superior  a  3.5  y  un  mínimo  de  tres  (3)  niveles  académicos   aprobados. En el caso de estudiantes de programas de posgrado se exigirá   como  requisito  tener  la  con dición  de  estudiante  activo  en  programas  de   educación superior.             ARTÍCULO  40.  FUNCIONES  DEL  COMITÉ  CURRICULAR .  Serán  funciones  del   Comité Curricular:       a.   Asesorar  al  Decano  en  los  aspectos  relacionados  con  la estructura  curricular   del programa: justificaci ón, perfiles, objetivos, plan de estudios, investigación y   extensión y proyección social, de acuerdo con las políticas institucionales.       b.     Evaluar  la estructura  curricular  del programa,  en  armonía  con  los  criterios  de   auto - evaluación  institucional  y  los  avan ces  científicos  o  tecnológicos  en  el   área específica de conocimiento.       c.   Recomendar al Consejo de Facultad los ajustes o modificaciones al currículo   de acuerdo con los resultados de la evaluación.       d.     Conceptuar sobre situaciones específicas que se relacionen c on la estructura,   organización y desarrollo curricular del programa.       e.   Recomendar  al  Consejo  de  Facultad  criterios  para  la  selección  de  los   aspirantes al respectivo programa académico.       f.   Las demás que le sean asignadas por la autoridad competente.          TÍTULO T ERCERO       DE LOS ÓRGANOS DE CONTROL, DEL SISTEMA DE CONTROL INTERNO, DEL   RÉGIMEN ADMINISTRATIVO Y DE LA JUNTA DE LICITACIONES                  \n26    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                CAPÍTULO I       DEL CONTROL FISCAL Y ÓRGANOS DE CONTROL        ARTÍCULO  41.  FUENTES  DE  CONTROL.     El  control  a  la  gestión  y  los  resultados   de sde lo fiscal, administrativo, judicial, disciplinario y académico, será ejercido por los   organismos que determine la Constitución y la Ley.       Todas las personas que tengan a su cargo o bajo su cuidado bienes o valores de   la  Institución  responden  por  su  cus todia  y  buen  manejo.  Sin  perjuicio  de  la   responsabilidad  penal,  civil,  administrativa  y  patrimonial  que  les  incumba  por  su   conducta,  son  responsables  fiscalmente  por  mermas,  daños  o  pérdidas  que   aquellos sufran, provenientes del mal uso o negligencia en su   administración.        Corresponde  a  la  máxima  autoridad  de  la  Institución  la  responsabilidad  de   establecer y desarrollar el Sistema de Control Interno, según la Ley.  Este Sistema   debe adecuarse a la naturaleza, la estructura y la misión de la Institución.        El  Consejo  Directivo  puede  establecer  un  Sistema  de  Veeduría  para  evaluar  las   gestiones financiera, académica y administrativa de la Institución.       ARTÍCULO  42.    SISTEMA  DE  CONTROL  INTERNO.     Corresponde  a  la  máx ima   autoridad de la Institución   la responsabilid ad de establecer y desarrollar el sistema   de  Control  Interno,  según  lo  previsto  en  la  ley.  No  obstante,  la  aplicación  de  los   métodos  y  procedimientos  al  igual  que  la  calidad,  eficiencia  y  eficacia  del  control   interno, también será de responsabilidad de los   jefes de cada una de las distintas   dependencias  y ,     en  general,  deberá  estar  presente  en  todas  las  actuaciones  de   los funcionarios de la Institución.          CAPÍTULO I I       DEL RÉGIMEN JURÍDICO DE LOS ACTOS Y CONTRATOS Y DE LA JUNTA DE   LICITACIONES       ARTÍCULO  43.     S alvo  disposición  legal  en  contrario,  los  actos  administrativos  que   emita  la  Institución  para  el  cumplimiento  de  sus  funciones,  están  sujetos  al   procedimiento  gubernativo  contemplado  en  el  Código  De  Procedimiento   Administrativo y de lo Contencioso Administr ativo y en las normas que lo modifiquen,   sustituyan o adicionen.  La competencia de los jueces para conocer de ellos y de los   demás actos, hechos y operaciones que realicen, se rigen por las normas de dicho   Código.      \n27    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                ARTÍCULO  44.  NOTIFICACIÓN  Y  PUBLICACIÓN  DE  LOS  ACTOS   ADMINISTRATIVOS.    Los actos  administrativos  que  expida  la Institución,  generales   o  particulares,  serán  obligatorios  y  oponibles,  siempre  que  se  realicen  conforme  al   procedimiento  establecido  en  el  Código  de  Procedimiento  Administrativo  y  de  lo   Contencioso Administrativo.       ARTÍCULO 45. RECURSOS .   Salvo disposición legal en contrario, contra los actos   administrativos  proferidos  por  el  Consejo  Directivo,  el  Rector  y  el  Consejo   Académico,  solo  procederá  el  recurso  de  reposición  y  con  él  se  agota  la  v ía   gubernativa.  Sin  embargo,  el  acto  administrativo  mediante  el  cual  el  Rector   imponga a un Docente una suspensión mayor de seis (6) meses, o de destitución,   o una sanción de expulsión a un alumno, será apelable ante el Consejo Directivo.       Contra  los  actos     administrativos  proferidos  por  las  demás  autoridades  de  la   institución, procede el recurso de reposición ante quien haya proferido el acto y el   de apelación ante su inmediato superior.       ARTÍCULO 46. RÉGIMEN CONTRACTUAL.  El régimen contractual de la Instit ución   se  ceñirá  a  lo  dispuesto  en  la  L ey  80  de  1993,  la  Ley  1150  de    2007  y  demás   disposiciones legales que lo reglamenten, modifiquen, adicionen o sustituyan.       ARTÍCULO  47 .     CONTRATOS .     Los  contratos  que  celebre  la  Institución  estarán   sujetos a los requisito s de aprobación y registro presupuestal por parte del Director   Administrativo  de  la  Gestión  Financiera  de  la  Institución  y  en  ellos  deberá   estipularse  que  los  p agos  a  que  se  obliga  la  entidad     quedan  subordinados  a  las   apropiaciones que se hagan en el respe ctivo presupuesto.       En  ningún  caso  se  podrá  autorizar  o  contraer  obligaciones  imputables  a   apropiaciones inexistentes  o en exceso de saldo disponible   antes de la aprobación   del  crédito  adicional  o  traslado  correspondiente.  No  se  podrán  expedir  actos   admini strativos para legalizar obligaciones contraídas por fuera del presupuesto o   en exceso del valor de las apropiaciones vigentes.       Para su validez, además de los requisitos propios de la contratación, requiere para   su perfeccionamiento de las firmas de las p artes y apropiación de pólizas, cuando   así lo exija la ley.       ARTÍCULO  48.  JUNTA  DE  ADQUISICIONES  Y  LICITACIONES.    La  Junta  de   Adquisiciones y Licitaciones se encuentra integrada por:        a.   El Rector o su delegado como Presidente, y quien solo tendrá voz.        b.   Los  Vicerrectores.   \n28    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   c.   El Secretario General.        d.   El  Jefe de la Oficina Asesora Jurídica .         e.   El  Director Administrativo de la Gestión Financiera.        En desarrollo de sus funciones, podrá ser invitada toda persona por cualquiera de   los miembros para un evento  específi co , quien participará con voz y sin voto.       PARÁGRAFO  PRIMERO .     La  Secretaría  de  la  Junta  será  ejercida  por  quien  la   misma Junta designe.       PARÁGRAFO     SEGUNDO .     La  Junta  de  Adquisiciones  y  Licitaciones  se  reunirá al   menos una (1) vez por semana en hora y día es tablecidos a través de acta en la   primera  reunión  del  año,  la  cual  se  llevará  a  cabo  la  primera  semana  hábil  del   mismo. Así mismo, podrá ser convocada de manera extraordinaria por cualquiera   de los miembros de la Junta.       ARTÍCULO  49.  FUNCIONES.    Son  funcion es  de  la  Junta  de  Adquisiciones  y   Licitaciones:        a.   Revisar las necesidades de contratación de la Institución.       b.     Verificar que la necesidad que se pretende contratar esté incluida dentro del   Plan Anual de Adquisiciones.        c.   Recomendar  el  adelantamiento  de  la  co ntratación  según  las  necesidades   evidenciadas.        d.     Velar  por  el  cumplimiento  de  los  principios  y  actuaciones  contractuales,  de   conformidad con lo establecido en la Ley 80 de 1993, la Ley 1150 de 2007 y   las demás normas que las sustituyan complementen.        e.   Las  demás  que  se  le  asignen  conforme  a  las  normas  legales  y   reglamentarias.       PARÁGRAFO.   La  responsabilidad  de  la  dirección  y  manejo  de  la  actividad   contractual  y  la  de  los  procesos  de  selección  será  del  Rector,  que  no  podrá   trasladarla  al  Consejo  Directivo,  a    la  Junta  de  Licitaciones  y  Adquisiciones,  a  los   Comités Asesores ni a los organismos del Control y Vigilancia, tal como lo dispone   el numeral 5o. del Artículo 26 de la Ley 80 de 1993.      \n29    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                CAPÍTULO  III       DEL RÉGIMEN ADMINISTRATIVO       ARTÍCULO 50.   Para lograr una   administración eficaz, corresponde al Rector adoptar   procedimientos  apropiados  de  planeación,  programación,  dirección,  ejecución,   evaluación y control de las actividades de la Institución.       ARTÍCULO  51.    Corresponde  al  Rector  adoptar  los  sistemas  de  planea ción,  de   bibliotecas  e  información  científica,  de  información  estadística,  de  admisiones,   registro  y  control  académico,  de  administración  financiera,  de  administración  de   personal, de adquisiciones y suministros, de almacenes e inventarios, administración   de  planta  física  y  de  control  interno,  necesarios  para  su  adecuado  funcionamiento,   de conformidad con las normas legales vigentes sobre la materia.       ARTÍCULO  52.   El  presupuesto  de  la  entidad  deberá  sujetarse  a  las  normas   contenidas en la Ley 30 de 1992 y a   los principios generales de la Ley Orgánica del   Presupuesto Nacional, y el Acuerdo Municipal de Presupuesto para vigencia.       ARTÍCULO  53.     El  presupuesto  de  funcionamiento  deberá  atender  las  normas  que   rigen tal materia.       Todas  las  disposiciones  en  materia  presupuestal  deberán  ceñirse  a  las   prescripciones  contenidas  en  el  reglamento  interno  expedido  por  el  Consejo   Directivo,  el  cual  regula  el  sistema  presupuestal:  programación,  elaboración,   presentación,  aprobación,  modificación  y  ejecución,  en  consonancia  c on  las   normas legales que regulan la materia.       En  armonía  con  los  principios  generales  establecidos  en  las  normas  legales   vigentes,  el  Consejo  Directivo  expide  el  Reglamento  del  Presupuesto  de  la   Institución,  al  cual  deben  sujetarse  la  elaboración  y  la  eje cución  del  presupuesto   anual.       ARTÍCULO 54.   En cumplimiento de lo establecido en el Artículo 118 de la Ley 30 de   1992, por lo menos el dos por ciento (2%) del presupuesto de funcionamiento de la   entidad  se  destinará  para  atender  adecuadamente  el  bienestar    universitario.  La   Institución    igualmente  destinará  al  menos  el  dos  por  ciento  (2%)  de  sus  ingresos   corrientes al fomento y desarrollo de programas de investigación.         Se  entiende  por  ingresos  corrientes  los  que  tienen  el  carácter  de  regulares  y   ordinarios .    En  la    Institución    están  constituidos  por  aquellos  derechos  pecuniarios   que provienen de un servicio regular ofrecido por la  Institución   y por los aportes y las   participaciones que se reciben de acuerdo con las normas legales.   \n30    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   ARTÍCULO  55.     En  la  elabora ción  del  presupuesto  se  atenderá  el  principio  del   equilibrio  presupuestal  y,  por  lo  tanto,  no  podrán  incluirse  partidas  de  ingresos   inciertos o que provengan de operaciones de crédito no aprobadas definitivamente.       ARTÍCULO  56.     La  ejecución  presupuestal  de berá  hacerse  sobre  la  base  de  los   acuerdos  de  obligaciones  y  de  ordenación  de  gastos  que,  para  el  efecto,  expida  el   Consejo Directivo.             TÍTULO  CUARTO       DEL PERSONAL DOCENTE,   ADMINISTRATIVO   Y   DE LOS ESTUDIANTES       CAPÍTULO I       DEL PERSONAL DOCENTE Y ADMIN ISTRATIVO       ARTÍCULO 57. DEL PERSONAL DOCENTE.   El profesor es la persona nombrada   o contratada como tal para desarrollar actividades de Docencia, de Investigación,   de Extensión y Proyección Social, y de Administración Académica, de acuerdo con   la  distribuci ón  consignada  en  su  plan  de  trabajo,  y  constituye  un  elemento   dinámico  para  la  formación  integral  de  los  estudiantes;  es  un  funcionario  público   comprometido con la solución de los problemas sociales que coadyuva, dentro de   la  autonomía  universitaria,  a  la  prestación  de  un  servicio  público,  cultural  e   inherente  a  la  finalidad  social  del  Estado.    Para  efectos  administrativos  está   adscrito  a  uno  de  los  Departamentos,  Institutos  o  Escuelas  constitutivos  de  una   Facultad, bajo la dependencia del Decano respectivo .         El profesor se constituye en guía para que el estudiante logre su meta educativa;   procura  que  éste  sea  sujeto  activo  en  el  descubrimiento  y  adquisición  de  los   conocimientos; con su trabajo, ejemplo y orientación a los alumnos colabora en la   preservaci ón  de  un  ambiente  que  permita  el  cumplimiento  de  la  función  de  la   Institución.       El  personal  docente  se  regirá  por  el  Estatuto  Docente  que  para  el  efecto  expida  el   Consejo  Directivo,  de  conformidad  con  las  disposiciones  establecidas  en  la  Ley  30   de 1992 y d emás normas aplicables.       PARÁGRAFO .     El  Estatuto  Docente  contendrá,  entre otros aspectos, el  régimen de   vinculación  y  promoción,  las  categorías,  el  retiro  y  las  demás  situaciones   administrativas;  los  derechos,  las  funciones  y  las  obligaciones  correspondient es  a  \n31    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                cada  categoría  y  dedicación;  las  inhabilidades  e  incompatibilidades;  un  sistema  de   evaluación  integral  y  periódico  del  desempeño;  el  régimen  disciplinario;  las   distinciones  y  los estímulos académicos  y económicos, en función  de  la excelencia   académica ;  y  las  condiciones  y  los  procedimientos  para  la  renovación  de  la   vinculación del profesor.       ARTÍCULO 58.  Los profesores de la Institución podrán ser de dedicación exclusiva,   tiempo completo, de medio tiempo y de cátedra. La dedicación del tiempo completo   a la Institución será de cuarenta (40) horas laborales semanales.       El  personal  docente  se  regirá  por  el  Estatuto  Docente  que  para  el  efecto  expida  el   Consejo  Directivo,  de  conformidad  con  las  disposiciones  establecidas  en  la  Ley  30   de 1992 y demás normas a plicables.       Ningún  funcionario  del  Estado,  de  tiempo  completo,  podrá  ser  nombrado  como   docente de igual dedicación, salvo las excepciones consagradas en la Ley.       ARTÍCULO  59.     DEL  PERSONAL  ADMINISTRATIVO.  DEFINICIÓN.    El    p ersonal   a dministrativo  está  conforma do  por  quienes  son  nombrados  para  desempeñar   funciones  administrativas  y  demás  labores  requeridas  para  el  funcionamiento   institucional.       De acuerdo con las funciones del cargo, el vínculo del personal administrativo con   la  Institución  podrá  ser:  de  libre  n ombramiento  y  remoción,  de  carrera   administrativa, o trabajadores oficiales.          Son  empleados  de  libre  nombramiento  y  remoción  quienes  desempeñen   cargos de dirección, supervisión, conducción y orientación institucional, cuyo   ejercicio implique adopción de po líticas o directrices.       Son  empleados  de  carrera  aquellos  que  se  encuentren  inscritos  en  ella  de   conformidad con las normas legales vigentes.       Son  trabajadores  oficiales  quienes  desempeñen  labores  de  construcción  y   sostenimiento de obras públicas.       Todo el p ersonal administrativo de la Institución se rige por el Reglamento Interno   de  Trabajo  y  por  toda  la  normativa  que  regula  el  Régimen  Laboral  de  la   Administración Pública.       PARÁGRAFO  PRIMERO .  Lo dispuesto en este artículo se aplicará sin perjuicio de   las sit uaciones jurídicas individuales consolidadas conforme a derecho.       PARÁGRAFO SEGUNDO.   Lo dispuesto en este artículo se aplica sin perjuicio de   los  derechos  individuales  consagrados  en  Convenciones  Colectivas  de  Trabajo  y  \n32    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                Laudos  Arbítrales,  siempre  y  cuando  el  servidor  permanezca  vinculado  a  la   Institución en el oficio que ocupe al entrar en vigencia el presente Estatuto.       ARTÍCULO 60. ESTATUTO DEL PERSONAL ADMINISTRATIVO.   El Estatuto del   Personal  Administrativo  será  exped ido  por  el  Consejo  Directivo  y    contie ne,  entre   otros  aspectos,  el  régimen  de  vinculación  y  promoción,  las  categorías,  el  retiro  y   las  demás  situaciones  administrativas;  los  derechos,  las  obligaciones,   inhabilidades  e  incompatibilidades  según  el  tipo  de  vinculación;  y  el  régimen   disciplinario,   de conformidad con las normas vigentes. Está basado en criterios de   selección, de ingreso y de promoción por concurso, y en la evaluación periódica y   sistemática del desempeño.       PARÁGRAFO.     Las  personas  que  presten  sus  servicios  a  la  Institución  en  forma   o casional o por el tiempo de ejecución de una obra o contrato no forman parte del   personal administrativo y su vinculación se hace por contrato de ejecución de obra   o de prestación de servicios.         Sólo  se  podrá  hacer  nombramientos  para  cargos  con  vacancia  temporal  o   definitiva  contemplados  en  la  planta  de   personal.  El  nombramiento  en   contravención de lo dispuesto en este artículo es ilegal y puede ser decl arado nulo   por  la  jurisdicción  c ontencioso    administrativa.    La  autoridad  nominadora  deberá   declarar  la  i nsubsistencia  tan  pronto  tenga  conocimiento  de  la  ilegalidad  de  un   nombramiento, so pena de incurrir en causal de mala conducta.       En todo caso ,   le serán aplicables las normas contenidas en los Decretos 2400 de   1968, 2045 de 1969, 1042 y 1045 de 1978, Ley 6 1 de 1987, Ley 190 de 1995, Ley   200 de 1995, Ley 443 de 1998 y demás normas que los reglamenten, modifiquen   o adicionen.          CAPÍTULO  II       DE LOS ESTUDIANTES       ARTÍCULO  61.    La  Instituci ón  Universitaria  Pascual  Bravo    será  accesible  a  los   estudiantes  que  demuest ren  poseer  las  capacidades  y  calidades  requeridas  y   cumplan  con  las  condiciones  académicas  exigidas;  sin  discriminación  de  sexo,   raza, etnia, condición económica, política y social.       ARTÍCULO  62.    El  estudiante  de  la  Institución  es  la  persona  que  tiene  matr ícula   vigente  en  un  programa  de  educación  para  el  trabajo  y  el  desarrollo  humano,   programa académico de pregrado o de posgrado, ligado al engrandecimiento de la   Institución, mediante una respuesta positiva a su compromiso con el conocimiento,  \n33    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                en  el  marco  d e  los  principios  rectores  del  quehacer  institucional.  La  calidad  de   estudiante se pierde o se suspende en casos específicamente determinados.       Al  matricularse,  el  estudiante  se  compromete  por  escrito  a  respetar  y  cumplir  las   normas de la Institución.        La  Institución asegura a sus estudiantes el derecho al estudio y brinda los medios   adecuados para su pleno ejercicio, de acuerdo con las posibilidades económicas y   administrativas, por medio de sus programas académicos y recursos docentes; el   campus  de  la  Ins titución  es  el  espacio  donde  el  estudiante  construye  su  propia   identidad  y  se  ubica  como  individuo  en  un  entorno  físico,  social  y  cultural.  Les   reconoce  el  derecho  de  organizarse  para  participar  en  la  vida  universitaria,  en  el   marco del respeto de la opini ón ajena, de la pluralidad de posiciones y análisis, y   del  ejercicio  de  estos  derechos  en  condiciones  de  acatamiento  a  los   procedimientos de la democracia.       Los  estudiantes  se  regirán  por  el  Reglamento  Estudiantil  expedido  por  el  Consejo   Directivo,  de  conf ormidad  con  las  disposiciones  establecidas  en  la  Ley  30  de  1992   así como por los reglamentos internos que expida el Rector tendientes a procurar el   bienestar general de la Institución.       El Reglamento Estudiantil incluirá como mínimo los siguientes aspectos : requisitos   de  inscripción,  de  admisión  y  de  matrícula;  derechos  y  deberes;  distinciones  e   incentivos; y régimen disciplinario y académico.       ARTÍCULO  63.   Las  sanciones  aplicables  a  los  estudiantes  son  de  carácter   académico  y  disciplinario.  Se  notificarán    de  acuerdo  con  lo  que  se  disponga  en  el   Reglamento Estudiantil.       ARTÍCULO 64.   El recurso de apelación solo procede cuando se trate de la sanción   de  expulsión,  de  acuerdo  con  los  procedimientos  que  establezca  el  Reglamento   Estudiantil.       En  los  demás  casos,    solo  procede  el  recurso  de  reposición.  Si  la  expulsión  es   impuesta por el Rector, la apelación se surtirá ante el Consejo Directivo.          CAPÍTULO  III       DISPOSICIONES VARIAS   Y TRANSITORIAS       ARTÍCULO  65.     El  derecho  a  la  libre  asociación  será  respetado  conforme    a  la  Ley   para todos los estamentos institucionales.   \n34    Acuerdo Consejo  Directiv o  015    Por medio del cual se expide el Estatuto General de la Institución Universitaria Pascual Bravo                   ARTÍCULO 66.   El presente Acuerdo deroga en particular el acuerdo 012 del 22 de   Julio    de  2010  con  sus  modificaciones,  y  todas  las  disposiciones  que  le  sean   contrarias.       ARTÍCULO 67.   El presente Acuerdo ri ge a partir de la fecha de su expedición y una   vez  surtidos  los  trámites  señalados  en  el  parágrafo  del  artículo  29  de  la  Ley  30  de   1992       ARTÍCULO  PRIMERO  TRANSITORIO .   Para los efect os establecidos en el presente   E statuto,  mientras  se  designan  las  autoridad es  y  organismos  que  se  crean  en  el   presente estatuto, continúan en funciones los actuales organismos y autoridades.       ARTÍCULO    SEGUNDO    TRANSITORIO .     El  Consejo  Directivo  deberá  reglamentar   los aspectos que el presente Estatuto General establece en un plazo m áximo de seis   (6) meses contados a partir de su expedición.       PUBLÍQUESE   Y CÚMPLASE       Dado en Medellín,  a los   22  días   de  diciembre   de 2017                         Original firmado         Original firmado    JORGE IVAN RIOS RIVERA     JUAN PABLO ARBOLEDA GAVIRIA    Presidente           Secretario       Pr oyectó : CD   Elaboró: Berta C.   Revisó: JPAG/CD    Firma:   Firma:   Firma:      \n";
+    const PDF_NAME = "acuerdo-015-estatuto-general (1).pdf";
+    const CHATBOT_THEME = "Chatbot Estatuto General";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué establece el Artículo 1 al expedir el Estatuto General de la Institución Universitaria Pascual Bravo?","¿Cuál es la naturaleza jurídica, el nombre y el domicilio de la Institución según el Artículo 2?","¿Cuál es el objeto institucional descrito en el Artículo 3 y mediante qué actividades se realiza?","¿Qué requisitos y calidades se exigen para ser representante de los docentes en el Consejo Directivo?","¿Qué condiciones deben cumplir los estudiantes para ser elegidos como representantes (promedio crédito, sanciones y vínculo laboral)?","¿Cómo se elige el representante del sector productivo y qué experiencia mínima se exige?","¿Cómo se determina la elección del Rector y qué período tiene según el apartado de “Elección y período”?","¿Cuáles son funciones clave del Rector, por ejemplo sobre ejecución de planes y coordinación técnico-financiera?","¿Qué atribuciones tiene el Comité Curricular frente a la estructura curricular y sus recomendaciones?","¿Qué fuentes de control se contemplan en el Artículo 41 y quiénes ejercen el control sobre la gestión y resultados?","¿Qué regulan los artículos sobre actos administrativos: procedimiento, notificación y publicación, y su oponibilidad?","¿Qué dispone el Estatuto sobre los estudiantes (definición, derechos y deberes) y qué recursos proceden frente a sanciones como la expulsión?"];
+    const INITIAL_PALETTE = {"primaryColor":"#5230e8","secondaryColor":"#7559ed","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#5230e8","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

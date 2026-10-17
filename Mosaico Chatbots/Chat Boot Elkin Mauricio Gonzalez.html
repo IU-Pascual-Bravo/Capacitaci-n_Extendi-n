@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Texturizado en superficies de Contacto (Elkin Mauricio gonzalez Montoya)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Texturizado en superficies de Contacto (Elkin Mauricio gonzalez Montoya)</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "   Efecto de la superficie de la textura en el rendimiento de cojinetes   deslizantes en estado hidrodinámico       El uso de superficies texturizadas con diferentes formas de microcavidades (texturas) y en   diferentes ubicaciones de la zona de textura puede ser    un método eficaz para mejorar el   rendimiento de los rodamientos. El presente estudio examina la influencia de la ubicación   de  la  textura  en  el  rendimiento  de  los  cojinetes  hidrodinámicos.  Los  resultados  teóricos   demuestran  que  las  características  más  impor tantes  pueden  mejorarse  mediante  una   disposición adecuada de las texturas en de la superficie de contacto .    La tribología es una ciencia que abarca el estudio de la fricción, el desgaste, la lubricación   y  la  mecánica  de  contacto,  y  permite  comprender  las  interacciones  de  la  superficie  y   proponer  soluciones  para  los  problemas  esenciales.  La  expansión  de  las  aplic aciones   tribológicas,  habitualmente  desde  la  maquinaria  industrial  hasta  las  aplicaciones   microscópicas, ha reavivado la importancia de la mecánica de contacto,  y  el interés en este   campo. Los cojinetes hidrodinámicos se utilizan con frecuencia en una gama   más amplia   de  aplicaciones  y  mecanismos.  Muchos  trabajos  [1 - 14]  se  han  dedicado  a  estudiar  la   influencia  de  la  rugosidad  en  la  hidrodinámica ,   en  el  rendimiento  de  los  cojinetes   hidrodinámicos  La  conclusión  fue  que  la  rugosidad  influye  en  el  rendimiento  de  los   rodamientos.   La  rugosidad  de  los  rodamientos  hidrodinámicos  puede  deberse  a  la   presencia de polvo, aditivos   en el lubricante y el desgaste, mientras que la rugosidad puede   ser aleatoria o   determinista.    La  rugosidad  determinista  que  se  conoce  como  textura  superficial   se  introdujo   deliberadamente  en  los  rodamientos  con  la  ayuda  de  técnicas  de  microfabricación.     El   texturizado de la superficie reclama cada vez más atención y   s e espera que el tratamiento   de la superficie reciba cada vez más atención y que sea un componente importante en los   futuros rodamientos  estructurados ,   de   la estructura de los cojinetes, tal y como demuestran   los autores  [15,16]. Por  medio de esta  nueva tecnología  (texturización de superf icies por   láser   texturización de la superficie [17], grabado químico [18], nueva técnica de tratamiento    [19], etc.), es posible producir microgeometrías controladas   (texturas) en las superficies de   los rodamientos para mejorar el rendimiento tribológico   global, incluida la reducción de la   fricción, la   mejora de la fiabilidad, el aumento de las condiciones de vida y   el consumo de   energía.  Tonder     [20]  señaló  que,  al  introducir  series  de  espinillas     o  rugosidad  en  la   superficie de deslizamiento, se genera una p resión adicional   y, por tanto, una mayor carga,   lo que también ha sido confirmado por Cupillardetal .   [24]. Kovalchenkoetal. [21] demostró   que  el  texturizado  con  láser     amplía  los  parámetros  de  contacto  en  términos  de  carga  y    Siripuram  y  Stephens  [22]  presentan  un  estudio  numérico  de  los  efectos  de  las   microaspere z as con diferentes   formas en la lubricación de superficies deslizantes cuando   se  encuentran  películas  hidrodinámicas.  El  coeficiente  de  fricción  mínimo  para  todos  los   escapes  que  se  ha  encontrado  en  una  proporción  de  0,2  en  el  caso  de  las  esperanzas   positivas y de 0,7 en el  caso de las esperanzas n egativas.   Algunos otros estudios recientes   [23 - 29] han establecido que  geometrías   y control , como la profundidad, anchura, número   de texturas y ubicación de  estas   influyen en   el rendimiento del rodamiento.   \n   En otros estudios [30 - 33], se han resuelto las ecuaciones de Navier - Stok para el flujo entre   dos superficies paralelas, una lisa y otra lisa.   para el flujo entre dos superficies paralelas,   una  lisa  y  otra  que  tiene  un  hueco  en  la  superficie.     Los  estudios  han  demostrado  que  el   efecto  de  la  presión     efecto  generador  de  presión  en  la  textura  de  la  superficie  en  el   funcionamiento de la película podría ser el resultado de la inercia convectiva.   La viscosidad   piezoeléctrica  puede  desempeñar  un  papel  importante  en    los  contactos  lubricados  con   mucha carga.   Por lo tanto, en las regiones de convergencia local   la presión puede ser mayor   que la caída de presión en las regiones divergentes.   Arghiretal. [30] han demostrado que   las ecuaciones de  N avier - Stokes   son inadecuadas para predecir la presión acumulada con   la presencia de   con la presencia de una mayor rugosidad, ya que los efectos de la inercia   pueden ser más importantes. Este hallazgo fue confirmado posteriormente por Sahlinetal.   [31] también   presentó un estudio sobr e la optimización de la geometría.   Kraker etal. [32], la   utilización de una secuencia de Reynold para estudiar los efectos   de la textura será válida   si  el  espesor  de  la  película  es  mayor  que  el  mínimo     de  la  película  del  lubricante  en  la   lubricación por película líquida.   Cupillard   et al. [33] han comprobado que el mecanismo de   la presión acumulada en una   brecha convergente entre las dos superficies de deslizamiento   y  la textura es     es similar  a la obtenida con la variación de convergencia para  superficies   lis as.   El mismo autor [34] descubrió que existe una profundidad de textura óptima, mayor   que la profundidad crítica, se produce una zona de recirculación global.   Por encima de esta   profundidad, se produce una zona de recirculación global, lo que provoca una pérdida de   capacidad  de  carga.     En  los    contactos  hidrodinámicos  no  cavitados     donde  se  cumple  la   hipótesis de Reynolds, Buscagliaetal. [35,36]   ha demostrado que la textura completa tiene   un impacto negativo tanto en la elevación hidrodinámica como en la viscosidad.   Los efectos   positivos  de  la  textura     observados  en  los  deslizadores  paralelos  de  textura  completa  se   explican mediante dos teorías.   La primera considera los fenómenos de cavitación como la   fuente de estos efectos.   La primera considera que los fenómenos de cavitación son la fuente   de  est os  efectos  positivos     de  hoyuelos  crea  una  alternancia  de  regiones  de  película   convergentes y divergentes   en la que la presión varía entre un valor positivo en las regiones   lubricadas  y  la  presión  de  vaporización  en  las  regiones  cavitadas.     En  consecuencia,  se   obtiene  un  resultado  globalmente  positivo  [37].  Otra  teoría  sugiere  que  la  capacidad  de   carga     generada  en  las  correderas  paralelas  de  textura  fina  se  debe  a  los  efectos  de  la   inercia     (inercia  convectiva)  [30].  Recientemente  se  ha  demostrado  que  esta  teo ría  es   inexacta y que los efectos de la inercia tienen, en general, una   influencia negativa sobre el   rendimiento hidrodinámico [38].   Por consiguiente, la cavitación es el principal mecanismo    que  conduce  al  aumento  de  la  elevación  y  a  la  reducción  de  la  fricción  observados   Recientemente, Dobrica   et   al. [39]    concluyen que:    La  texturización  completa  no  puede  generar  una  elevación  hidrodinámica  en  los   deslizadores  paralelos,   excepto  cuando  los  hoyuelos  se  colocan  en  la  entrada  del   deslizador  (el  levantamiento  generado  es  mínimo).     En  los  deslizadores  convergentes   inclinados hacia el plano, la texturización completa tiene efectos negativos.    En  los  deslizadores  convergentes  inclinados,  la  texturización  completa  tiene  efectos   negativos.   En   los deslizadores paralelos parcialmente texturizados, el efecto positivo de la   textura es   debido al mecanismo de cavitación, el flujo de entrada aumenta y se desarrolla  \nuna  lubricación  completa  a  cierta  distancia  del  borde  principal.  Pero  en  las  correderas   convergentes,  la  cavitación  tiene     l a  influencia  de  la  cavitación  es  mínima  (afecta  a  una   pequeña parte del contacto).    La influencia de la cavitación es mínima (afecta a una pequeña parte del contacto ).   En   los   deslizadores paralelos, el inicio del texturizado parcial en la entrada genera un significativo   levantamiento  dinámico.     En  los  deslizadores  inclinados  hacia  el  plano  con  una  baja   convergencia global de la película, el texturizado parcial proporciona pequeñas mejoras de   rendimiento.   En los deslizadores de alta convergencia, el texturizado parcial tiene un efecto   mínimo.   En los deslizadores de alta convergencia, el texturizado tiene un efecto mínimo.    Diferentes investigadores han adoptado distintos modelos de rugosidad superficial (modelo   de rugosidad aleatoria, modelo sinusoidal, modelo de hoyuelos, etc.) para concluir que la   rugosidad  o  textura  de  la  superficie  mejora  el  rendimiento  del  rodamiento.  E n  varios   estudios se ha intentado determinar los parámetros óptimos de texturización que minimicen   la fricción o maximicen el espesor de la película de fluido (lo que equivale a maximizar la   capacidad de carga). Una de las conclusiones que se desprenden de   estos estudios es que   el texturizado parcial conduce a un mejor rendimiento que el texturizado completo. Por lo   tanto,  en  el  presente  trabajo  se  utiliza  la  textura  superficial  determinista  para  estudiar  la   influencia  de  la  ubicación  de  las  texturas  en  la    superficie  del  cojinete.  El  análisis  de  la   superficie, utilizado en la lubricación hidrodinámica, requiere declaraciones detalladas de la   superficie; una malla refinada de ésta y una importante potencia de cálculo. Se utiliza un   enfoque numérico para dar u na descripción del efecto de la ubicación de las texturas sobre   las  características  más  importantes  en  un  cojinete  hidrodinámico.  Mediante  una  sabia   elección de la disposición de las texturas en una de las superficies del cojinete, se puede   mejorar su rend imiento. La superficie del cojinete está texturizada con hoyuelos cilíndricos.    2. Formulación del problema    En un problema de lubricación hidrodinámica, las ecuaciones de gobierno en una región   de lubricación hidrodinámica completa pueden ser descritas por la conocida ecuación de   Reynolds.   Para las coordenadas cartesianas, cuando   el espesor de la película lubricante h   está en la dirección del eje y   (Fig. 1)    la  presión  en  la  película  lubricante  para  un  gorrón  que    funciona  en  estado  estacionario  se  rige  por  la  siguiente   ecuación   [40]:       En la ecuación (1), P es la presión del lubricante, h es el   espesor de la película. La ecuación (2) describe el espesor   de la película h que puede escribirse como sigue.       Es  un  hecho  conocido  que  el  espesor  de  la  película   lubricante          o  el  rodamiento  liso  (sin    texturas)     depende     de  la  distancia  radial  C,  de  la  relación   \nde excentricidad   ɛ   y la posición angular Ꝋ .   En la ecuación anterior,  es la variación   del espesor de la película debida a la superficie texturizada   (Fig. 1b).  Las condiciones de   contorno, conocidas como condiciones de contorno de   Reynolds,  se  utilizan  para  determinar  la  zona  de   ruptura  de  la  película.  Consisten  en  garantizar  que      en los límites de ruptura de   la película lubricante.    En el caso del presente estudio   el rodamiento funciona   en  condiciones  estables ,  la  fuerza  aplicada  F  es   constante.  Los  parámetros  se  calculan  para  una   excentricidad fija    La  carga  total   W   (soportado  por  el  contacto)  se  calcula   integrando  el  campo  de  presión  a  lo  largo  de  la  superficie  de   contacto  del    cojinete  de  deslizamiento,  entonces  el  ángulo  de   actitud   φ  es obtenido (Fig. 1a).   La capacidad de carga se calcula   a partir de la integración de la presión que actúa sobre el eje.       El  par  de  fricción    ζ 1     en  el  cojinete  y    ζ 2     en  el  rodamiento  se  obtienen,  respectivamente,   integrando las tensiones de cizallamiento   τ   a lo largo de la superficie del  cojinete (y=0)  El   flujo axial del fluido se obtiene por integración de la componente de la velocidad del fluido   en  la  dirección  axial     z,    y  a  través  de  la    sección  de  películas   Todas   estas   características  se  calculan  numéricamente.  Los  detalles  de  los  cálculos  se  presentan  en   [40].      2.1. Forma de la textura    La forma de la textura utilizada en este estudio es cilíndrica. Como se muestra en   Fig. 2, rx,   ry   y rz ,  son las dimensiones de la textura, respectivamente   en las direcciones de los ejes   x,y,z  En el caso de la geometría de hoyuelos cilíndricos   tenemos  rx=rz=r   y la ecuación de   la geometría está definida por   Las coordenadas  del  centro de la textura    O C    se  anotan     (x c ,y c ,z c )    Est e  centro  se  encuentra  en  la  superficie  de l    rodamiento, haciendo   y c =0  La profundidad en el punto   M ( Ꝋ , z )   en la superficie de la textura   se   define en   ∆ h   (Fig. 1b).      ∆ h = ∆ z    \n2.2. Resolución de la ecuación de Reynolds :    La  determinación  de  la  presión  en  la  película  de   lubricante  requiere  la  resolución  numérica  de  la   ecuación  (1)  mediante  el  método  de  las  diferencias   finitas.  El  método  de  resolución  más  habitual,   utilizado  aquí,  es  el  de  Christopherson  [41].  La   resolución  de los sistemas lineales obtenidos tras la   discretización  se  realiza  mediante  el   método  iterativo  de  Gauss - Seidel.  El   uso de un método iterativo para la resolución se justifica por la aplicación de las   condiciones  de  contorno  de  Reynolds.     La  presión  es  la    única  incógnita,  mientras  que  la   excentricidad viene dada   ( e.g.   según la diferencia entre la fuerza dada   F  y  la   comput ada W   en  el  paso de iteración anterior )  Esto implica que la ecuación   (1)  es la   única  que  se  utiliza  para  formar  el  sistema  de  ecuaciones  final  para  obtener     P    También   deben  cumplirse  las  condiciones  de  cavitación  Para  un  régimen  estacionario,  el   procedimiento  computacional consiste en dar valores iniciales a la excentricidad   El campo   de presión se obtiene verificando la condición de  convergencia de   la   presión   en  cada punto   nodal i de la superficie de apoyo , l a carga soportada W y el ángulo de la actitud del cojinete    φ  se  calculan.  Se  comparan  la  carga  calculada  y  la  carga  fija  externa  F;  el  proceso  se   detiene cuando la condición de convergencia de la carga   se  satisface. Si no se cumple este   control de errores, se actualiza el valor de excentricidad y se repite el proceso de cálculo.    3. Resultados y discusiones .    Muchos  investigadores  (Tonder  [20],  Cupillardetal.  [24,33],   Dobrica   y  Fillon  [38],   Dobricaetal.  [39],  etc.)  han  utilizado  el  concepto     de  textura  superficial  en  forma  de  micro   rug osidades   o microcavidades   y llegaron a la conclusión de que éstas son las responsables   de  influir  en  el  espesor  de  la  película  lubricante.  Se  ha  observado  que  el  espesor  de  la   película lubricante aumenta con la textura negativa. La excentricidad es un   factor importante   en el diseño de rodamientos con textura. Cupillardetal.   [24] han observa do   un aumento del   coeficiente de fricción   en las relaciones   de excentricidad bajas y altas para la configuración   del  hoyuelo    usando  ( r=4  mm  y  h min /d=0.05)     hay  una  gama  de  radios  de  excentricidades   ( de sde   0,37 a 0,75 )  para el que se obtiene una mejora del coeficiente de fricción para un   cojinete de deslizamiento.   La excentricidad, que se mantiene en 0,60 (corresponde a una   carga  externa  aplicada  de  12.600  N).  Se  puede  observar  que  las  curvas  de  presión     se   mantienen siempre por debajo de la curva de presión  en el   caso   del cojinete   liso.       3.1. Condiciones de cálculo    En la Fig. 2 se muestra un modelo texturizado en 3D.     La  forma  de  los  hoyuelos  se  ha  elegido  como  circular,  ya  que  es   relativamente fácil de realizar. Un hoyuelo se caracteriza por su radio   (r)  y  profundidad  (ry)    como  se  muestra  en    Fig.  1b.     Un  parámetro   adimensional que surge es la relación entre el espesor mínimo de la   película y la profundidad del hoyuelo ,   S=h min /r y .     \n   Se  analizan  las  superficies  de  apoyo  con  texturas  cilíndricas  para  el  cojinete  de   deslizamiento mostrado en   la  Fig. 1 a .   La  superficie de los rodamientos está texturizada   y   en  estado    estacionari o    ( ω 2 =0)    mientras  la  superficie  del    jinete     es  suave  y     en movimiento    ( ω 1 ≠0)  Sólo  se  estudia  una  mitad  del  sistema  de  cojinetes  de  deslizamiento  debido  a  la   simetría del cojinete. Se utilizan mallas uniformes. Los mismos parámetros geométricos y   condiciones de funcionamiento estudiados por Vincent et al. [42] se utilizan aquí para    las   simulaciones.    Para obtener resultados independientes de la malla,   la  malla  utilizada  debe  ser  de  calidad  fina.  La   resolución  de  la  malla  utilizada  para  el  caso  liso  es   similar a la utilizada para los casos con hoyuelos. Los   valores de los parámetros importantes en un co jinete   de deslizamiento lubricado se calculan y se resumen en  la tabla 1.       El tamaño de la malla   ( NꝊ x NZ)   y las precisiones   se imponen a la presión P y   a la carga transportada   W calculada.  Los resultados se obtienen para seis combinaciones   de   tamaño de malla y precisiones   Se observa que los valores calculados   se estabilizan a   partir del caso 3   Cuando la precisión   aumenta   caso (4,5 y 6)  , el tiempo de computación se   incrementa  considerablemente,   pero  l os  resultados  siguen  siendo  los  mismos.  La   configuración  4  se  mantuvo  para  la  continuación  del  estudio .  P ara  los  resultados  que  se   presentan a continuación, las precisiones de convergencia de las pruebas utilizadas para   los cálculos de la presión   P y de carga W  ɛ p =10 - 4   y  ɛ w =10 - 5   respectivamente,  El tamaño de   la malla utilizada es de 891 nodos en la dirección circunferencial y 142 nodos en la dirección   axial.   En un trabajo reciente [43], hemos encontrado que para distribuciones específicas de   textura en la superficie del rodamiento y con una mayor de nsidad de asperidad, la textura   tiene más influencia en las características de contacto .   Las texturas   son de forma cilíndrica    con profundidad   r y   y radio r  (Fig. 2).   Como se muestra en la Fig. 3   los hoyuelos se colocan   en el centro de la celda de la  textura y las distancias entre las texturas   son  a= 46.8 micras   y  b=  50  micras     Durante  todo  el  estudio,  las texturas se  distribuyen de forma que  ocupen   todo el espacio que se les reserva, lo que corresponde   a una densidad máxima, como se muestra en las figuras   4,  6  y  7.  La  densidad  o  fracción  de  área  de  la  textura,   definida como la fracción del área de la textura   ( π r 2 )  en   el área de una célula unitaria   (Lx x Lz)   se acerca a 0,51    (en el caso   1  Ntx=80 y Ntz=25 ;  Lx= 2.47   mm   y  L z = 2. 50   mm     La  densidad  es  igual  a    0,51 ).    El  tamaño  de  malla  \nutilizado (891 x 142) permite obtener un número de 10 nodos por textura en las direcciones   circunferencial   axial, respectivamente.      3.2. Validación    En relación con el cojinete de deslizamiento con superficies lisas (sin  texturas), se calculan   las  características  de  contacto  más  importantes  (Tabla  2).  Los  resultados  obtenidos   mediante el código de cálculo de   autores [29], se comparó con los calculados por Vincent   et al. [42] en el caso de un cojinete de deslizamiento sin texturas. Se encuentra una muy   buena  concordancia  entre  los  resultados  de  los  dos  estudios.  La  mejora  inducida  por  el   texturizado de la super ficie se evaluará con respecto al rendimiento del cojinete base sin   texturas.   \n  \n             \nSegún De Kraker   et al. [32] los principales parámetros de textura son la relación  S  entre el   espesor de la película h min   y la profundidad del hoyuelo     r y ,   en nuestro estudio   h min =11.96   micras   (Table 2)   El uso de una ecuación de Reynolds para estudiar los efectos de la  textura   será válido si una relación   S  <  1 existe Esto se   verifica aquí para  r y > 11.96 micras .   Para el resto   de  este  estudio,  un  hoyuelo  cilíndrico  con   dimensiones   r=1mm  (radio  del  cilindro)    r y =0.015mm     (altura  del  cilindro)  se  considera    (S=0.8).          3.3. Resultados    Aquí,  la  textura  cilíndrica  (r=1  y  r y =0,015  mm)  se  utiliza  para     investigar  el  efecto  de  la   distribución  de  la  textura  en  las  características.  La  relación de  concentricidad  es  de  0,60   (rodamiento con carga media).   Las coordenadas circunferenciales  y 1 , y 2   y las coordenadas   axiales     z 1 ,    z 2     delimitan  la  zona  de  textura  en  la  superficie  del    rodamiento     ( Fig.  4).  Se   consideran 25 casos  según la disposición geométrica     de   las  texturas  en  la  superficie  de  los  cojinetes.  La  tabla  3    resume  las  características  más  importantes  calculadas   para todos   estos casos (el espesor mínimo de la película   h min , el par de fricción  ζ ,   el flujo de la película de fluido Q,   el  ángulo  de  inclinación    φ ,  la  presión  máxima     P máx     y  su   posición  angular    Ꝋ m ,  y  por  último  el  inicio  de  la     zona  de   cavitación  θ e ) .          \nLos resultados correspondientes de la Tabla 4        muestran  la  variación  de  la  presión  máxima,  el  espesor  mínimo  de  la  película,  el  par  de   fricción, el flujo de la película y el ángulo de  ruptura para los 25 casos en comparación con   los  valores  del  caso  liso  (caso  0).     La  mejora  de  las  características  del  cojinete  de   deslizamiento  consiste  en  aumentar  el  espesor  mínimo  de  la  película  (tener  una  mejor   capacidad  de  carga  hidrodinámica),  disminuir  el  par  de  fricción  (reducir  la  pérdida  de   energía por fricción), mejorar la r egión de presencia de la película de lubricante (tener una   mejor distribución de la presión), y mantener el mismo valor del flujo de la película de fluido   (mantener inalterado   el valor del suministro de lubricante).  La configuración de la textura 25   da los mejores resultados en comparación con todos los demás casos , el espesor mínimo   de la película se incrementa en un 1,8% aproximadamente, el par de fricción se reduce en   un 1% aproximadamente. El espesor mínimo de la película, el par de fricción, el flujo de la   película, la presión máxima y el comienzo de la zona de   rotura se comparan con el caso   liso en la Tabla 4.     La Fig. 5 muestra la evolución del espesor mínimo de la película, el par de fricción, el flujo   axial y el ángulo de ruptura de la película de fluido para los 25 casos de disposición. Para   algunos casos, en los que las texturas se sitúan totalmente en la pa rte descendente de la   presión (casos 13 - 16 y 19 - 25), el espesor mínimo de la película aumenta, el par de fricción   disminuye  y  la  presión  máxima  se  reduce  bastante  (máx.    - 1,9%).  La  presión  disminuye   sensiblemente,  sin  embargo,  las  prestaciones  de  los  rodami entos  se  mejoran  desde  la   reducción de la zona de cavitación (el límite de la zona de ruptura se expande hasta+5,6%)   en  el  contacto  hidrodinámico.  Estas  configuraciones  contienen  una  textura  situada  en  la   segunda  parte angular  del  rodamiento  (más allá de 1 80 ° ),  en la parte descendente  de la   curva de presión.   La texturización de la región de salida del contacto, situada en la parte   descendente del campo de presión, permite un mejor suministro de la zona de cavitación   por parte de la película de fluido. En co nsecuencia, se observa una pequeña disminución   de la presión máxima (hasta el 1,9%), del flujo de la película de fluido (hasta el 0,8%) y del   par  de  fricción  en  el  contacto  (hasta  el  1%).  La  ampliación  de  la  región  de  la  película   completa  en  un  5,6%  (que  c orresponde  a  la  reducción  de  la  zona  cavitada)  mejora  la  \ndistribución  del  campo  de  presión,  la  capacidad  de  transporte  y  el  espesor  mínimo  de  la   película en un 1,8%. El efecto colectivo de los hoyuelos en la película parcial   e l texturizado   da una película media convergente equivalente entre la región de máxima presión y la zona   de cavitación.   Para los casos 17 y 18 (relación de excentricidad igual a 0,60 y S=0,8), las   texturas se sitúan en la primera mitad angular del cojinete (entre 0 °   y 180 ° ). Corresponden   a  disposiciones  del  área  de  las  texturas  en  la  región  d e  máxima  presión.  Para  estas   configuraciones, el par de fricción aumenta aproximadamente un 12,6%, el espesor mínimo   de  la  película  disminuye  aproximadamente  un  25,6%,  la  presión  máxima  aumenta   aproximadamente  un  10,6%  y  la  zona  de  fluido  de  la  película  co mpleta  disminuye   aproximadamente un 3,8%. La configuración 17 da un fuerte aumento de la presión máxima   (+10,6%), pero se observa una reducción significativa del espesor de la película ( - 19,1%) y   un  aumento  considerable  del  par  de  fricción  (+8,8%).  El  aume nto  de  la  presión   hidrodinámica máxima (Fig. 6) no conduce automáticamente a una mejora del rendimiento   del cojinete de deslizamiento.   En los demás casos (casos 1 - 12), el valor del espesor mínimo   de la película disminuye, el par de fricción aumenta, la presión máxima aumenta y la zona   de película completa permanece relativamente constante. Estas configuraciones contienen   una  textura  situa da  en  la  primera  parte  angular  del  rodamiento  (dentro  de     180°).  Las   texturas están situadas en la entrada del contacto (c erca de los fluidos y antes de los 45°)   para los casos 10 - 12, en la parte ascendente del campo de presión ,   para los casos   7 - 9, en   la parte ascendente y en la región de presión máxima ,   para los casos 4 - 6 y ocupaban la   totalidad de la superficie del cojinete para los casos   1 - 3.   Las configuraciones 1 a 12 afectan   negativamente a las características del rodamiento. La texturización de la región de entrada   de contacto (casos 10 a 12) tiene un efecto modesto y negativo sobre las prestaciones del   rodamiento; +0,1% para la presión máxi ma,  - 0,2% para el espesor de la película, y no se   observa ningún cambio en el par de fricción y el ángulo de ruptura. Por otro lado, el flujo de   la película de fl uido se ve perturbado negativamente y disminuye alrededor de un 2,5%, lo   que perturba el suministro de la zona de cavitación por parte del fluido de la película. Para   los casos de 1 a 9, se observa lo mismo, sólo que las variaciones son más destacadas. La   variación más importante se observa en los casos 1 y 4, que corresponden al mallado de la   totalidad del rodamiento y de la primera mitad de éste (dentro de los 180°), respectivamente.   El texturizado de la totalidad de la superficie del rodamiento (caso 1),   de la mitad de éste   (caso  4)  o  de  una  parte  (caso  7)  puede  dar  lugar  a  una     reducción  consiguiente  de  las   prestaciones  del  cojinete  de  deslizamiento  (Fig.  5).    El  caso  25  muestra  que  es  posible   mejorar el rendimiento. Esto confirma la importancia de una buena distribución angular de   la zona texturizada en la superficie del cojinete. La Fig. 6 muestra la variación del espesor   mínimo de la película y la presión par a cuatro casos de distribución de las texturas en la   superficie desarrollada del cojinete. Se pue de observar claramente la forma cilíndrica de la   textura, su distribución en la superficie de contacto y la posición angular del espesor mínimo   de  la  película  (correspondiente  al  pico  de  presión)  (cerca  de  150°).  Los  25  casos  de   configuración de las textur as en la superficie desarrollada del rodamiento se ilustran en la   Fig. 7. Esta imagen permite la visualización en 2D de todos los casos representativos de   disposiciones de áreas de texturas (todos los casos están resumidos en la Tabla 3).      \n   4. Conclusión    Se ha desarrollado un modelo numérico basado en el método de las diferencias finitas para   estudiar la influencia de la distribución de texturas en la superficie de apoyo de un cojinete   de deslizamiento hidrodinámico sometido a una carga estacionaria. Se su pone que el eje   es liso y rígido mientras que la superficie del cojinete está parcial o totalmente texturizada   con forma cilíndrica. Se han considerado diferentes disposiciones de la zona texturizada.   La  presencia  de  una  cavidad  (textura)  aumenta  localment e  el  espesor  de  la  película  de   lubricante  y  disminuye  la  fuerza  de  fricción.  El  texturizado  completo  parece  ineficaz  para   generar capacidad de carga hidrodinámica en el contacto por los efectos de la cavitación.   El texturizado parcial puede generar elevaci ón hidrodinámica en el rodamiento, cuando la   textura  está  situada  en  la  parte  declinante  del  campo  de  presión  de  contacto.  Para  una   textura  profunda  (S<1)  y  con  una  relación  de  excentricidad  de  aproximadamente  0,6,  la   mayor mejora del rendimiento del cojin ete de deslizamiento se observa cuando se texturiza   la segunda parte angular del cojinete (más allá de 180°), en la parte descendente del campo   de  presión.  La  superficie  texturizada  afecta  positivamente  a  la  zona  de  cavitación  al   aumentar la región de flui do de película completa. En el caso complejo de un cojinete de   deslizamiento, con zonas convergentes (presión hidrodinámica) y divergentes (cavitación),   el  texturizado  parcial  tiene  un  efecto  positivo  mínimo  y  el  texturizado  completo  tiene  un   efecto negati vo.  El diseño óptimo del área de texturización depende en gran medida de los   parámetros  geométricos  y  de  las  condiciones  de  funcionamiento  del  cojinete  de   deslizamiento.   \n";
+    const PDF_NAME = "Efecto de la superficie de la textura en el rendimiento de cojinetes deslizantes en estado hidrodinámico.pdf";
+    const CHATBOT_THEME = "Texturizado en superficies de Contacto (Elkin Mauricio gonzalez Montoya)";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué es la tribología y qué fenómenos estudia en el contexto de cojinetes deslizantes?","¿Cómo se relaciona la rugosidad superficial con la hidrodinámica y el rendimiento del rodamiento?","¿En qué se diferencia una rugosidad/textura aleatoria de una textura superficial determinista introducida deliberadamente?","¿Qué técnicas de microfabricación se mencionan para producir microgeometrías controladas en las superficies de los cojinetes?","¿Por qué introducir texturas puede generar presión adicional y aumentar la carga en el contacto?","¿Qué mecanismo se considera principal para explicar el aumento de elevación y la reducción de fricción (cavitación vs inercia convectiva)?","¿Qué diferencia de resultados se reporta entre texturizado completo y texturizado parcial en deslizadores paralelos y convergentes?","¿Cuál es la formulación del problema en lubricación hidrodinámica: qué papel cumple la ecuación de Reynolds y cómo se definen P y h?","¿Qué parámetros geométricos describen un hoyuelo cilíndrico (radio y profundidad) y cómo se define el parámetro adimensional S = hmin/ry?","¿Cómo se justifica el uso de un enfoque numérico (malla refinada y alta potencia de cálculo) para estudiar la influencia de la ubicación angular de las texturas?","¿Qué criterios de desempeño se comparan entre el caso texturizado y el caso liso (espesor mínimo, par de fricción, presión máxima, flujo y ángulo de ruptura)?","Según las conclusiones, ¿en qué zona angular del campo de presión es más favorable el texturizado parcial (p. ej., más allá de 180°) y cuándo puede ser ineficaz o negativo el texturizado completo?"];
+    const INITIAL_PALETTE = {"primaryColor":"#29cf17","secondaryColor":"#21a612","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#29cf17","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

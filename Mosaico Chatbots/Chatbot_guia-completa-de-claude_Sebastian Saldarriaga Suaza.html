@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: guia-completa-de-claude</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>guia-completa-de-claude</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "de 0 a 100 Guía completa de UNA GUÍA DE:  De dónde surge, cómo entrar a  Claude por primera vez, plan gratuito  vs. de pago, modelos, versión web vs.  app, funcionamiento básico.  Introducción a Claude Claude  MirenAGK  Proyectos, artefactos, estilos,  memoria, conectores, skills, plugins,  cowork, tareas programadas,  dispatch, Claude en Chrome, Claude  Code y Claude Design.  Funcionalidades avanzadas  Cómo evitar quedarte sin  créditos en Claude y cómo usar  los comandos para explotar todo  el potencial de Claude.  Trucos extra \n   Guía   completa   de   Claude   ¡Hey!   👋       Gracias   por   descargarte   la   guía   completa   de   Claude.   Mi   nombre   es   Miren    Agirregomezkorta   Iza   y   te   enseño   a   usar   la   IA   en   tu   trabajo   de   forma   sencilla   y    práctica ,   para   que   ahorres   tiempo,   dinero   y   esfuerzo.   Si   sientes   que   el   mundo   de    la   inteligencia   artificial   evoluciona   demasiado   rápido,   tranquilo:   estoy   aquí   para    ayudarte   a   ponerte   al   día   con   la   IA.       Esto   es   todo   lo   que   aprenderás:       1.   Introducción   a   Claude .......................................................................................................... 2    Un   poco   de   cotilleo:   qué   es   Claude   y   de   dónde   surge ........................................................... 2    Cómo   entrar   a   Claude   por   primera   vez ........................................................................................... 3    Pagar   o   no   pagar,   esa   es   la   cuestión ................................................................................................ 4    Los   modelos   actuales:   ¿cuál   necesitas? .......................................................................................... 6    Versión   web   vs.   app   de   escritorio .......................................................................................................... 7    Funcionamiento   básico   de   Claude .................................................................................................... 8       2.   Funcionalidades   avanzadas   de   Claude ......................................................................... 9    Proyectos:   carpetas   para   organizar   tu   trabajo .......................................................................... 9    Artefactos:   entregables   listos   para   descargar ........................................................................... 11    Estilos   de   escritura   para   que   Claude   hable   como   tú ........................................................... 15    Memoria:   lo   que   Claude   aprende   sobre   ti .................................................................................... 16    Conectores   que   llevan   Claude   a   tus   apps .................................................................................... 18    Skills   o   habilidades:   cómo   tiene   que   trabajar   Claude ....................................................... 20    Plugins:   paquetes   de   skills   listos   para   instalar ......................................................................... 23    Cowork:   Claude   actúa   en   tu   ordenador ....................................................................................... 25    Tareas   programadas .................................................................................................................................. 27    Dispatch:   controla   Claude   desde   tu   móvil .................................................................................. 28    Claude   en   Chrome ....................................................................................................................................... 29    Claude   Code:   la   baza   ganadora ......................................................................................................... 31    Claude   Design:   la   herramienta   para   diseñadores ................................................................ 33       3.   Trucos   extra ..........................................................................................................................   34    Cómo   evitar   quedarte   sin   créditos   en   Claude .........................................................................   34    Comandos   para   explotar   todo   el   potencial   de   Claude ...................................................... 36          Espero   que   esta   guía   te   ayude   mucho.   ¡Un   abrazo!       Miren   😊    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     2   \nIntroducción    a Claude Nivel 1: Principiante \n   1.   Introducción   a   Claude    Un   poco   de   cotilleo:   qué   es   Claude   y   de   dónde   surge    Claude   es   el   asistente   de   IA   creado   por   Anthropic ,   una   empresa   fundada   en    2021   por   ex-miembros   de   OpenAI   (sí,   los   de   ChatGPT).             Dario   Amodei   era   el   Vicepresidente   de   Investigación   en   OpenAI   (básicamente,    uno   de   los   cerebros   detrás   de   GPT-3),   y   su   hermana   Daniela   era   la   Vicepresidente    de   Política   y   Seguridad.   O   sea:   ambos   estaban   en   puestos   clave,   viendo   cómo   se    cocinaba   el   futuro   de   la   IA.   Y   entonces...   decidieron   largarse.   Pero   no   solos.   Se    llevaron   con   ellos   a   un   tercio   del   equipo   de   investigación   de   OpenAI .       ¿El   motivo?   Los   Amodei   defendían   un   enfoque   mucho   más   cauteloso   y    consideraban   que   OpenAI   (y   ChatGPT)   estaba   avanzando   demasiado   deprisa   sin    gestionar   bien   los   riesgos.   Además,   en   esos   momentos   OpenAI   estaba    negociando   su   relación   con   Microsoft   y   otras   iniciativas   para   ganar   mucha   pasta.    Los   fundadores   de   Anthropic   pedían   que   se   pensara   más   en   el   bien   público   y   la    gobernanza   responsable.       Si   a   esto   le   sumas   que   Claude   es   una   alternativa   potentísima   a   ChatGPT   y   que    en   los   últimos   meses   ha   sacado   novedades   aún   más   avanzadas ...   Creo   que    podrás   entender   por   qué   hay   tanta   gente   migrando   a   esta   herramienta   🤭 .       Así   que   dejémonos   de   historias   y   vayamos   al   grano.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     4   \n   Cómo   entrar   a   Claude   por   primera   vez    Fácil.         1.     Ve   a   https://claude.ai/   y   crea   tu    cuenta .   Puedes   vincular   tu   Gmail    o   introducir   tu   dirección   de   correo    electrónico   para   recibir   un   código    de   verificación.         2.     Te   preguntará   qué   plan   quieres    utilizar:   gratuito   o   de   pago.   Te    explico   cuál   elegir   en   el   próximo    apartado.       3.     Desactiva   la   función   de   mejorar   a    Claude .   ¿Por   qué?   Si   tienes   el    botoncito   activo,   tus   chats   podrán    utilizarse   para   reentrenar   los    modelos   de   IA   de   Claude.   No   te    interesa.   Desactiva   el   botón   para    proteger   tu   información.          Por   cierto:   si   ya   usas   Claude   desde   hace   tiempo,   puedes   desactivar   esta   función    en   Ajustes   >   Privacidad   >   Ayudar   a   mejorar   Claude                   Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     5   \n   Pagar   o   no   pagar,   esa   es   la   cuestión    Actualmente,   estos   son   los   planes   que   tienes   disponibles   para   particulares:          Si   eres   una   empresa,   tienes   aún   más   posibilidades:          Así   que   es   normal   que   te   preguntes...   Miren,   ¿qué   tengo   que   hacer?   Aquí   van    algunos   consejos:    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     6   \n   Comparativa   de   planes   de   Claude:    Plan     Precio   /   mes     Lo   mejor   que   tiene     Para   quién     Cuándo   subir   de   nivel    Free     0   €     •   Claude   Sonnet   4.6    •   Artefactos   (Word,   Excel,   PPT)    •   Búsqueda   web    •   Probadores    •   Uso   ocasional    •   Sin   datos   sensibles    Cuando   te   quedes   sin   mensajes    2+   veces/semana    Pro     18   €     •   Límites   más   altos    •   Claude   Opus   (cerebrito)    •   Deep   Research    •   Profesionales   autónomos    •   Uso   diario   intenso    Cuando   quieras   usar   Claude   en    Excel   o   PowerPoint   /   Uso    intensivo    Max     90   €     •   Opus   ilimitado    •   Claude   en   Excel   y   PowerPoint    •   Analistas   de   datos    •   Diseñadores    Cuando   necesites   gestionar   un    equipo   o   compliance    Team     17   €   o   85   €    por   usuario    •   Panel   de   admin   +   factura   única    •   Espacios   compartidos    •   RGPD,   mayor   seguridad    •   Equipos   5-50    •   Agencias,   startups    •   Departamentos    Cuando   superes   50   users   o    necesites   SSO/compliance    avanzado    Enterprise     20   €   usuario    +   tarifas   API    •   RGPD,   mayor   seguridad    •   Región   datos   custom    •   Soporte   24/7    •   +50   empleados    •   Sectores   regulados    •   Banca/Salud/Legal    —    ✅   Empieza   con   el   plan   gratuito .   Paga   cuando   empieces   a   frustrarte   por   el   límite   de   uso   y   necesites   más.    ✅   Elige   la   opción   de   pago   mensual .   El   pago   anual   conlleva   un   descuento,   sí.   Pero   el   mundo   de   la   IA   evoluciona   tan   rápido    que,   tal   vez,   en   unos   meses,   Claude   se   haya   quedado   atrás   y   prefieras   invertir   tu   dinero   en   una   nueva   herramienta.    ✅   Ten   en   cuenta   que   no   incluyen   impuestos .   Por   ejemplo,   si   eliges   el   plan   Pro   de   18   €   y   le   sumas   el   IVA,   terminas   pagando    unos   21   €,   que   es   muy   parecido   a   lo   que   pagarías   por   ChatGPT,   Gemini   u   otras   alternativas.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     7   \n   Los   modelos   actuales:   ¿cuál   necesitas?    Bien,   antes   de   nada,   aclaremos   qué   es   un   modelo .   Para   ello,   vamos   a   utilizar   la    metáfora   de   un   coche.   Cuando   te   pones   a   conducir,   utilizas   el   volante,   la   palanca    de   cambios,   los   pedales,   etc.   para   manejar   lo   que   hace   el   vehículo.   Pero,   debajo    del   capó,   hay   algo   sin   lo   que   el   coche   no   se   movería   ni   un   centímetro:   el   motor.       En   las   herramientas   de   IA   ocurre   lo   mismo:   tenemos   una   interfaz   con   la   que    interactúa   el   usuario   (los   botones,   barras   y   todos   los   elementos   de   la   web   que    utilizas).   Pero   debajo   del   capó,   hay   algo   sin   lo   que   Claude   no   funcionaría:   los    modelos.   Es   decir,   los   modelos   son   el   motor   que   hace   funcionar   a   las    herramientas   de   IA .       E,   igual   que   en   los   coches   tenemos   motores   más   o   menos   potentes,   eléctricos   o    de   gasolina,   en   las   herramientas   de   IA   también   podemos   elegir   entre   diferentes    modelos.   En   caso   de   Claude,   tenemos   tres   motores/modelos   principales :    Modelo     Velocidad     Capacidad     Cuándo   usarlo     Consumo    Haiku   4.5     ⚡⚡⚡    Rapidísimo    💡      Tareas    simples    Consultas   rápidas,    emails,   resúmenes    cortos    €    Sonnet   4.6     ⚡⚡      Rápido    💡   💡    Equilibrado    Uso   diario,    documentos,   análisis    estándar    €€    Opus   4.7     ⚡      Más   lento    💡   💡   💡    Máxima    potencia    Análisis   complejos,    código   avanzado,    investigación    €€€       En   la   práctica:   El   90%   del   tiempo   usarás   Sonnet   (es   el   que   viene   por   defecto).   Solo    cambias   a   Opus   cuando   necesitas   algo   realmente   complejo,   y   a   Haiku   cuando    solo   quieres   respuestas   rapidísimas.   Puedes   cambiar   el   modelo   desde   la   barra   de    prompts:          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     8   \n   Versión   web   vs.   app   de   escritorio    Si   es   la   primera   vez   que   entras   a   Claude,   mi   consejo   es   que   utilices   su   versión    web .   Funciona   en   cualquier   navegador   y   es   perfecta   para   empezar,   accesible    desde   cualquier   sitio.       Ahora   bien:   en   esta   guía   encontrarás   funcionalidades   avanzadas   que   solo   están    disponibles   si   descargas   su   versión   de   escritorio   y,   en   concreto,   activas   el   modo    Cowork   (te   cuento   más   sobre   ello   más   adelante).   Aquí   tienes   los   links   de   descarga,    tanto   para   Windows   como   para   Mac .         Funcionalidad     Web    (claude.ai)    App    escritorio    Notas    Proyectos     Sí   ✅     Sí   ✅     –    Artefactos     Sí   ✅     Sí   ✅     –    Estilos     Sí   ✅     Sí   ✅     –    Memoria     Sí   ✅     Sí   ✅     –    Conectores     Sí   ✅     Sí   ✅     –    Skills     Sí   ✅     Sí   ✅     –    Plugins     ❌   No     Sí   ✅     –    Cowork     ❌   No     Sí   ✅     –    Tareas    programadas    ❌   No     Sí   ✅     –    Dispatch     ❌   No     Sí   ✅     –    Claude   en    Chrome    🟡   Parcial     Sí   ✅     Haz   clic   en   “ Añadir   a   Chrome ”    Claude   Code     ❌   No     Sí   ✅     Link   de   descarga   especial:    https://claude.ai/code/family      Claude   Design     ✅   Sí     ❌   No      (por   ahora)    Link   de   uso   especial:    https://claude.ai/design         💡   Consejo :   no   te   líes.   Empieza   con   la   versión   web   y,   poco   a   poco,   irás    descubriendo   las   funcionalidades   avanzadas.   Cuando   llegue   el   momento,   podrás    descargar   la   aplicación   de   escritorio   para   seguir   avanzando.      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     9   \n   Funcionamiento   básico   de   Claude    Mira,   te   seré   sincera:   si   estas   leyendo   esta   guía,   intuyo   que   ya   has   usado   alguna    herramienta   de   inteligencia   artificial   previamente,   aunque   sea   de   forma   muy   muy    principiante.   Y,   en   el   fondo,   el   funcionamiento   básico   de   Claude,   ChatGPT,    Gemini,   Copilot,   Grok,   DeepSeek   y   otras   herramientas   de   IA   es   muy   similar .       No   te   quiero   aburrir,   así   que   te   he   preparado   una   checklist   para   que   midas   si    conoces   los   principios   básicos   de   las   herramientas   de   IA.       ¿Sabes   utilizar   estas   funcionalidades   de   las   herramientas   de   IA?    (Da   igual   si   las   has   usado   en   Claude,   ChatGPT,   Gemini,   Copilot   o   cualquier   otra)         Enviar   un   mensaje      Buscar   información      Resúmenes   y   análisis      Adjuntar   un   fichero   (con   el   símbolo   del   clip   o   “+”)      Crear   una   imagen   (pide   que   te   cree   una   imagen)      Revisar   el   historial   de   chats       Si   has   respondido   que   sí   a   todos   los   elementos   anteriores,   enhorabuena,   estás    listo   para   pasar   al   bloque   2:   funcionalidades   avanzadas   de   Claude.   Si   no,   por   favor,    mira   este   vídeo   antes   de   seguir:       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     10   \nFuncionalidades  avanzadas de  Claude Nivel 2: Intermedio \n   2.   Funcionalidades   avanzadas   de   Claude    Proyectos:   carpetas   para   organizar   tu   trabajo    Los   proyectos   sirven   para   organizar   tus   chats   dentro   de   carpetas   temáticas.    También   podrás   añadir   instrucciones   (prompts)   y   archivos   específicos   para   ese    proyecto,   para   aportarle   mayor   contexto   a   Claude.   Además,   la   propia   herramienta     irá   generando   una   memoria   específica   del   proyecto,   con   sus   ideas   clave.       Te   lo   pongo   fácil:   si   has   usado   los   proyectos   en   ChatGPT,   puedes   saltar    directamente   a   la   próxima   sección,   porque   en   Claude   son   exactamente   iguales.             1.     Detalles :   puedes   cambiar   el   nombre   y   la   descripción   del   proyecto,   así   como    archivarlo   o   eliminarlo.    2.     Barra   de   prompts :   envía   mensajes   como   lo   harías   normalmente,   y   se   te    guardarán   automáticamente   en   el   historial   del   proyecto.    3.     Historial   del   proyecto :   puedes   ver   y   recuperar   todos   los   chats   que   has    tenido   en   ese   proyecto.    4.     Memoria :   el   propio   Claude   va   desarrollando   un   conjunto   de   ideas   que    recopilan   las   claves   de   tu   proyecto   y   sirven   de   contexto   para   futuras    conversaciones.   Esta   memoria   está   aislada   y   no   afecta   a   los   chats   de   fuera    de   tu   proyecto.    5.     Instrucciones :   puedes   añadir   prompts   específicos,   es   decir,   indicarle   a    Claude   cómo   quieres   que   actúe   cuando   estés   trabajando   en   ese   proyecto.    6.     Archivos :   te   permite   adjuntar   documentos   que   aporten   mayor   contexto   o    información   importante   relativa   al   proyecto.   Puedes   subir   archivos   desde   tu    dispositivo,   copiar   texto,   conectarte   a   GitHub   o   elegir   ficheros   de   Google    Drive.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     12   \n   💡 ¿Cuándo   deberías   utilizar   los   proyectos?      Cuando   quieras   tener   carpetas   separadas   para   tareas   muy   diferentes   entre   sí.    Por   ejemplo:   durante   varios   meses,   tuve   como   clientes   una   empresa   que   vendía    jamón,   una   aseguradora,   un   coach   empresarial   y   una   academia   de   inglés.   ¿Tú   te    imaginas   qué   lío   tendría   yo   dentro   de   mi   perfil   de   Claude,   si   mezclara   todos   estos    contextos?   Es   mucho   mejor   tener   un   proyecto   por   cada   cliente .    Hoy   en   día   mis   clientes   ya   no   son   tan   variopintos,   pero   sí   que   tengo   iniciativas    muy   diversas   dentro   de   mi   empresa:   lanzamientos   de   cursos,   desarrollo   de   nuevas    guías,   formaciones   en   empresas,   etc.   También   tengo   un   proyecto   por   cada    iniciativa   interna   diferente .       Cómo   compartir   tus   proyectos    Si   tienes   el   plan   Team   o   Enterprise   (es   decir,   un   plan   empresarial),   podrás    compartir   tus   proyectos   con   otros   miembros   de   tu   organización.    ❖     Niveles   de   permisos :    ➢     Puede   usar:   puede   chatear   en   ese   proyecto.   Puede   ver,   pero   no    cambiar,   las   instrucciones   y   los   archivos.    ➢     Puede   editar :   puede   chatear   en   ese   proyecto.   Puede   ver   Y   cambiar,    las   instrucciones   y   los   archivos.    ❖     Cómo   compartir:    ➢     A   un   solo   usuario :   le   compartes   el   proyecto   por   email.    ➢     A   varios   usuarios   a   la   vez,   usando   listas   de   email.    ➢     A   toda   la   organización :   para   que   cualquiera   lo   pueda   descubrir.          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     13   \n   Artefactos:   entregables   listos   para   descargar    Si   le   preguntas   al   propio   Claude   qué   son   los   artefactos,   te   dirá   algo   así   como:       Si   sigues   sin   tenerlo   del   todo   claro,   tranqui,   no   te   juzgo...   Vayamos   poco   a   poco:    ●     Normalmente,   cuando   chateas   con   una   IA,   tú   mandas   un   mensaje,   y   la   IA    te   responde   con   otro   mensaje.   Esto   es   texto   plano   ( plain   text ).    ●     Si   tú   le   pides   a   Claude   que   genere   algo   que   va   más   allá   de   ese   texto   plano,    entonces   te   creará   un   artefacto.    ●     Los   artefactos   se   pueden   descargar   en   un   solo   clic   y   se   guardan   en   la    carpeta   de   artefactos ,   en   la   barra   lateral   izquierda.       ¿Qué   tipo   de   artefactos   puedes   crear?    ¡De   muchos   tipos!   Y,   como   sé   que   un   ejemplo   vale   más   que   mil   explicaciones,   te    propongo   lo   siguiente:   yo   te   proporcionaré   prompts   sencillos   que   quiero   que   tú    copies   y   pegues   en   Claude .   Al   hacerlo,   se   te   creará   automáticamente   un    artefacto   y   entenderás   mejor   de   lo   que   hablo.          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     14   \n      1.     Documento   de   texto   (.docx)    Crea     una   propuesta   comercial   para   servicios   de   consultoría   en   transformación    digital.     Cliente:     empresa     retail     de     200     empleados.     Incluye     tabla     de     precios     y    timeline.       Copia   y   pega   ese   prompt   en   Claude,   y   verás   que   Claude   dividirá   tu   pantalla   en    dos:   a   la   izquierda,   tendrás   el   chat   normal   (el   texto   plano),   pero   a   la   derecha    tendrás   el   artefacto   (un   documento   Word   maquetado   y   listo   para   descargar).       Como   ves,   en   este   caso   nos   da   la   posibilidad   de   descargárnoslo   como   un   fichero    .docx   o   de   añadirlo   directamente   a   nuestro   perfil   de   Google   Drive.             Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     15   \n   2.     Hoja   de   cálculo   (.xlsx)    Crea   una   calculadora   de   ROI   para   campañas   de   Google   Ads.   Inputs:   inversión,    CPC,   tasa   de   conversión,   ticket   medio.   Que   calcule   automáticamente   beneficio    neto.       Copia   y   pega   el   prompt   para   obtener   un   resultado   como   este:          IMPORTANTE :   te   muestro   los   resultados   de   los   artefactos   en   bruto,   tal   cual   han    salido   de   Claude.   No   olvides   que   las   herramientas   de   IA   pueden   cometer   errores   y    que   tu   criterio   humano   es   imprescindible.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     16   \n   3.     Presentaciones   (.pptx   o   fichero   en   Canva)       Presentación   de   12   slides   sobre   tendencias   del   ecommerce   2026.   Target:    directores   de   marketing.   Incluye   datos,   gráficos   y   casos   de   éxito.       4.     Código   y   aplicaciones   web   (HTML)       Crea   una   landing   page   para   un   curso   de   copywriting.   Sección   hero,   beneficios   en    3   columnas,   testimonios,   CTA   final.   Diseño   moderno   y   limpio.       5.     Diagramas   y   visualizaciones   (.png)       Crea   un   diagrama   de   flujo   del   proceso   de   aprobación   de   gastos   en   una   empresa.    Desde   solicitud   hasta   pago   final,   con   puntos   de   decisión.       Estas   son   solo   algunas   ideas   para   inspirarte   y   explorar   los   artefactos.   La   próxima    vez   que   quieras   crear   un   entregable   potente,   prueba   a   pedirle   ayuda   a   Claude,    seguro   que   te   sorprenderá   😉 .          💡   Truco   avanzado       Crear   artefactos   consume   muchos   créditos .   Por   eso,   es   mejor   que   primero    utilices   el   chat   normal,   el   de   texto   plano,   para   darle   forma   a   tu   entregable.   Una   vez    lo   tengas   claro,   es   momento   de   pedirle   a   Claude   que   genere   el   artefacto,   es   decir,    la   versión   final   descargable.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     17   \n   Estilos   de   escritura   para   que   Claude   hable   como   tú    Menuda   maravilla.   No   puedo   describir   esta   funcionalidad   de   Claude   de   orta    manera.   Los   estilos   de   escritura   sirven   para   que   Claude   utilice   un   estilo   u   otro    según   la   tarea   que   le   encomiendes.   Están   disponibles   desde   la   barra   de   prompts    (donde   escribes   los   mensajes),   pulsando   en   el   boton   “+”:             Como   ves,   de   manera   predeterminada   puede   utilizar   un   tono   normal,   de    aprendizaje,   conciso,   explicativo   o   formal.   Y   lo   mejor:   también   puedes   crear   tus    propios   estilos   personalizados .       Para   ello   puedes:    ●     Añadir   ejemplos   de   tu   escritura   desde   un   archivo   de   tu   dispositivo   →   Por    ejemplo,   que   le   subas   un   PDF   con   informes   que   hayas   escrito   previamente.    ●     Pegar   contenido   de   texto   →   Por   ejemplo,   copiando   tus   posts   de   LinkedIn    más   recientes.    ●     Describir   el   estilo   de   forma   directa   →   Por   ejemplo,   indicando   que   quieres    que   sea   profesional,   pero   sin   tecnicismos.    Yo,   por   ejemplo,   tengo   ya   añadidos   mis   estilos   de   redacción   para   la   newsletter   y    mi   perfil   de   LinkedIn   😊 .   Insisto,   pruébalo,   ¡es   una   maravilla!   Ya   estoy   harta   de   que    todos   sonemos   robóticos   y   aburridos.      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     18   \n   Memoria:   lo   que   Claude   aprende   sobre   ti    Hubo   un   tiempo   en   el   que   parecía   que   las   herramientas   de   IA   tenían   amnesia:   te    tirabas   la   mañana   entera   contándole   el   plan   estratégico   de   tu   negocio   y,   al   día    siguiente,   al   abrir   un   nuevo   chat,   debías   empezar   desde   cero.   Afortunadamente,    eso   ya   pasó   a   la   historia.       Claude   tiene   la   capacidad   de   buscar   detalles   relevantes   en   conversaciones    anteriores   y   de   generar   una   memoria   general   de   tus   chats,   para   mantener   el    contexto   y   la   consistencia   a   lo   largo   del   tiempo.       Para   asegurar   que   tienes   la   memoria   activida   (o   para   desactivarla):       1.     Identifica   perfil   en   el   menú   lateral   izquierdo.    2.     Ve   a   Ajustes   >   Capacidades   >   Memoria    3.     Confirma   que   tienes   los   dos   botones   encendidos:       Si   clicas   donde   dice   “Memoria   de   tus   chats”,   podrás   revisar   y   editar   todo   lo   que    Claude   ha   aprendido   sobre   ti   hasta   ahora.       💡   Cómo   trasladar   tu   memoria   de   ChatGPT   a   Claude       Tengo   muuuuchos   alumnos   que   se   me   quejan   de   que   llevan   ya   mucho   tiempo    trabajando   con   ChatGPT   (o   Gemini,   o   Copilot),   y   que   no   quieren   cambiarse   a    Claude   porque   “perderían   toda   la   memoria”.       Afortunadamente,   esto   no   es   así.   Claude   permite   importar   la   memoria   que    tengas   en   cualquier   otra   herramienta   de   IA :             Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     19   \n   El   proceso   es   muy   sencillo.       1.     Haz   clic   en   “ Iniciar   importación ”    2.     Copia   el   prompt   que   te   proporciona   Claude:       3.     Pega   el   prompt   en   tu   herramienta   de   IA   habitual   (por   ejemplo   ChatGPT).    4.     Copia   la   respuesta   de   la   otra   IA:       5.     Pega   la   respuesta   de   la   otra   IA   en   Claude:          ¡Y   listo!   🥳   Ya   tienes   todo   el   contexto   de   tus   conversaciones   previas   incorporado   a    Claude.   Es   posible   que   falten   algunos   detalles   que   tengas   que   añadir    manualmente,   pero   tendrás   un   borrador   muy   potente.      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     20   \n   Conectores   que   llevan   Claude   a   tus   apps    Los   conectores   te   permiten   conectar   Claude   con   tus   apps   de   siempre ,   para    extraer   su   contexto   y   actuar.   Si   te   quieres   poner   técnico,   su   nombre   oficial   es    conectores   MCP   (model   context   protocol).       Por   ejemplo:   podrías   conectar   Canva   y   pedirle   a   Claude   que   transforme   tus    apuntes   en   una   presentación,   mediante   un   artefacto,   que   siga   tu   kit   de   marca.    Mola,   ¿eh?   😏       Si   usas   ChatGPT,   esta   funcionalidad   es   igual   que   sus   aplicaciones.   En   Gemini,   son    las   aplicaciones   conectadas.       ¿Qué   aplicaciones   se   puede   conectar   Claude?      La   lista   es   larguísima,   pero   aquí   puedes   ver   las   más   populares:                      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     21   \n   ¿Cómo   puedes   conectar   tus   aplicaciones?       Puedes   acceder   al   directorio   de   conectores   yendo   a   tu   perfil   (abajo   a   la   izquierda)    >   Ajustes   >   Conectores   >   Explorar   conectores.   Un   vez   tengas   claro   qué   apps    quieras    conectar,   haz   clic   sobre   el   conector   y   sigue   su   proceso   paso   a   paso.   En    general,   es   muy   sencillo,   y   solo   te   pedirá   que   inicies   sesión   en   tu   cuenta.       ⚠   IMPORTANTE:   medidas   de   seguridad   para   los   conectores       Voy   a   decir   lo   obvio:   si   le   das   acceso   a   tu   cuenta   de   Gmail   a   Claude,   podrá   ver   todo    e   incluso   actuar   dentro   de   tu   email.   ¿Sí?   La   página   de   atención   al   cliente   de    Claude   dice   que   “todas   las   transferencias   de   datos   están   cifradas”.   A   mí   me   sigue    pareciendo   que   no   es   suficiente.   Así   que   mejor   sigue   estos   consejos:       ✅   Pide   permiso   en   tu   empresa :   por   ejemplo,   no   conectes   tu   email   de   trabajo   sin    antes   consultarlo   con   tus   supervisores   o   el   equipo   de   informática.       ✅   Desactiva   los   conectores   cuando   no   los   necesites :   puedes   hacerlo    directamente   en   la   barra   del   chat.       ✅   Gestiona   tus   conectores   para   limitar   los   permisos   que   les   das.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     22   \n   Skills   o   habilidades:   cómo   tiene   que   trabajar   Claude    Con   las   skills   o   habilidades,   la   cosa   se   pone   seria.   Esta   funcionalidad   sirve   para    enseñarle   a   Claude   cómo   tiene   que   trabajar ,   es   decir,   qué   proceso   debe   seguir    para   completar   tus   peticiones.         Sé   que   suena   un   poco   confuso.   Ya   hemos   explicado   que   en   los   proyectos   puedes    añadir   instrucciones   personalizadas,   que   puedes   indicar   tu   estilo   de   escritura   y    que   puedes   modificar   la   memoria   para   que   Claude   entienda   mejor   cómo   quieres    que   sean   sus   respuestas.         Las   skills   añaden   una   capa   adicional:   enseñan   un   proceso   de   trabajo   que   Claude    utiliza   de   forma   automática ,   siempre   que   le   encargues   una   tarea   similar.       Vamos   con   un   ejemplo:   siempre   que   diseño   algo   para   mi   empresa,   sigo   mi   kit   de    marca.   Incluye   unos   colores,   unas   tipografías,   unos   tamaños   de   letra,   etc.   Me    gustaría   que   Claude,   cada   vez   que   diseñe   algún   artefacto   para   mí,   utilice   ese   kit    de   marca.       Es   decir:   tengo   una   tarea   recurrente   con   un   proceso   definido .   En   lugar   de   tener    que   repetírselo   cada   vez   a   Claude,   he   creado   una   skill   que   se   activa    automáticamente.       ¿Se   entiende   el   concepto?   Veamos   ahora   cómo   podemos   implementarlo.       Cómo   crear   tu   primera   skill   o   habilidad    1.     Accede   al   menú   de   skills .   Abre   el   menú   lateral   izquierdo   y   ve   a    Personalizar   >   Crear   nuevas   habilidades   >   +   >   Crear   habilidad    2.     Tienes   3   opciones   para   crear   tus   skills:    a.     🟢   Fácil:   Escribe   las   instrucciones   de   la   habilidad .   Si   tienes   un    proceso   bien   documentado   (por   ejemplo,   con   un   proceso   operativo    estándar),   simplemente   haz   un   copia   pega   y   vive   feliz.    b.     🟡   Medio:   Crea   con   Claude .   Irás   chateando   con   Claude   para   aclarar    cómo   quieres   que   sea   el   proceso   y   te   guiará   en   la   creación   de   tu   skill.    c.     🔴   Difícil:   Cargar   una   habilidad .   Si   quieres   ponerte   técnico,   te   dejo    aquí   la   guía   oficial   de   Claude   sobre   cómo   crear   skills   avanzadas    desde   cero.   Te   reconozco   que   ni   yo   misma   me   aclaro,   me   parece    absurdamente   complejo   para   el   resultado   que   da.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     23   \n   En   mi   caso,   he   elegido   la   opción   de   escribir   las   instrucciones   directamente.       3.     Guarda   tu   skill.   Importante:   el   nombre   que   le   pongas   será   el   comando   de    activación.   En   mi   caso,   le   he   llamado   /marca.       Cómo   usar   tu   skill :   Simplemente,   en   cualquier   conversión   utiliza   la   barra    /NOMBRE-DE-TU-SKILL.   En   mi   caso,   basta   con   que   escriba   /marca,   y   Claude    automáticamente   recupera   toda   la   información   que   le   había   dado.       Y   este   es   el   resultado.   Como   ves,   respeta   mi   identidad   de   marca   perfectamente   :)       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     24   \n   Ahora   bien,   un   aviso   importante:   ¿recuerdas   que   antes   te   decía   que   las   skills    activan   procesos   automáticamente?   Cuando   Claude   considera   que   una   petición    que   le   has   hecho   se   podría   mejorar   con   una   de   tus   skills,   la   activa    automáticamente .       Es   lo   que   ha   ocurrido   en   este   ejemplo.   Le   he   pedido   a   Claude   que   analice   los    excels   con   las   métricas   de   rendimiento   de   mi   newsletter   en   el   último   mes   y   que    me   cree   un   informe.   No   solo   ha   utilizado   la   skill   de   /analisis-kit   (la   que   yo   le   había    pedido),   sino   que   también   ha   activado,   de   forma   automática   la   skill   de   /marca    para   crearme   el   informe:                   💡   Utiliza   las   skills   como   repositorios   de   prompts       Sinceramente,   las   skills   me   parecen   demasiado   complejas   para   lo   que   hacen.   A    veces,   resulta   más   sencillo   tener   el   proceso   documentado   en   un   PDF   y   subirlo,   sin    más,   a   la   conversación.       Peeero   hay   un   uso   que   me   encanta.   ¿Tienes   prompts   que   utilices   una   y   otra   vez?    Puedes   guardar   cada   uno   de   esos   prompts   como   una   skill ,   y   acceder   a   ellas    utilizando   los   /comandos.   Serían   una   alternativa   (un   poco   liosa)   a   los   GPTs   de    ChatGPT   o   los   gems   de   Gemini.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     25   \n   Plugins:   paquetes   de   skills   listos   para   instalar    Si   la   sección   de   las   skills   te   ha   dejado   un   poco   KO,   tranquilo,   que   tengo   buenas    noticias.   Puedes   descargar   paquetes   de   skills   o   habilidades   prediseñadas ,   sin    tener   que   tomarte   el   trabajazo   de   crearlas   tú.   Eso   son,   precisamente,   los   plugins.    Bien,   algunos   requisitos:    ●     Necesitas   descargar   la   aplicación   de   escritorio .    ●     Tienes   que   cambiar   de   la   pestaña   de   Chat    a   la   de   Cowork   (en   la   siguiente   sección   te    explico   todos   los   detalles).   Para   ello,   en   la    columna   de   la   izquierda,   busca   el    botoncito   con   el   símbolo   de   la   checklist.    ●     Ve   a   Personalizar   (Customize)    ●     Elige   la   opción   “ Explorar   plugins ”    ●     Accederás   al   directorio   de   plugins   oficial   de   Claude.       💡   Truco :   también   puedes   buscar   plugins   en   repositorios   como   GitHub   e    instalarlos   manualmente.   En   ese   caso,   asegúrate   de   que   el   desarrollador   es   fiable,    para   evitar   riesgos   de   seguridad.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     26   \n   Cuando   instales   un   plugin   (es   decir,   un   paquete   de   skills),   automáticamente   se   le    añaden   habilidades   a   tu   perfil   de   Claude ,   que   te   podrán   ayudar   en   tus   tareas   del    día   a   día.   Por   ejemplo,   si   eliges   el   plugin   de   marketing,   tendrás   skills   para    planificar   campañas,   investigar   a   la   competencia,   copywriting,   preparar    secuencias   de   email,   hacer   una   auditoría   SEO,   etc.       Para   que   nos   entendamos:   es   como   si   pudieras   descargarte   miniversiones   de    Claude   especializadas   en   diseño,   recursos   humanos,   operaciones,   ingeniería,    product   management,   legal,   productividad,   etc.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     27   \n   Cowork:   Claude   actúa   en   tu   ordenador    La   funcionalidad   cowork   le   da   acceso   a   Claude   a   tu   ordenador ,   para   poder    actuar   sobre   tus   archivos,   carpetas   y   aplicaciones.   Llevas   meses   escuchando   que    2026   será   el   año   de   los   agentes   de   IA.   Pues   cowork   es,   precisamente,   un   agente    de   IA:   no   solo   responde   a   tus   preguntas,   sino   que   también   actúa .       Con   un   ejemplo   se   entiende   enseguida:   en   cowork,   le   puedes   pedir   a   Claude   que    analice   la   carpeta   de   descargas   de   tu   ordenador,   que   identifique   los   ficheros   que    no   has   abierto   en   los   últimos   6   meses   y   que   los   borre.    También   podrías   pedirle    que   almacene   los   artefactos   que   cree   directamente   en   tu   dispositivo.       ¿Cómo   puedes   empezar   a   utilizar   el   modo   cowork?    1.     Necesitas   una   cuenta   de   pago ,   así   que   pasa   por   caja .   Sorry   😅    2.     Descarga   la   aplicación   para   escritorio.    3.     Tienes   que   ir   al   apartado   de   cowork .   Para   ello,   busca   el   símbolo   de   la    checklist   en   la   barra   lateral   izquierda.       4.     Pide   lo   que   quieras :       ●     En   el   botón   de   “ Trabajar   en   un   proyecto ”,   selecciona   la   carpeta   de   tu     dispositivo   sobre   la   que   quieres   que   trabaje.   En   mi   caso,   es   la   carpeta   de    descargas.    ●     Activa   la   opción   “ Preguntar ”   para   que   Claude   tenga   que   pedir   tu    beneplácito   antes   de   actuar.   También   tienes   la   opción   de   omitir   todas   las    aprobaciones,   lo   que   permitirá   avanzar   a   Claude   forma   más   autónoma,    pero   también   de   forma   menos   segura.    ●     El   comando   /askuserquestions   sirve   para   que   Claude   te   haga   preguntas    de   aclaración   antes   de   ejecutar   la   orden.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     28   \n      En   mi   caso,   Claude   no   eliminó   los   ficheros   directamente,   sino   que   creó   una    subcarpeta   que   yo   solo   tuve   que   eliminar.          Curiosamente,   no   necesitó   mucho   tiempo,   aunque   para   tareas   más   complejas    puede   alargarse.   Ten   en   cuenta,   asimismo,   que   el   modo   cowork   consume   más    créditos   que   el   chat   habitual.       ⚠   Cuidado :   cuando   utilizas   un   sistema   de   IA   agéntica,   como   Claude   cowork,   la    herramienta   adquiere   mayor   autónomía   (lo   que   le   permite   hacer   auténticas    maravillas   sin   tu   supervisión),   pero   también   se   expone   a   mayores   riesgos.    Consulta   la   guía   para   usar   cowork   de   forma   segura   de   Anthropic   antes   de    empezar.      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     29   \n   Tareas   programadas    Cada   lunes,   recibo   un   email   en   el   que   Claude   analiza   mi   agenda   semanal,   me    prepara   una   lista   de   eventos   y   me   indica   si   tengo   alguna   tarea   urgente   o   que    requiera   una   acción   por   mi   parte.   ¿Mola,   eh?   😏   Esa   es   la   promesa   de   la   IA:    quitarte   de   encima   tareas   repetitivas   de   forma   automática.    Las   tareas   programadas   sirven   para   que   Claude   ejecute   una   instrucción   de    forma   periódica .   Es   decir:   no   tienes   que   escribir   el   prompt   cada   vez   que   quieras    que   haga   la   tarea,   sino   que   lo   programas   una   vez,   y   listo.    1.     Ve   al   apartado   de   Cowork   en   la   app   de   escritorio   (como   te   he   explicado   en    la   sección   anterior).    2.     Clica   el   botón   “ Scheduled ”   y,   a   continuación,   “ New   task ”       3.     Rellena   los   campos.   El   más   importante   es   el   prompt   que   le   des   a   la   tarea,    ya   que   será   la   instrucción   que   utilizará   cada   vez   que   ejecutes   la    automatización.   Por   ejemplo:       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     30   \n   4.     Ten   en   cuenta   que,   para   que   la   automatización   funcione,   debes   conectar    las   aplicaciones   implicadas .         En   el   ejemplo   anterior,   necesito   que   Claude   pueda   acceder   a   mi   Google    Calendar   y   a   Gmail.   Recuerda   que   los   conectores   se   gestionan   en   el     apartado   Personalizar   (o   Customize)   >   Conecta   tus   aplicaciones.    5.     Consejo   extra:   haz   una   prueba   no   sensible .         Por   ejemplo:   no   pruebes   la   automatización   directamente   con   tu   email    corporativo,   que   contiene   información   confidencial.   Utiliza   un   email    personal   para   hacer   pruebas   y,   cuando   compruebes   que   todo   funciona    correctamente,   escálalo   al   entorno   corporativo,   siempre   con   aprobación   de    tu   equipo.       Dispatch:   controla   Claude   desde   tu   móvil    Si   utilizas   la   versión   cowork   de   Claude,   verás   que   también   tendrás   acceso   al    apartado   Dispatch   (o   despacho).   Dispatch   te   permite   enviar   mensajes   desde   tu    móvil   a   Claude   para   que   empiece   a   trabajar   en   una   tarea ,   incluso   las   más    avanzadas   que   impliquen   el   modo   agéntico   en   tu   ordenador   (como   ejemplo   que     te   he   mostrado   anteriormente   de   identificar   y   borrar   archivos   antiguos   en   la    carpeta   de   descargas   de   tu   ordenador).       Necesitarás   la   app   móvil   de   Claude   que   puedes   encontrar   en   Google   Play   o   en   la    App   Store .   Conecta   ambas   cuentas   y   ¡a   disfrutar!       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     31   \n   Claude   en   Chrome    Puedes   instalar   la   extensión   de   Chrome   de   forma   gratuita   aquí ,   clicando   el    botón   de   “Añadir   a   Chrome”.   Necesitarás   utilizar   Google   Chrome   como   tu    extensión,   no   funciona   con   Safari,   Explorer,   Edge,   Mozilla   Firefox,   etc.    A   continuación,   deberás   habilitar   la   extensión   de   Chrome   en   la   configuración   de    tu   perfil   de   Claude:       La   extensión   de   Chrome   de   Claude   habilita   dos   funciones   simultaneamente:    contar   con   un   asistente   de   IA   en   las   páginas   web   que   visites   y   permitir   que    Claude   acceda   e   interactúe   en   páginas   web .    A   simple   vista,   las   dos   funcionalidades   parecen   muy   similares,   pero   no   lo   son.    1.   Tendrás   un   chatbot   al   que   poder   hacerle   preguntas   sobre   el   contenido   que    estás   viendo   en   tus   pestañas   de   Google   Chrome .   Por   ejemplo,   en   esta   captura    estoy   leyendo   una   noticia   en   El   País,   y   le   he   pedido   contexto   adicional   a   Claude:       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     32   \n   2.   La   aplicación   de   Claude   también   podrá   entrar   en   páginas   web   e   interactuar    con   ellas .    ⚠   ESCENARIO   HIPOTÉTICO :   Imagina,   por   ejemplo,   que   le   pides   que   entre   en   tu    perfil   de   LinkedIn   y   responda   a   los   comentarios   de   tus   posts.   Claude   podría   utilizar    la   extensión   de   Chrome   para   acceder   a   tu   cuenta   y   actuar   en   tu   nombre.    Por   favor,   no   pruebes   este   ejemplo .   Quiero   que   entiendas   la   aplicabilidad   real    que   puede   llegar   a   tener   esta   tecnología,   pero   que   también   seas   consciente   de   los    riesgos   que   entraña:    a)     Le   estás   dando   acceso   real   a   tu   perfil.   Ahí   hay   muchísima   información   que    probablemente   no   quieras   regalar   a   Claude.    b)     Si   algo   sale   mal,   las   consecuencias   son   reales.   Es   tu   perfil,   así   que,   si   hubiera    algún   ataque   o   instrucción   maliciosa,   Claude   podría   enviar   mensajes   en   tu    nombre   o   publicar   posts   que   hundan   tu   reputación.      c)     A   LinkedIn   no   le   gustan   nada   las   automatizaciones.   De   hecho,   están    prohibidas.   O   sea:   si   detectan   que   estás   usando   una   IA   para   comentar,   te    expones   a   que   te   congelen   o   cierren   la   cuenta.    Por   favor,   espera   hasta   que   esta   tecnología   lleve   ya   un   tiempo   en   marcha   y   a   que    otros   metan   la   pata   para   aprender   de   sus   errores   😅 .   Eso   es   lo   que   yo   hago.       De   nuevo,   esta   funcionalidad   de   Claude   nos   aproxima   a   una   IA   agéntica   mucho    más   potente,   y   más   peligrosa.   Te   aconsejo   que   leas   la   guía   de   primeros   pasos   con    Claude   en   Chrome   y   la   guía   de   permisos   de   Claude   en   Chrome ,   de   Anthropic.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     33   \n   Claude   Code:   la   baza   ganadora    Si   habías   oído   hablar   de   Claude   antes   de   leer   esta   guía,   lo   más   probable   es   que    sepas   que   es   una   bestia   a   la   hora   de   programar   (y   que   le   da   mil   vueltas   a   las    demás   opciones).    Pero   te   soy   sincera:   yo   no   programo ,   y   sé   que   la   inmensa   mayoría   de   mi   audiencia    tampoco.   Así   que   no   quiero   enseñarte   nada   que   no   utillice   yo   misma   en   mi   día   a    día,   y   en   lo   que   no   me   desenvuelva   con   soltura.    Por   eso,   te   he   elaborado   una   lista   de   mis   recursos   favoritos   que   he   recopilado   de    varios   creadores,   para   que   aprendas   de   ellos.       1)     Cursos   gratuitos   de   Claude   Code   de   Anthropic :    Tal   vez   no   lo   sepas,   pero   Anthropic   tiene   una   academia   de   cursillos   gratuitos   para    que   aprendas   a   usar   Claude   de   forma   gratuita.   Es   verdad   que   los   contenidos   están    en   inglés,   pero   puedes   subtitular   e   incluso   traducir   los   vídeos   de   YouTube   sin    ningún   problema.    En   concreto,   te   recomiendo   dos   cursos   para   aprender   a   usar   Claude   Code:   Claude    Code   101   y   Claude   Code   in   Action .             Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     34   \n   2)     Guía   de   AI   with   Allie .    Allie   K.   Miller   es   una   de   las   voces   más   prominentes   en   divulgación   sobre   IA.    Con   experiencia   previa   en   empresas   como   IBM   y   Amazon,   ahora   se   dedica    a   integrar   sistemas   de   IA   en   el   ámbito   corporativo.    Esta   guía   me   gusta   mucho   porque   procede   de   alguien   con   MUCHA    experiencia   técnica,   pero   está   dirigida   a   gente   que   no   tiene   ninguna    experiencia   técnica.   Es   decir:   profesionales,   directivos   y   emprendedores    como   tú   y   como   yo.          3)     Videotutorial   de   Ángel   Molina       Si   necesitas   ayuda   en   español,   te    recomiendo   a   mi   colega   Ángel   Molina   que,    además   de   ser   muy   majo,   explica   la   IA   de    forma   sencilla   y   accesible,   como   a   mí   me    gusta.   Este   tutorial   te   dará   las   bases   que    necesitas   para   empezar.          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     35   \n   Claude   Design:   la   herramienta   para   diseñadores    Claude   Design   te   permite   crear   diseños,   prototipos   interactivos,    presentaciones   y   más   con   una   calidad   espectacular .   Igual   que   con   la    programación,   te   confieso   que   yo   no   me   dedico   al   diseño,   por   lo   que   no   soy   la    fuente   más   apta   para   guiarte   en   el   uso   de   esta   nueva   herramienta.      Por   eso,   una   vez   más,   te   comparto   mi   lista   de   recursos   para   aprender   a   usar    Claude   Design :       1)     Guía   oficial   de   Claude   Design ,   de   Anthropic    Empecemos   por   la   fuente   original.   En   este   artículo   aprenderás   cómo   funciona    Claude   Design,   cómo   crear   un   nuevo   proyecto,   cómo   escribir   prompts   efectivos,    cómo   iterar   en   tu   diseño   y   cómo   exportar   y   compartir   los   resultados.   Si   quieres   ir    un   paso   más   allá,   consulta   también   la   guía   para   configurar   tu   sistema   de   diseño    en   Claude   Design .       2)     Artículo   de   Alejandro   Bauer       Alejandro   Bauer   es   un   senior   product   designer   con   especialización   en   AI-native    design   systems   (o   sea:   lleva   muchos   años   trabajando   como   diseñado   y   ahora   se    ha   especializado   en   IA).   En   este   artículo   explora   las   capacidades   y   los   límites   de    Claude   Design   con   ojo   experto   y   con   mucha   honestidad.      Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     36   \nTrucos extra Nivel 3: Avanzado \n   3.   Trucos   extra    Cómo   evitar   quedarte   sin   créditos   en   Claude    Lo   confieso:   Claude   tiene   funcionalidades   muy,   muy   potentes   que   no    encontramos   en   ningún   otro   sitio   y,   poco   a   poco,   se   está   convirtiendo   en   una   de    mis   herramientas   favoritas.       Sin   embargo,   tiene   un   problema   muy   importante:   tiene   límites   de   uso   muy    escasos,   y   es   fácil   quedarte   sin   créditos   enseguida ,   incluso   en   la   cuenta   de    pago.       Anthropic   ofrece   la   posibilidad   de   comprar   créditos   extra   que   suplementen   tu    suscripción   usual.   Por   ejemplo,   yo   pago   el   plan   mensual   de   18   €,   pero   de   vez   en    cuando   compro   “bonos”   de   50   €   que   me   permiten   seguir   chateando   cuando   he    alcanzado   mi   límite.       Para   evitar   llegar   a   ese   límite   y   ahorrar   un   dinero,   sigue   estos   consejos   para   que    tus   créditos   de   Claude   duren   más .    (Nota:   esta   es   una   recopilación   de   trucos   de    Ruben   Hassid   y   Anisha   Jain ).          1.     Convierte   tus   PDFs   a   Markdown .   Ya   sabes   que   puedes   guardar   un   mismo    fichero   en   varios   formatos   (.docx,   .pdf,   .txt,   etc.).   Markdown   es   un   formato    mucho   más   ligero,   por   lo   que   a   Claude   le   cuesta   menos   esfuerzo   leerlo   y   a     ti   te   cuesta   menos   créditos.   Puedes   convertir   tus   PDFs   a   Markdown   en   esta    página   web .          2.     Planifica   en   el   chat,   crea   en   cowork .   A   lo   largo   de   esta   guía   te   he    explicado   que   hay   algunas   funcionalidades   que   solo   están   disponibles   en   el    modo   cowork   de   la   app   de   escritorio   (como   los   plugins,   dispatch,   etc.).   El    cowork   es   mucho   más   costoso   que   el   chat   normal   así   que,   antes   de    ejecutar   ninguna   tarea   avanzada,   planifícalo   todo   en   el   chat.          3.     Haz   que   Claude   te   pregunte .   No   le   envíes   prompts   superlargos   a   Claude.    Es   mejor   darle   un   prompt   breve   y   pedir   que   Claude   te   haga   preguntas   para    recabar   la   información   que   necesita.   Prueba   este   prompt:       Quiero   [TAREA]   para   conseguir   [RESULTADO].   /AskUserQuestions          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     38   \n   4.     Edita   el   mensaje,   no   envíes   uno   nuevo .   Si   Claude   no   responde   como    querías,   la   reacción   más   frecuente   es   enviar   un   nuevo   mensaje   pidiendo    correcciones.   En   lugar   de   eso,   utiliza   el   simbolo   del   lápiz   para   editar   tu    mensaje   anterior,   que   consume   menos   créditos.          5.     Agrupa   tus   tareas   en   un   solo   mensaje .   Cada   vez   que   le   mandas   un    mensaje,   Claude   relee   toda   la   conversación   desde   el   principio   antes   de    responderte.   Por   tanto,   si   mandas   tres   mensajes   seguidos,   Claude   hace   tres    relecturas   completas.   La   solución   obvia:   pide   varias   cosas   en   un   solo    mensaje.          6.     Abre   un   nuevo   chat   cada   15-20   mensajes .   La   lógica   es   la   misma   que   en   el    punto   5.   Si   Claude   lee   todo   el   hilo   de   conversación   con   cada   nuevo    mensaje,   cuanto   más   larga   sea   la   conversación,   más   créditos   consume.   Así    que,   cuando   lleves   un   rato,   escríbele:   \"Resume   toda   esta   conversación   en    un   briefing   breve.\"   Copia   ese   resumen   →   abre   un   chat   nuevo   →   pégalo   como    primer   mensaje.   Contexto   conservado,   historial   resetado.          7.     Elige   el   modelo   según   la   tarea .   Recuerda   que   tenemos   diferentes   motores    dentro   de   Claude.   Elige   sabiamente:    ●     Haiku   →   el   económico,   para   tareas   simples    ●     Sonnet   →   el   equilibrado,   para   la   mayoría   de   cosas    ●     Opus   →   el   potente   (y   caro),   para   análisis   complejos   y   trabajo   profundo          8.     Usa   Proyectos   para   archivos   que   reutilizas.   Si   subes   el   mismo   documento    a   5   chats   distintos,   Claude   lo   procesa   5   veces.   5x   el   coste.   Si   subes   el   archivo    a   un   proyecto,   se   procesa   una   sola   vez,   y   todos   los   chats   dentro   de   ese    proyecto   lo   leen   sin   volver   a   procesarlo   desde   cero.          9.     Desactiva   lo   que   no   estás   usando .   Claude   tiene   funciones   extra   que    consumen   créditos   aunque   no   las   necesites   para   esa   tarea:   búsqueda   web,    conexiones   con   otras   apps,   modo   de   razonamiento   extendido...   Mantenlo    todo   apagado   por   defecto,   y   enciéndelo   cuando   lo   necesites.       Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     39   \n   Comandos   para   explotar   todo   el   potencial   de   Claude    Los   comandos   de   Claude   son   instrucciones   rápidas   que   cambian   cómo   el    modelo   piensa,   responde   o   actúa,   sin   necesidad   de   escribir   prompts   largos.   Son    interesantes   porque   ahorran   tiempo,   mejoran   la   calidad   del   output   y   dan    control   sobre   el   comportamiento   de   la   IA   con   una   sola   palabra.       Hay   muchísimos   comandos   y   no   pretendo   que   te   los   aprendas   de   memoria,   pero    quiero   compartirte   la   selección   de   mis   comandos   favoritos   (mis   fuentes   han   sido    Ruben   Hassid ,   Yago   Carballo   y   Vivian   Francos ).       #     Comando     ¿Qué   hace?    1     /clear     Borra   toda   la   conversación   y   reinicia   el   contexto   para    empezar   una   tarea   nueva   sin   residuos.    2     /compact     Comprime   el   historial   de   la   sesión   liberando   espacio   de    contexto   sin   perder   lo   esencial.    3     /context     Muestra   cuántos   tokens   llevas   consumidos   para   saber    cuánto   espacio   te   queda.    4     /plan     Activa   el   modo   solo   lectura   para   que   Claude   planifique    cada   paso   antes   de   ejecutar   nada.    5     /model     Cambia   entre   Opus,   Sonnet   o   Haiku   en   mitad   de   una    sesión   según   necesites   profundidad   o   velocidad.    6     /rewind     Deshace   los   últimos   pasos   de   Claude   y   permite   volver   a   un    punto   anterior   de   la   conversación.    7     /resume     Reabre   una   sesión   anterior   por   su   nombre   o   ID   para    continuar   donde   lo   dejaste.    8     /export     Guarda   toda   la   conversación   como   archivo   de   texto   para    documentar   o   reutilizar   el   trabajo.    9     /rename     Pone   nombre   a   la   sesión   actual   para   organizarla   y    encontrarla   fácilmente   después.    10     /cost     Muestra   el   gasto   total   de   tokens   de   la   sesión   para   controlar    el   consumo.    11     /usage     Informa   sobre   tus   límites   actuales   del   plan   y   el   estado   de   la    tasa   de   uso.    Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     40   \n   #     Comando     ¿Qué   hace?    12     /init     Genera   automáticamente   un   archivo   CLAUDE.md   leyendo    tu   proyecto   y   resumiendo   el   contexto   clave.    13     /memory     Edita   los   archivos   de   memoria   y   controla   qué   recuerda    Claude   entre   sesiones.    14     /diff     Abre   un   visor   de   cambios   para   revisar   qué   ha   modificado    Claude   en   tus   archivos.    15     /security-    review    Analiza   los   cambios   pendientes   en   busca   de   posibles    problemas   de   seguridad.    16     /permissions     Gestiona   qué   herramientas   puede   usar   Claude   y   cuáles    debe   pedirte   permiso   antes.    17     /config     Abre   el   panel   de   configuración   para   cambiar   tema,    modelo,   estilo   de   output   y   preferencias.    18     /human     Reescribe   el   texto   generado   para   que   suene   más   natural   y    menos   robótico   —   ideal   para   copies   y   posts.    19     /eli10     Pide   a   Claude   que   explique   cualquier   concepto   como   si    tuvieras   10   años,   sin   jerga   ni   tecnicismos.    20     /alt   three     Genera   tres   alternativas   distintas   ante   cualquier   pregunta    cuando   no   sabes   qué   opción   elegir.    21     /kill   critic     Elimina   la   tendencia   de   Claude   a   ser   complaciente   y   le    fuerza   a   darte   feedback   honesto   y   directo.    22     /ooda     Analiza   el   contexto   y   ayuda   a   tomar   decisiones   difíciles    aplicando   un   marco   de   acción   concreto.    23     /L99     Le   indica   a   Claude   que   trabaje   al   máximo   nivel   de   esfuerzo    y   detalle   posible   en   esa   respuesta.    24     /x10think     Fuerza   al   modelo   a   razonar   mucho   más   antes   de    responder,   sacrificando   velocidad   por   profundidad.    25     /artifacts     Genera   una   mini-app   interactiva   —   gráficos,   dashboards   o    interfaces   —   directamente   dentro   del   chat.          Miren   Agirregomezkorta   Iza   –   Guía   completa   de   Claude     41   \nDerechos de autor: Miren Agirregomezkorta Iza, 2026  hola@mirenagk.com  Web:  mirenagk.com  Newsletter:  https://mirenagk.kit.com/  LinkedIn:  https://www.linkedin.com/in/mirenagk/  Este manual está protegido por la licencia Atribución-NoComercial-  SinDerivadas 4.0 Internacional de Creative Commons. Para más información:  https://creativecommons.org/licenses/by-nc-nd/4.0/    ¡Pues esto es todo!  Espero que lo aprendido en esta guía te ayude a implementar la IA  poco a poco, de forma sencilla y práctica en tu día a día. Si quieres  mantenerte al día de todos los avances de la IA, suscríbete a mi  newsletter y sígueme en LinkedIn.  ¡Un abrazo!  Miren  😊 \n";
+    const PDF_NAME = "guia-completa-de-claude.pdf";
+    const CHATBOT_THEME = "guia-completa-de-claude";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿De dónde surge Claude y qué lo hace diferente de otras IAs?","¿Cómo puedo entrar por primera vez a Claude y qué opciones de plan existen (gratuito vs. de pago)?","¿Qué diferencia hay entre la versión web y la app de escritorio de Claude?","¿Cuáles son las funciones básicas que debo dominar en Claude (enviar mensajes, buscar info, resumir, adjuntar, revisar historial)?","¿Qué son los proyectos en Claude y para qué sirven al organizar chats, archivos e instrucciones?","¿Cómo funciona la memoria dentro de un proyecto y cómo se diferencia de la memoria fuera de ese proyecto?","¿Qué son los conectores y qué precauciones de seguridad debo seguir al dar acceso a cuentas (por ejemplo, Gmail)?","¿Qué son las skills y cómo me ayudan a automatizar un proceso recurrente con un comando de activación?","¿Cómo creo mi primera skill: qué diferencia hay entre la opción fácil, medio y difícil?","¿Qué puede hacer Claude con la extensión de Chrome y qué riesgos implica cuando interactúa con páginas y cuentas?","¿Qué es Claude Code y por qué se considera especialmente útil para programar, y dónde puedo aprender a usarlo?","¿Para qué sirven comandos avanzados como /plan, /export, /memory, /security-review y /artifacts, y cuándo los usarías?"];
+    const INITIAL_PALETTE = {"primaryColor":"#e83d30","secondaryColor":"#ed6459","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#e83d30","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

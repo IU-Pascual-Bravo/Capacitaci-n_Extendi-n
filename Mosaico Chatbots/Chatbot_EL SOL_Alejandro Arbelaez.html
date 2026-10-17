@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Chatbot el sol</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Chatbot el sol</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "      1                                                                                                                                                         TEMA 1:   EL SOL: FUENTE DE ENERGÍA  Localización :     Bloque :     Familia :     Ciclo :     Moduloa :     Unidad :    \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 2 de 31                        Título de la UD:     “TITULO”                                Familia      Ciclo     Modulo     Bloque      Duración    Curso     Autor      Traductor     Revisión                                                     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 3 de 31     Indice:              Indice:.............................................................................................................3    TEMA 01: EL SOL: FUENTE DE ENERGÍA ...............................................................6    1.1.   LA ENERGÍA DEL SOL ...............................................................................6    1.1.1. CARACTERÍSTICAS DEL SOL ...................................................................6    1.1.2 EL ESPECTRO SOLAR ..............................................................................6    1.1.3. TIPOS DE RADIACION SOLAR .................................................................8    1.1.4. PARAMETROS DE LA POSICIÓN SO L - TIERRA ...........................................9    MASA DE AIRE. AM......................................................................................9    ESTACIONES ............................................................................................ 10    CONSTANTE SOLAR ................................................................................... 12    1.1.5. CAPTACION DE LA ENERGIA SOLAR ....................................................... 13    CAPTACION TERMICA PASIVA ..................................................................... 14    CAPTACION TERMICA ACTIVA ..................................................................... 15    CAPTACION FOTOVOLTAICA ....................................................................... 15    1.2. PARAMETROS DE LA ENERGIA SOLAR . ......................................................... 16    1.2.1. IRRADIANCIA SOLAR ........................................................................... 16    1.2.2. IRRADIACIÓN  SOLAR.......................................................................... 17    1.2.2. IRRADIACIÓN  SOLAR.......................................................................... 18    1.2.3. INSOLACIÓN ...................................................................................... 19    1.2.4. INDICE DE CLARID AD.......................................................................... 20    1.2.5. HORAS DE SOL PICO. HSP.................................................................... 21    1.2.6. COEFICIENTE DE INCLINACION............................................................. 22    1.3. CONVERSION FOTOVOLTAICA ............ ........................................................ 23    1.3.1. EFECTO FOTOVOLTAICO. CÉLULA  SOLAR................................................ 23    PRINCIPIO DE FUNCIONAMIENTO ................................................................ 24    1.3.2. TIPOS DE CELULAS SEGÚN EL  MA TERIAL UTILIZADO .............................. 26    CELULAS DE SILICIO MONOCRISTALINO ...................................................... 26    CELULAS DE SILICIO POLICRISTALINO ........................................................ 26    CELULAS DE SILICIO AMORFO .................................................................... 27    CELULAS DE ARSENIURO DE GALIO ............................................................. 27    CELULAS DE  SULFURO DE CADMIO Y CO BRE................................................ 27   \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 4 de 31  1.3.3. TIPOS DE CELULAS DE SILICIO SE GÚN SU CONSTRUCCIÓN ..................... 28    CELULAS CON TECNOLOGÍA SATURNO ......................................................... 28    CÉLULAS CON TECNOLOGÍA BACK CONTAC T................................................. 28    1.3.4. PARAMETROS FUNDAMENTALES DE LA CELULA ....................................... 29      \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 5 de 31         1.-  INTRODUCCIÓN A LA UD.-                                                                                                                                              Unidad Didactica     Actividad nº1       Duración    Tipo de   actividad   Enseñanza      Aprendizaje     Recursos Necesarios  Equipamiento necesario         PRESENTACIÓN      OBJETIVO   O1.-   O2.-   O3.-   O4.-   CAPACIDADES TERMINALES  CRITERIOS DE  EVALUACIÓN   C1.-   C2.-    C3.-   C4.-   CR1.-   CR2.-   CR3.-   CR4.-    CONTENIDOS   Conceptuales   Procedimentales   Actitudinales   C1.-   C2.-   C3.-    P1.-    P2.-   P3.-    A1.-   A2.-   A3.-    LISTADO DE ACTIVIDADES Y RECURSOS   Actividades  Duración   Recursos   1         2         3         4        \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 6 de 31   T T T E E E M M M A A A       0 0 0 1 1 1 : : :       E E E L L L       S S S O O O L L L : : :       F F F U U U E E E N N N T T T E E E       D D D E E E       E E E N N N E E E R R R G G G Í Í Í A AA        1 1 1 . . . 1 1 1 . . .         L L L A A A       E E E N N N E E E R R R G G G Í Í Í A A A       D D D E E E L L L       S S S O O O L L L       1.1.1. CARACTERÍSTICAS DEL SOL   El  Sol  es  una  estrella  de  tipo  medio  en  cuyo  interior,  y  debido  a  las  altas  temperaturas  y  presiones    existentes  (entre   10   y   40   millones  de   ºK   y  más  de  1  millón  de  atmósferas),  se  producen  reacciones    termonucleares  de fusión, en las cuales interviene su principal componente, el  HIDROGENO .         En  estas  reacciones  el  hidrógeno   H   se  convierte  en  helio   He   con  una  pérdida  de  masa  de  aprox.  El     0,7% .  Esta  masa  se  convierte  en  energía  radiactiva  y  atraviesa  la  capa  solar  hasta  llegar  a  su    superficie, la cual se encuentra a  5.500 ºK , radiándose a continuación al espacio en forma de: ondas   electromagnéticas, neutrinos y partículas subatómicas (viento solar).                                             1.1.2 EL ESPECTRO SOLAR   La    energía  solar   que  nos  llega  a  la  Tierra  lo  hace  en  forma  de   ondas  electromagnéticas,   con   longitudes de onda ( λ ) entre 0,3 y 3 μm .  Dentro de este espectro nos encontramos con las siguientes   radiaciones:  Gamma  (1%),  Ultra violeta  (4%),  Luminosa  (49%) e  Infrarroja  (46%).      Diámetro del Sol  109 veces superior al de la Tierra   Masa del Sol  330.000 veces mayor que la de la Tierra   Temperatura Superficial de Sol  5.500 ºK   Origen de la energía radiada  Reacciones  de fusión, Hidrógeno ..........Helio + energía   Distribución de la energía radiada  Calorífica  =  46%;  Luminosa  =  49  %;  Ultravioleta  =  4  %;    Otras = 1 %   Constante solar ( PERIHELIO)  1.400 W/m², fuera de la atmósfera    Constante solar ( AFELIO)  1.309 W/m², fuera de la atmósfera   Distancia media  de la tierra al Sol  150.000.000 Km  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 7 de 31  Si bien es cierto que las  radiaciones  gamma  y  ultra violeta  poseen un mayor nivel energético, debido   a su baja longitud de onda, apenas representan un  5%  del total de la energía solar. Siendo la energía   de  las   luminosas    y  las   infrarrojas ,  con  un   95% ,  la  que  deberemos  tener  en  cuenta  para  su    aprovechamiento.      Las radiaciones electromagnéticas se pueden considerar como:  corpúsculos energéticos oscilantes (   FOTONES  ).   Su  nivel  energético  es    inversamente  proporcional  a  su  longitud  de  onda,  según  la    siguiente ecuación:         w = h · f = h · c /  λ    donde:   w  = Energía del fotón.   h  = Constante de Planck   f   = Frecuencia del fotón    c   = Velocidad de la luz   λ   = Longitud de onda               La  tierra  recibe  del  Sol  una  energía  de  aprox.   5.000  Q/año ,  si    consideramos el consumo industrial en aprox.  0,25 Q/año (1 Q =   3.10¹³ kWh) , podremos hacernos una ligera idea de la cantidad de   energía  que  recibimos  del  Sol    y  de  sus  posibilidades  para    solucionar,  en  parte,  el  problema  energético  que  tiene  la    humanidad.           \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 8 de 31   1.1.3. TIPOS DE RADIACION SOLAR                                          La  dispersión  que  sufre  la  radiación  solar  al  paso   por  la  atmósfera  hace  que  se  distingan  dos  tipos    diferentes de radiación :  DIRECTA  y   DIFUSA .   La  radiación directa  la recibimos del sol sin recibir desviaciones en su trayectoria, se caracteriza por   producir sombras muy definidas y poder concentrarse mediante lentes. En días muy claros puede llegar   a ser de, hasta el  85%  de la radiación total.       La  radiación difusa  es aquella que sufre desviaciones en su trayectoria, debido al paso a través de la   atmósfera.  En  días  claros,  este  tipo  de  radiación,  puede  llegar  a  ser  un   15%   de  la  total  y  en  días    nublados hasta el  100% .      Existe  un  tercer  tipo  llamada   radiación  de    albedo,    y  es  aquella  radiación  directa  o  difusa    que  se  refleja  en  el  suelo  o  en  superficies    cercanas a él ( nieve, lagos, paredes de edificios,   etc. ).      La  radiación  solar    que  recibimos  a  nivel  de  la    superficie  terrestre  es  la  suma  de  las  tres    anteriores,  DIRECTA ,  DIFUSA  Y DE  ALBEDO .         \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 9 de 31   1.1.4. PARAMETROS DE LA POSICIÓN SOL - TIERRA  MASA DE AIRE. AM   Se denomina  masa de aire  ( AM ), a la distancia que recorre la radiación solar a través de la atmósfera   terrestre.       Esta distancia es función del ángulo que forman la perpendicular a la tierra y el rayo vector del Sol ( θ ).                                             Como  podemos    observar,  cuanto  mayor  sea  el  ángulo  formado  entre  la  vertical  y  los  rayos  solares,    mayor será la masa de aire que estos han de atravesar y, en consecuencia, menor la energía con la que   incidan sobre la superficie terrestre.   Este es el motivo por el que existen diferencias considerables en la incidencia energética de la radiación   solar  durante:  los  meses  de  invierno  y    verano,  el  ecuador  y  los  polos,  o  el  amanecer  atardecer  y  el    mediodía.      Este  concepto,  como  se  puede  comprender,  es  muy  importante  a  la  hora  de  realizar  los  cálculos    necesarios  para  configurar  debidamente  una  instalación  de  aprovechamiento  de  energía  solar  y  está    integrado en las tablas de irradiación solar.  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 10 de 31   ESTACIONES   La posición del sol con respecto a un punto determinado de la superficie terrestre, es función de la hora   del día y de la época del año.      En el  hemisferio norte:                                              La  posición  del  sol,  para  cualquier  hora  del  día  y  época  del  año  se  determina    por  dos  ángulos:    ELEVACIÓN y AZIMUT.       ALTURA  o  ELEVACIÓN.-   Es  el  ángulo  formado  por  la  línea  imaginaria  que  une  el  sol  con  un    determinado punto de la tierra,  y su horizontal.       AZIMUT.-  Es el ángulo formado por la proyección, sobre la superficie terrestre, de la línea imaginaria   que une el sol con un determinado punto de la tierra,  y su meridiano.     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 11 de 31   POSICION SOLAR:    ALTURA o ELEVACIÓN y AZIMUT, DESDE UN PUNTO SITUADO A 43º NORTE                                                                      \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 12 de 31   CONSTANTE SOLAR   La  intensidad  de  la  radiación  solar,  al  propagar se  por  el  espacio,  disminuye,  según  una  función    cuadrática ( I = P/4  π  R2 ), a medida que se aleja del SOL.   A  estos  efectos  podemos  considerar  que  la  órbita   que  describe  la  tierra  alrededor  del  SOL    es    prácticamente circular ( radio = 150 x 109 m ).   Por lo tanto; La intensidad de radiación solar, que llega al exterior de la atmósfera de la TIERRA, es una    constante, y su cálculo será:      I = P/4  π  R2   I = (4 x 1026) / (4 x 3,14 x (150 x 109)2  = 1,4 kW / m2      Así pues;  la   constante solar   la podemos definir como:      “LA  INTENSIDAD  DE  RADIACIÓN    SOLAR,  FUERA  DE  LA  ATMOSFERA,     QUE  INCIDE  SOBRE  UNA    SUPERFICIE  DE  1  m2,   PERPENDICULAR  A  LOS  RAYOS    SOLARES, DURANTE 1 seg.”      El valor real  es de:  1.367 W / m2.      A nivel de superficie terre stre, por efectos de la   atmósfera este valor queda en:  1.000 W / m2,  y   se denomina  IRRADIANCIA Máxima.       La diferencia de radiación que nos llega a la tierra, en función de la hora del día y/o de la época del año,   no se debe a la distancia a la que se encuentra el  SOL de la TIERRA, sino al ángulo con el que inciden   sus rayos sobre la superficie terrestre (masa de aire  AM ).  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 13 de 31   1.1.5. CAPTACION DE LA ENERGIA SOLAR   El  aprovechamiento  de  la  energía  del  Sol,  por  parte  del  ser  humano,  ha  sido  una  constante  desde    tiempos  inmemoriales.  Los  elementos  de  captación  utilizados eran  sistemas  pasivos,  no  existía  ningún    tipo de control sobre ellos, y normalmente eran elem entos arquitectónicos; estanques, patios interiores,   cristaleras,  etc.  La  función  de  estos  elementos  era:  acumular  calor  o    dirigir  la  luz,  sin  exponerse    directamente  a  los  rayos  solares.  También  se  utilizaban  para  secar  alimentos  o  producir  sal  por    evaporación del agua de mar.      La  captación  solar  directa,  por  medio  de  ingenios  fabricados  por  el  ser  humano,  podemos  dividirla  en    tres tipos a saber:  captación térmica pasiva, captación térmica activa y captación fotovoltaica.                                    Diagrama donde se representan todos los modos de captación solar:                                                             CAPTACIÓN SOLAR   Olas  Eólica  Hidráulica   CAPTACIÓN SOLAR   DIRECTA   FOTÓNICA  TÉRMICA   Fotoquímica  Fotovoltaica  Activa  Pasiva   Arquitectura   solar pasiva   Solar térmica  Solar   fotovoltaica   Foto   química   Biomasa  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 14 de 31   CAPTACION TERMICA PASIVA   Es  la  captación  directa  de  la  energía  solar  en  las  viviendas  o  edificios,  mediante  la  aplicación  de    criterios arquitectó nicos bioclimáticos.      La  arquitectura  bioclimática,  al  diseñar  un  edificio,  tiene  en  cuenta  tanto  el  clima  como  el  medio    ambiente  que  rodean  a  este.  De  esta  forma,  tanto  la  orientación  como  los  materiales  que  utiliza,  van    encaminados a aprovechar al máximo las energías renovables y a producir el mínimo impacto posible en   su entorno.      Para  la  captación  de  la  energía  solar  en  viviendas,   se  utilizan  algunos  de  los  siguientes  elementos:    muros acristalados, lechos de piedras, plantas,  recipientes de agua,  muros de inercia, etc.        \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 15 de 31   CAPTACION TERMICA ACTIVA   La captación térmica activa se realiza mediante colectores térmicos. Estos elementos captan la radiación   infrarroja del sol y la trasmiten a un fluido (agua o aire) que circula por ellos.      Existen  diversos  tipos  de  colectores:    planos,  de  vacío,  cilíndricos    concentradores, etc.    Los  primeros  se  utilizan  para  suministrar    agua caliente  a las viviendas; los de vacío   y los de aire sirven para calefacción; y los   concentradores,  pueden  elevar  la    temperatura  del  agua  a  más  de  1.000º  C,    utilizándose  para  producir  electricidad,    mediante turbogeneradores.       Existen instalaciones, eólico-solares, en las   que  se  calienta  el  aire  en  unos    invernaderos.  En  el  centro  de  ellos  existe    una  chimenea,  por  la  que  asciende  el  aire    caliente y mueve un aerogenerador que se   encuentra en su interior.               CAPTACION FOTOVOLTAICA         Llamamos,  captación  fotovoltaica  a :  la    conversión  directa  de  la  energía  solar    en energía eléctrica.  Es el espectro visible   de  la  radiación  solar  el  máximo  responsable    de esta conversión.      El  elemento  básico,  encargado  de  esta    conversión es:     LA CELULA FOTOVOLTAICA.           \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 16 de 31   1 1 1 . . . 2 2 2 . . .       P P P A A A R R R A A A M M M E E E T T T R R R O O O S S S       D D D E E E       L L L A A A       E E E N N N E E E R R R G G G I I I A A A       S S S O O O L L L A AA R R R       1.2.1. IRRADIANCIA SOLAR  Es  la  intensidad  de  radiación  solar  que  incide   en  una  superficie  unitaria  en  la  unidad  de    tiempo y se mide en (W/m²).      La irradiancia, es un valor variable en función de: el ángulo de inclinación de la superficie, la latitud del   lugar, la época del año, la hora del día, las condiciones climatológicas, la contaminación etc.       En condiciones ideales, el valor máximo  que puede alcanzar es de 1.000 W/m².                                             Valores que toma la irradiancia solar al ca bo del día, según la posición del Sol.      En  las  tablas  de  irradiancia,  nos  dan  valores  medios,  de  un  día  medio  de  cada  mes,  para  lugares    determinados y sobre superficies horizontales.       La  irradiancia  se  expresa  con  la  letra   G  ,   y  se  le  aplican  los  subíndices:   o ,    b    y    d .  para  expresar     los   siguientes conceptos:      Go   .............  Irradiancia extraterrestre sobre una superficie horizontal.   Gb   .............  Irradiancia directa sobre una superficie horizontal.   Gd   .............  Irradiancia difusa sobre una superficie horizontal.   G     .............  Irradiancia global sobre una superficie horizontal.      La  irradiancia  extraterrestre,  para  una  superficie   perpendicular  a  la  radiación  solar,  es  lo  que     denominamos  constante solar .      Los  datos  de  irradiancia  son  útiles  para  realizar  los  cálculos  de     irradiación  solar   en  superficies    horizontales, datos necesarios para el correcto dimensionado de las instalaciones solares.  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 17 de 31   TABLA DE LA RADIACIÓN MENSUAL Y ANUAL DE LAS 52 PROVINCIAS     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 18 de 31   1.2.2. IRRADIACIÓN  SOLAR   Es la cantidad de energía solar que incide en una superficie unitaria en un tiempo determinado. Se mide   en , Kj/m²  ó  kWh/m².      1 kWh/m² = 1.000 Wh/m².   1 kWh/m² = 3.600 kj/m².   1 kWh/m² =     3,6 Mj/m².      Por lo general, para calcular la irradiación, se determina la irradiancia a diferentes horas del día y  se   integran los valores tomados, para obtener el valor de la irradiación.                                                         Variaciones de la irradiancia solar al cabo del día e irradiación total obtenida         Según queramos expresar la irradiación durante  una hora  o durante  un día , deberemos utilizar la letra   ( I ) en el primer caso y la ( H ) en el segundo. Los subíndices serán los mismos que para la irradiancia.  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 19 de 31   1.2.3. INSOLACIÓN   Es  el  número  de  horas  en  las  que  el  Sol  no  está  cubierto  por  las  nubes.  Se  puede  dar  el  número  de    horas de Sol, diarias, mensuales, anuales, etc. Se representa por ( Nsol ).                                                   Un día del mes de Junio, según el gráfico de la derecha, tendremos alrededor de 15 horas de luz de día.   Si ese día han sucedido unos periodos de tiempo con  el cielo nublado, tal como se muestra en el gráfico   de la izquierda, donde se contabilizan 8 horas, la insolación será la resta entre ambas cantidades.   INSOLACIÓN = HORAS DE LUZ – HORAS DE NUBLADO   Nsol = 15 – 8 = 7 horas        INSOLACION Nsol EN EL PAIS VASCO   MES  ZONA COSTA  ZONA INTERMEDIA  LA RIOJA   ENERO  73  70  104    FEBRERO  88  95  126    MARZO  117  130  161    ABRIL  126  140  178    MAYO  163  177  218    JUNIO  170  197  253    JULIO  188  236  300    AGOSTO  177  217  279    SETIEMBRE  147  176  202    OCTUBRE  127  133  157    NOVIEMBRE  87  84  117    DICIEMBRE  66  57  94   \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 20 de 31   1.2.4. INDICE DE CLARIDAD   Es  el  cociente  entre  la  irradiación  que  recibe  una  superficie  horizontal  en  la  superficie  terrestre  y  la    irradiación que hubiera recibido si estuviese fuera de la atmósfera terrestre. Este parámetro nos indica   el  grado  de  atenuación  global  que  sufren  la  radiación  solar  al  atravesar  la  atmósfera  en  un  lugar    determinado. Se representa por las letras ( Kt ).          Tabla de valores del índice de claridad, KT, en el País Vasco       INDICE DE CLARIDAD (Kt)  PAIS VASCO   MES  ZONA    COSTA   ZONA   INTERMEDIA   LA RIOJA   ENERO  0 , 37  0 , 37  0 , 44   FEBRERO  0 , 39  0 , 42  0 , 52   MARZO  0 , 39  0 , 45  0 , 55   ABRIL  0 , 41  0 , 44  0 , 52   MAYO  0 , 43  0 , 46  0 , 54   JUNIO  0 , 44  0 , 48  0 , 58   JULIO  0 , 45  0 , 55  0 , 63   AGOSTO  0 , 46  0 , 55  0 , 61   SETIEMBRE  0 , 45  0 , 53  0 , 58   OCTUBRE  0 , 43  0 , 47  0 , 53   NOVIEMBRE  0 , 40  0 , 41  0 , 48   DICIEMBRE  0,34  0,33  0,46   \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 21 de 31   1.2.5. HORAS DE SOL PICO. HSP.   La  irradiancia  máxima  teórica  a  nivel  de  mar  se  considera  que  tiene  un  valor  de   1.000  W/m2 .  Los    datos técnicos de los paneles fotovoltaicos están referidos a esa irradiancia.       Para simplificar los cálculos necesitaremos saber a cuantas horas, de una irradiancia constante de 1.000   W/m², corresponde la irradiación  diaria en kWh/m². A esta relación se le llama   HORAS DE SOL PICO    y se representan por las letras ( HSP ).      La relación entre la  IRRADIACIÓN  solar y las  HSP  es la siguiente:       Expresada  en  kWh/m2.:          (kWh/m2) / (1kW/m2) = HSP.    Expresada  en  LANGLEYS:   LANGLEYS x 0,0116 = HSP.    Expresada  en  Mj/m2:            Mj x 0,28 = HSP.      Como  ejemplo,  tomemos  una  superficie  que  ha  recibido  durante  un  día  una  irradiación  (energía)  de    5kWh/m².   Para  saber  cuantas  horas  necesitaría,  para  recibir  esa  energía,  con  una  irradiancia  de    1.000 W/m²,  no tenemos más que sacar el cociente entre la irradiación y la irradiancia;                                        (5 kWh/m²) / (1kW/m²)  =  5 HSP.                                                Gráfico donde se representa el número de HSP del ejemplo anterior     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 22 de 31      1.2.6. COEFICIENTE DE INCLINACION   Para aprovechar al máximo la radiación solar, necesitamos colocar los módulos FV perpendiculares a los   rayos del sol. Esto nos obliga, en función de la latitud donde se ubique la instalación y de la época del   año  en  que  nos  encontremos,  a  colocar  los  módulos  con  una  cierta  inclinación  con  respecto  a  la    horizontal. Sí, tenemos en cuenta que los datos de irradiación se dan en algunos casos sobre superficies   horizontales,  comprenderemos  la  necesidad  de  contar  con  coeficientes  de  corrección  para  el  cálculo    correcto de la irradiación en módulos inclinados. El coeficiente de inclinación se representa por la letra     ( k )                                             Valores que toma el coeficiente K, según el grado de inclinación del módulo FV     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 23 de 31   1 1 1 . . . 3 3 3 . . .       C C C O O O N N N V V V E E E R R R S S S I I I O O O N N N       F F F O O O T T T O O O V V V O O O L L L T T T A A A I I I C C C A A A       1.3.1. EFECTO FOTOVOLTAICO. CÉLULA SOLAR    Las  células  fotovoltaicas  son  obleas  muy  finas,  aprox.  0,3  mm  de  espesor,  de  un  material    semiconductor,  arseniuro  de  galio  o  silicio.  Normalmente,  es  este  último  el  más  utilizado  debido  a  su    menor costo productivo, aunque presenta un me nor rendimiento (arseniuro 26%, silicio 24%).                                       Esta oblea sufre tratamientos de dopado (introducción de   impurezas) en sus dos caras. En la cara en que recibe las   radiaciones  solares,  se  le  dopa  con  átomos  de   fósforo   (P)  que posee 5 electrones en su capa de valencia.      La  estructura  resultante  es,  en  consecuencia,  un  cristal    con algunos electrones libres. Esta capa tiene un espesor   de 0,2 a 0,5  μ m, y se le denomina,  capa N.      A la cara que no recibe radiación solar se le dopa con  boro    ( B ) que posee 3 electrones en su capa de valencia.      La  estructura  resultante  es  un  cristal  con  exceso  de    huecos, y se le denomina  capa P .      Para  captar  la  corriente  de  electrones  que  circulará  por  la    oblea y llevarla al exterior, se colocan en cada una de sus   caras unos  contactos eléctricos .      En  la   cara  P ,  no  iluminada,  el  contacto  es  una  fina    película  metálica   que  cubre  toda  su  superficie.  Por  el    contrario, en la  cara N , la expuesta a la radiación solar, el   contacto  son    unos   hilos  muy  finos ,  en  estructura  de    peine, que cubren una pequeña parte de la superficie de la   célula.      De  esta  forma  se   evita   una   perdida   significativa  de  su    rendimiento ,  por  disminución  de  la  superficie  útil  de  la    célula.    EFICIENCIA TIPICA DE CÉLULAS FOTO VOLTAICAS (FV)   SILICIO AMORFO  13%   TELENIURO DE CADMIO  16%   SILICIO POLICRISTALINO  20%   SILICIO MONOCRISTALINO  24%   ARSENIURO DE GALIO  26%  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 24 de 31      Estos  contactos  son  de  un   material  muy  conductor ,  y  se  depositan  sobre  la  célula  por   métodos   serigráficos  o  laser.      Para  disminuir  el  porcentaje  de  los  fotones  reflejados  por  la  superficie  de  la  célula,  y  aumentar  su    rendimiento,  se   texturiza  su  superficie   y  se  le  aplica  un   tratamiento  antirreflectante .  Estas    medidas reducen las  perdidas por reflexión  a un  12%.                                          PRINCIPIO DE FUNCIONAMIENTO         En  la  zona  de  unión  de  las  dos  caras ,  N   y   P ,  se    combinan algunos electrones de la  zona N  con huecos   de  la   zona  P .  Creándose  en  esa  unión  una   zona  de    potencial eléctrico.       En  el  silicio,  la  energía  de  la   banda  prohibida  (Eg)    es  de  aproximadamente   1,12  Ev .  Esta  energía    corresponde  a  fotones  con  longitud  de  onda  de   1,1   μ m  e inferior, longitudes de onda correspondientes  a   la luz visible.         Los fotones que inciden sobre la célula, con una   energía  igual  o  superior  al   ancho  de  banda    prohibida  Eg   (energía  que  necesitan  los    electrones  de  valencia  para  pasar  a  la  capa  de    conducción)  del  silicio,  crean   pares   electrón/hueco   que  se  desplazan  a  través  de    esta.       Los  fotones  de  energía  superior  a  Eg  utilizan    una  parte  de  su  energía  en  producir  un  par    electrón  hueco,  perdiendose  el  resto  en  forma    de calor.     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 25 de 31   Los    fotones  de  energía  inferior  a  Eg.   No  crean  pares  electrón/hueco  por  no  tener  la  suficiente    energía para ello. Disipándose esta en forma de calor      Estos  pares  electrón/hueco  tienden  a    desplazarse  de  la  zona  iluminada  a  la  oscura,  y    llegarán  a  recombinarse  de  no  existir    un    potencial  eléctrico  que  los  separe  y  los  haga    circular en sentidos opuestos.      Los  pares  electrón/hueco  creados  próximos  a  la    unión  P-N,  son  separados  por  el  potencial    eléctrico  existente  en  ella,  haciendo  que  cada    uno circule en dirección opuesta.              Los electrones son desplazados hacia la región N y los huecos hacia la región P, creándose una corriente   eléctrica  (corriente  fotogenerada  o   fotocorriente  IL ).Esta  corriente  depende  de  la  intensidad  de    radiación solar  (irradiancia ).         Cuando  los  pares  electrón/hueco  se    generen  a  una  distancia  de  la  unión    superior  a  la  longitud  de  difusión    (distancia que puede recorrer un electrón   libre  antes  de  recombinarse),  se    recombinarán  y  la  energía  luminosa  que    absorbieron  se  recuperara  en  forma  de    calor. Efecto no deseable en la célula.               Para  disminuir  el  efecto  de  recombinación,  es  necesario  aumentar  la  longitud  de  difusión.  Para  ello  es    necesario que el cristal sea lo más puro posible, tanto en su estructura como en su constitución, deberá   ser monocristal y poseer un grado mínimo de impurezas no deseadas.      Otro  efecto  de  recombinación,  se  produce    por  efecto  de  la  diferencia  de  potencial    externa de la célula. Si esta es muy grande,   el  efecto  de  recombinación,  puede  llegar  a    anular  a  la  corriente  fotogenerada.  A  esta    corriente  se  le  denomina  corriente  de    oscuridad o de diodo  Id .   La  corriente  que  puede  suministrar  cada    célula   Ic , depende por lo tanto de   IL   e   Id .   (Ic = IL – Id)           \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 26 de 31   1.3.2. TIPOS DE CELULAS SEGÚN EL  MATERIAL UTILIZADO   Existen  varios  tipos  de  células  fotovoltaicas,  en  función  del    material  utilizado  en  su    fabricación.  Algunas  de  ellas    comienzan  a  estar  en  desuso,  mientras  que  otras  se    encuentran todavía en proceso de experimentación y mejora.      Los  tipos  de  células  que  existen  en  la  actualidad    son  las    siguientes:  silicio  monocristalino,  silicio  policristalino,  silicio    amorfo, arseniuro de galio y sulfuro de cadmio y cobre.            CELULAS  DE  SILICIO    MONOCRISTALINO   Son las más utilizadas en la actualidad, debido a su relación rendimiento –   costo.   Están formadas por una estructura de silicio monocristal, la cual le confiere   un buen rendimiento gracias a la perfección estructural que presenta.      El proceso de fabricación es el mismo que se utiliza para la producción de    los circuitos integrados utilizados en la industria electrónica. Su producción   es costosa, debido a la gran complejidad técnica del proceso de purificación   del silicio y la posterior obtención de una estructura monocristalina.             CELULAS DE SILICIO POLICRISTALINO   Son  similares  a  las  monocristalinas  pero,  para  simplificar  su  proceso    productivo,  no  se  controla    de  forma  exhaustiva  el  crecimiento  de  su  red    cristalina.  Esto  da  como  resultado,  que  su  estructura  presente  un  cierto    grado de imperfecciones y, una disminución de  su rendimiento.      Estas  células  presentan  una  relación  rendimiento  –  costo  menor  que  las    monocristalinas,  pero  se  siguen  fabricando  gracias  a  que  es  posible    producirlas en formato cuadrado, lo cual evita los costos de una posterior   mecanización.     \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 27 de 31   CELULAS DE SILICIO AMORFO   Las células de silicio amorfo presentan ciertas ventajas con respecto a   las monocristalinas, tales como: menor costo productivo, posibilidad de   poderse  fabricar  en  capas  más  finas  (hasta  50  veces)  y  un  mayor    coeficiente de absorción.       Por  el  contrario,  su  elevada  velocidad  de  recombinación  (debido  a  la    gran  cantidad  de  imperfecciones  de  su  red  cristalina)y  la  rápida    degradación de las células al ser expuestas al sol, no le permiten, por   el momento, ser una opción real a las células monocristalinas.      Se está trabajando en la fabricación de células amorfas de diferentes capas, cada una sensible a un tipo   de radiación luminosa, para poder igualar en rendimiento y vida útil a las monocristalinas.      Si  se  consigue,  en  un  futuro,  solucionar  estas  deficiencias,  las  células  amorfas,  pueden  ser  los    elementos que permitan una masiva utilización de la energía solar fotovoltaica.         CELULAS DE ARSENIURO DE GALIO   El arseniuro de galio(AsGa) es el elemento idóneo para la fabricación de células fotovoltaicas, debido a   que presenta un alto coeficiente de absorción.      En su forma monocristalina, puede llegar a alcanzar un rendimiento práctico de hasta un 25%. El mayor   problema,  para  su  utilización,  es  su  poca  abundancia  en  la  naturaleza,  por  lo  cual  la  relación    costo  -    rendimiento de estas células es muy alta.         CELULAS DE  SULFURO DE CADMIO Y COBRE   Son células compuestas por una capa de sulfuro de cadmio (SCd) y otra de sulfuro de cobre (SCu2). No   presentan un buen rendimiento, pero sí una alternativa económica, debido a su facilidad de fabricación   y a sus bajísimos costes de producción.   Estas células están en proceso de investigación, para solucionar problemas de envejecimiento.  \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 28 de 31      1.3.3.  TIPOS  DE  CELULAS  DE  SILICIO  SEGÚN  SU    CONSTRUCCIÓN   En  la  mayoría  de  las  células  de  silicio  el  terminal    negativo dispuesto en la cara superior, está serigrafiado   sobre ella ocupando una superficie considerable.      Esto  hace  que  el  rendimiento  de  la  célula  disminuya,    debido  a  que  la  superficie  que  ocupa  dicho  terminal  no    sea activo en lo que respecta a captación fotónica.      Para disminuir esta superficie de contacto, y aumentar el   rendimiento  de  las  células  se  han  desarrollado  dos    tecnologías:         CELULAS CON TECNOLOGÍA SATURNO         Consiste  en  enterrar  los  contactos  verticalmente  en  la  cara    superior, conservando la misma superficie de contacto que en   las células normales pero disminuyendo la superficie expuesta   al SOL              CÉLULAS CON TECNOLOGÍA BACK CONTACT         Consiste  en  colocar  los  terminales,  tanto  negativo  como    positivo, por la cara anterior.      De esta forma la cara superior quedará totalmente libre y   toda ella será activa a efectos fotónicos            \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 29 de 31     1.3.4. PARAMETROS FUNDAMENTALES DE LA CELULA   Tomando  como  base    el  gráfico  resultante  de  los  parámetros  intensidad  –  tensión  de  una  célula    fotovoltaica, podemos deducir  algunas de sus características técnicas.       Estos parámetros se determinan, para una radiación solar de:  1.000 W/m²  ó  100 mW /cm².                                        Icc. – Intensidad de cortocircuito.   Es  la  intensidad  que  circula  por  la  célula,  al  cortocircuitarse  sus  bornes  de  salida  (tensión  cero).    La    podemos medir, conectando un amperímetro, directamente, en su salida.      Vca. – Tensión en circuito abierto.   Es  la  máxima  tensión  que  nos  entrega  la  célula,  cuando  no  tiene  conectada  ninguna  carga  entre  sus    bornes  (intensidad  cero).  Se  mide,  conectando  un  voltímetro  entre  sus  bornes  (0,5  V    aproximadamente).                                 Ip. – Intensidad de pico o máxima   Es la intensidad que circula por la célula  para una radiación de 1.000 W/m2 a 25 ºC.           \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 30 de 31   Vp – Tensión de pico o máxima   Es la máxima tensión que nos entrega la célula para una radiación de 1.000 W/m2 a 25 ºC.      Wp. – Potencia pico o máxima   Es el  punto Ip – Vp, de máximo valor, que se  puede alcanzar en la curva I – V.                                  Ff. – Factor de forma.   Es la relación (Ip x Vp / Icc x Vca). Es evidente que, su valor, es menor que la unidad, y nos sirve para   determinar  la  calidad  de  las  células.  En  las  monocristalinas,  este  valor  suele  estar  comprendido  entre    0,7 y 0,8.      η . – Rendimiento. (efici encia de conversión)      Es la relación existente entre la potencia de pico Wp y la potencia de radiación, que recibe la célula, Wr.          Ejemplo de Rendimiento:      Tomando una célula de 100 cm2, y 2,4 Wp a una radiación max. de 100 W/m2   ( 100 mW/cm2 ).      A  esta  irradiancia  en  100  cm2  Wr  =10  W;  por  lo  tanto  Wp/Wr  =  2,4/10  =    0,24; 24 %         PMP.- Punto de máxima potencia   Es el punto de la gráfica en el que se consigue la máxima potencia para cualquier valor de radiación.   Cuando esta es de 1.000 W/m2  el PMP = Wp.  El  PMP  es el punto óptimo de  trabajo de la célula                 \n                ZAMALBIDE AUZOA Z/G 20100 ERRENTERIA GIPUZKOA TEL: 943082900   Página 31 de 31                                       Las dos variables físicas que mayor incidencia  tienen sobre los parámetros, V e I, de una célula son:La   temperatura  y la  radiación solar .      La variación de temperatura, produce una variación en la tensión de la célula según el siguiente gráfico.                                       Como podemos observar, a una variación de la  temper atura, corresponde una variación, inversa, de la   tensión en circuito abierto de la célula. Esta variación se hace menos  evidente, cuando conectamos la   célula a una carga.      Si    sometemos  a  la  célula  a  una  radiación  variable,  manteniendo  una  temperatura  constante,  y    tomamos los datos (V e I) para diferentes cargas; obtendremos el siguiente gráfico.                                       En  este  gráfico,  podemos  ver  que;  la  tensión  de  circuito  abierto  es,  prácticamente,  constante  para    cualquier nivel de radiación y, por el contrario, la intensidad de cortocircuito disminuye con esta.  \n";
+    const PDF_NAME = "EL SOL.pdf";
+    const CHATBOT_THEME = "Chatbot el sol";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué características del Sol influyen en su función como fuente de energía?","¿En qué consiste el espectro solar y por qué es importante para el aprovechamiento energético?","¿Cuáles son los tipos de radiación solar (directa, difusa y albedo) y qué porcentaje puede representar cada una en días claros?","¿Qué es la masa de aire (AM) y cómo afecta a la energía con la que llega la radiación a la Tierra?","¿Cómo se determina la posición del Sol usando los ángulos de elevación y azimut?","¿Qué es la constante solar y cómo se relaciona con la intensidad de radiación al alejarse del Sol?","¿Qué diferencia hay entre irradiancia e irradiación, y en qué unidades se mide la irradiación?","¿Cómo se calcula la insolación (Nsol) y qué indica sobre la presencia de nubes?","¿Qué es el índice de claridad (Kt) y qué nos dice sobre la atenuación atmosférica de la radiación?","¿Qué son las horas de sol pico (HSP) y cómo relacionan irradiación e irradiancia teórica de 1.000 W/m²?","¿Cómo funciona una célula fotovoltaica a nivel de pares electrón-hueco y qué papel juega la unión P-N?","¿Qué parámetros técnicos (Icc, Vca, Wp, factor de forma y rendimiento) se usan para evaluar el rendimiento y la calidad de una célula?"];
+    const INITIAL_PALETTE = {"primaryColor":"#e84030","secondaryColor":"#ed6659","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#e84030","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

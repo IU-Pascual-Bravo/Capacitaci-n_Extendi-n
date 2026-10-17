@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: LIDERAZGO ORGANIZACIONAL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>LIDERAZGO ORGANIZACIONAL</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "Gestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            183    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    Los estilos de liderazgo y su   influencia en la organización:   Estudio d e caso s   en el     Campo de Gibraltar      Alejandro Jiménez Collante    Administración y Dirección de Empresas    Universidad de Cádiz    alejandro.jimenezcollante@alum. uca.es         Mercedes Villanueva Flores    Departamento de Organización de Empresas    Universidad de Cádiz    mercedes.villanueva@uca.es               RESUMEN       El presente trabajo  se centra en   estudiar la importancia del liderazgo  en   las organizaciones ,   por lo que se   analizan diferentes    estilos de liderazgo     recogidos en la literatura . Se pone de   manifiesto que el estilo  de liderazgo  democrático es el considerado más adecuado en algunas   empresas del sector tecnológico ,   en el Campo de Gibraltar.   Este estilo de liderazgo influye  en    el clima organizativo, el est rés laboral, el compromiso y la motivación del trabajador, así como   en la resolución de los conflictos en el trabajo.        Palabras clave :   Est ilo s de liderazgo , organización , sector tecnológico .            ABSTRACT       This work is dedicated to study the importance of    leadership and the different existing ways   and they can be adapted by the companies to favor their enterprise results. Several theories   are studied, as well as leadership styles. It is   also emphasized how leadership   styles influence   different organizationa l variables. It becomes clear that the democratic style is considered the   most suitable in some of the technolo gical sector enterprises in  the Campo  Gibraltar.   This style   of leadership influences the organizational climate, work stress, commitment and moti vation of   the worker, as well as the resolution of conflicts at work.       Keywords:   Leadership styles, organization, technology sector .               \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            184    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95       1.  INTRODUCCIÓN       La organización y el tratamiento de los equipo s de trabajo   en las organizaciones  es un   tema  recurrente  en    los  estudios  recientes.  Esto  es  debido  a  la  enorme  necesidad  de   responder ante los objetivos marcados en un mercado muy competitivo, que lleva a las   empresa s a ser solventes laboralmente  y de forma constante para no quedar rezagadas   en  el  mercado  que  las  a coge.  Esta    situación     obliga  a  tomar  el  liderazgo  en  gran   consideración, ya que es una de las claves  para que   una organización goce de buena   salud  laboral.    Por  tanto ,    es     esencial  saber     gestionar  y  liderar  a  los  trabajadores    en    cualquier  empresa   que pretend a cumplir con sus objetivos  organizativos .       Actualmente,    en  las     orga nizaciones  y  núcleos  de  trabajo,    el  liderazgo  toma  un  papel   fundamental .  Se  pasa de grupos  de trabajo   muy marcados por el descontento a grupos   laborales  que  también  necesitan  sentirse queridos  y  bien  tratados  para rendir  de  una   manera  adecuada  y  satisfactoria ,     de  cara  a  la  consecución  de  los  objetivos.  La   existencia  de  la  figura  de  un  líder  puede  repercut ir  de  manera  positiva   en  las   organizaciones , ya que otorga un plus a los equipos que se sienten respaldados y bien   entendidos por una figura superior en rango ,   que se preocupa por el bienestar de los   empleados. Sin embargo, no siempre sucede esto ,   ya que a lgunas  organizaciones se   encuentran  en  muchas  ocasiones  dirigidas  por  líderes  que  carecen  de  la  capacidad   suficiente para gestionar los grupos  de trabajo.        El  estudio  planteado  cobra  relevancia  sobre  todo  en  los  tiempos  en  los  que  nos   encontramos. La evol ución constante que están tomando las  organizaciones,  llevan a   un  aumento  de  la  necesidad  en  la  plantilla  de  la figura  de  un  líder  que  sea  capaz  de   gestionar al grupo. Un líder debe encontrar la manera más fácil de lograr los objetivos.        Los   estilos de li derazgo que se  recogen   en este trabajo  son  algunos de  los  estilos  más   representados  e n  las  distintas  organizaciones .  Cada  estilo  cuenta  con  unos   condicionantes propios, con  ventajas e inconvenientes en cada uno de ellos.       El objetivo que tiene este estudio   es doble. Por un lado, se pretende realizar una revisión   de la literatura sobre el liderazgo y    los diferentes estilos que utilizan los líderes en las   organizaciones .  Por  otro  lado,  se  analizan  los  estilos  de  liderazgo  utilizados  en  dos   jóvenes empresas co n base tecnológica. Ambas empresas han nacido en el Campo de   Gibraltar, donde tienen sus sedes, aunque su desempeño es de ámbito internacional.        L a metodología  empleada para  la realización de  este trabajo ha consistido en acudir a   revistas especializadas   de la base de datos Abis Inform y google académico. Además,   se  ha  llevado  a  cabo  un  e studio  de  casos  con  un  enfoque    cualitativo,  acudiendo  a   entrevistas  semi - estructuradas  y  en  profundidad    realizadas  a  los  directivos  y   responsables  de los recursos human os de dos empresas del Campo de Gibraltar. Los   entrevistados  han  respondido  abiertamente  y  sin  limitaciones  a  las  preguntas   formuladas . Las cuestiones  realizadas   han sido  previamente diseñadas y ordenadas en   función de la temática .  Además,   han ido dirigida s a conocer   la influencia de los estilos   de liderazgo en la organización, en el clima organizacional, en los conflictos laborales,   en el estrés laboral, en el compromiso y en la motivación del trabajador.       Este  trabajo  se  estructura  de  la  siguiente  forma.    En  la  introducción,  se  recoge n     los   objetivos  y  la  metodología  empleada  en  este  trabajo.    En  el  segundo  apartado,  se   exponen    la s     características    de  algunos    de  los  estilos  de    liderazgo     a  los  que  se  hace  \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            185    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    referencia en diferentes trabajos   y su influencia sobre   algunas variables organizativas .   En el tercer apartado, se realiza un estudio sobre los estilos de liderazgo llevados a cabo   en    dos     empresas  tecnológicas  del  Campo  de  Gibraltar.  Finalmente,  se  recogen    las   conclusiones  y limitaciones  del trabajo.          2.  REVIS IÓN DE LA LITERATURA       2.1  Concepto de liderazgo    El  significado  de  liderazgo  ha  sido  modificado  según  los  cambios  que  se  han   desarrollado a lo largo de los años. La figura que representa el líder salta a la vista por   su poder e influencia hacia otras persona s. Su concepto ha generado gran cantidad de   debates  dentro  de  la  literatura  científica  y  han  sido  muchos  los  autores  que  han   analizado  dicho    concepto .     Durante  la  época  de  las  dos  guerras  mundiales  hubo  una   frase  que  tuvo  cierta  trascendencia,  la  cual  consideraba  que  el  liderazgo  dependía   básicamente  de  rasgos  personales  como  la  inteligencia,  iniciativa,  pasión  o  el  valor.   Según  este  punto  de  vista,  quien     gozaba  de  estos  rasgos  personales  tenía  grandes   capacidades  de  ser  un  buen  líder.  Aunque ,  se  llegó  a  con statar  que  esto   era   incoherente , por lo que  se reformuló de nuevo   apareciendo diferentes definiciones sobre   el  liderazgo .     Una    definición  que  aclara  la    autoridad  del  liderazgo  es  su  capacidad  de   influir  en  un  grupo  para  alcanzar  una  visión  o  conjunto  de  metas.  La  fuente  de  esta   influencia podría ser formal, como la que puede proporcionar un cargo directivo en una   organización  ( Robbins,  2002 ).     Otra     definic ión  sobre  el  liderazgo  recoge  que    es  un   proceso  alt amente  interactivo  y  compartido     que     implica  el  establecimiento  de  una   dirección, visión y estrategias para llegar a una meta, alineando a su vez a las personas   y motivándolas  (French y Bell, 1996).   Son muc has las teorías que  intentan explicar el   liderazgo, como pueden ser la teoría X y la teoría Y ,  la  t eoría de la parrilla gerencial y la   te oría de los rasgos, entre otras. S in embargo ,   en este trabajo nos centraremos en los   estilos de liderazgos a los que se   hace referencia en la literatura   y su influencia sobre   diferentes variables organizativas .        2.2   Estilos de liderazgo    En  un  principio,  el  estilo  de  liderazgo  que  adopta  el  líder  en  una  organización  va  a   depender de motivos de diversa índole. A raíz de esto y    en base a su experiencia, el   líder adoptará un tipo de liderazgo que haga frente a los problemas o comportamientos   acontecidos.   Por tanto, muchos autores han indagado sobre el concepto del estilo de   liderazgo  que  debe  asumir  un  directivo  desde  diferentes  p ers pectivas.  Según   Chiavenato (1999 ), el   estilo de   liderazgo es la influencia interpersonal ejercida en una   situación, dirigida a través del proceso de comunicación humana a la consecución de   uno  o  diversos  objetivos  específicos.  Sin  embargo,  cabe  destacar     que    Ayaub  (2011 )    afirmó que los estilos de   liderazgo son desarrollados por lo actos y comportamientos de   los  líderes,  qui enes  a  veces  puede  influenciar  en     los  miembros  de  la  organización.   Asimismo,  los  estilos  de  liderazgo  dependen  de  los  antecedentes,  co nocimientos,   valores y experiencias que se obtienen a lo largo de   la vida cotidiana ( Stoner, 1996 ).       Existe una extensa variedad de estilos de liderazgo que influyen en la forma de ejercer   del  líder  en  la  organización.  Cada  uno  de  ellos  aporta  en  las    organizaciones  ciertas   l imitaciones  o  facultades  que  dependerán    de  las  características  particulares  de  cada   uno de  ellos .   Encontramos diferentes clasificaciones sobre los estilos de liderazgo en la   literatura .         \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            186    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    Liderazgo a utocrático    El líder autocrático siempre se ha considerado como un tipo de persona inflexible hacia   los  criterios  de  sus  seguidores,  que  se  rige  por  sus  propios  argumentos  y  asume  la   responsabilidad en la toma de decisiones. Este tipo de líder  acude   a remuneraciones o    castigos  dependiendo  de  las  acciones  realizadas  por  los  propios  seguidores .    El    líder   autocrático  impone  y  espera  el  cumplimiento  de  sus  órdenes  por  sus  subordinados,   suele ser dogmático y seguro.  Ayaub (2011),   pone   de manifiesto   que este tipo de líder   tom a las decisiones sobre las actividades y los trabajos, sin tomar en cuenta la opinión   de sus subordinados. Diversos autores que analizaron este estilo de liderazgo, lo han   colocado en la misma categoría del liderazgo autoritario  sin distinciones ni difere ncias   entre ellos. Los líderes autoritarios se basan en su poder para obligar y sus habilidades   para persuadir  mientras que   los líderes autocrát icos resuelven los problemas o toman    las  decisiones  por  ellos  mismos,  usando  la  información  que  t ienen  disponibl e  en  el   momento.       Liderazgo d emocrático    El líder con un estilo de liderazgo democrático   tiende a ser más participativo y tiene muy   en  cuenta  los  puntos  de  vista  de  cada  uno  de  sus  subordinados.    En  el  momento    de   proyectar alguna acción cada  subordinado   debe   estar presente  para que finalmente se   apruebe el proyecto. Este tipo de líder fomenta que los empleados decidan y asuman   responsabilidades  en  la  toma  de  decisiones.     El    líder  se  caracteriza  por    ser  activo,   consultivo y orientador, contrario al anterior. A demás, el líder democrático tiene un claro   sentido de responsabilidad y compromiso personal para satisfacer las necesidades de   la  organización  que  lidera.    Es  un  líder  que  comparte     la toma  de  decisiones  con  otros   miembros de la organización y, por tanto,  es tá  conectado con una alta moralidad en la   mayoría de  las  situaciones.  Hackman y Johnson ( 2013 ) relacionan al líder democrático   con el incremento de la productividad, el compromiso y la satisfacción.   Por tanto, es un   líder  influyente en los subordinados, un   estimulador para la consecución de proyectos,   un buen guía, un apasionado de las consecuencias lógicas, un gran oyente y respetuoso   con el trato haci a sus empleados.        Liderazgo laissez - faire    Este tipo de liderazgo es totalmente contrario a los es tilos an teriormente mencionados.   Este estilo  destaca por ser un est ilo apático a la hora de tomar  decisiones, sustrayendo   el  cargo  de  responsabilidad  y  cediéndolo  a  su  vez  a  sus  subordinados,  sin  ayuda,   motivación  ni  control  de  las  actividades  que  realizan  sus  seg uidores.  Muchos  lo  han   criticado a causa de su escasa capacidad de compromiso hacia la organización.   Este   líder no es capaz de resolver  los  conflictos que surgen en la organización, ni dirigir  hacia   la consecución   de los objetivos y metas marcados,  no   ofrece apoyo a sus seguidores,   elude cualquier cuestión que requiera de la experiencia y la responsabilidad del cargo   de un directivo. Su desempeño y perseverancia es ineficiente, lo que lo hace ser más   pasivo y desinteresado que cualquier otro tipo  de lí der.  Se   trata de una persona inactiva,   que evita la toma de decisi ones y la supervisión y procura   no involucrarse en  el trabajo   del grupo.  Para   Robbins (2002),   es un líder que proporciona los materiales necesarios   y deja hacer su trabajo a sus empleados co mo ellos  consideren   conveniente.       Liderazgo transformacional y transaccional       Los  estudios realizados  sobre  el  estilo  de  liderazgo  transformacional  demuestran que   proporciona  mejores  resultados  organizativos,  a  través  del  carisma,  inspiración  y   búsqueda  d el  interés  de  la  organización  (Lupano  y  Castro,  2008).   Entre  sus   particularidades destaca su estilo para animar al personal trabajador,  estimulándolo a   conseguir los objetivos previstos y  considerándolo   como un individuo significativo en la  \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            187    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    organización  y     no  como  un  mero  instrumento  de  trabajo.    Este  estilo     de  liderazgo   presenta un gran número de ventajas, ya que el líder se convierte en un modelo a seguir,   además    se    lleva  a  cabo     una  colaboración  cooperativa  en  la  que  se  desarrollan  las   habilidades socio - personales, aumentando la autoesti ma de ambos, líder y seguidores.    P or  tanto , este estilo   conlleva mejores resultados y beneficios para la organización.         Sin  embargo ,  el  estilo  d e  liderazgo  transaccional  se  diferencia  con  respecto  a l     estilo   anterior   en su carácter metódico para influir en el compromiso de los trabajadores. Su   modo  de  dirigir  la  organización  se  apoya  en  las  recompensas  o  castigos  de  los   seguidores  teniendo en cuent a   su productividad. Los líderes transaccionales premian a   los subordinados por cumplir con las orientaciones dadas. Predomina por saber cómo   gui ar  o  impulsar  a  sus  seguidores    mediante  la  especificación  de  su finalidad  y  lo que   repercute  la  tarea  en  sí.  Es te  modelo  de  liderazgo  resulta  funcional  y  efectivo  en  el   contexto de empresas de corte tradicional, ya que éstas buscan líderes que plan ifiquen    y  generen  estrategias  que  garanticen  el  cumplimiento  estricto  de  los  procesos  que   conduzcan a los resultados  de seados (Barbosa  y Contreras,  2013).      Por  tanto,  e l  estilo  de  liderazgo  utilizado  por  los  directivos  en  las  organizaciones   repercute de manera significativa en las mismas.        2.3   Influencias del estilo de liderazgo en diferentes variables.    Los  estilos  de  liderazgos  influyen  en  diferentes  variables  organizativas   como  la   conflictividad laboral ,   el clima organizacional y el estrés laboral .        Clima Organizacional    Para  que  fluya  un  clima  participativo  y  abierto  en  la  organización,  obteniendo  como   resultado una alta productividad y una eficiente satisfacción de los empleados, debería   ser conveniente que la entidad presente una administración que muestre grandes dotes   de gestión. Ello quiere decir que el estilo de liderazgo que se aplique en la organ ización   influirá sobre el clima laboral que se extiende en la compañía.    Tanto  el  liderazgo  transformacional  como  el  democrático  desarrollan  un  estilo  de   lide razgo  basado  generalmente  en  la     participación  de  los  empleados  en  la  toma  de   decisiones.  Además,  t ienen  en     consideración  las  necesidades    y  capacidades  que   presentan  los  tr abajadores  o  incluso    considera ,     de  forma  significativa ,     la  manera  de   mostrar  la  pequeña  línea  de  separación  que  existe  entre  el  poder  del  líder  y  de  los   miembros  de  la  organización.  T odo  esto  ligado  con  la  manera  de  comunicar  a  sus   seguidores la visión de la empresa y de incrementar el compromiso y la responsabilidad   de los subordinados para obtener un mejor rendimiento, hacen que estos estilos tengan   un resultado primordial y favorece dor con respecto al clima laboral  de   la organización.       Estrés laboral    El estrés es un estado de tensión que es producido por distintas situaciones que se dan   en  las  empresas  y  en  algunas  ocasiones  por  las  exigencias  del  trabajo .  Davis  y   Newstrom (1 991)   mani fiestan que  la  causa  por  la  cual  se  origina  el  estrés  laboral ,     es   debido  a  que  en  algunas  ocasiones  los  trabajadores  pueden     mostrar  un  cansancio   emocional  y  apatía  por  el  trabajo  que  realizan,  lo  cual  explica  que  se  sientan   íntegramente  incapacitados  para    conseguir  sus  metas.  Es  por  ello,  que  muchos   trabajadores que sufren estrés laboral muestran múltiples quejas por cualquier acción   que  realizan,  achacan  sus  fallos  a  sus  compañeros  o  incluso  llegan  a  abandonar  su   puesto de trabajo.   Los  líderes juegan un pa pel central en las organizaciones y pueden   influir  tanto  en  las  conductas  y  salud  de  las  organizaciones  como  en  las  de  sus   seguidores. Hay que apreciar que el comportamiento que tome un líder con respecto a   sus subordinados puede provocar diversas tensione s, puesto que en ciertas ocasiones  \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            188    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    dicha c onducta del líder conlleva   finalmente a un nivel de estrés afectando al bienestar   de  la  organización.  A  este  respecto,  Tepper  (2000)  indicó     que  los  empleados  que   perciben  que  sus  supervisores  muestran  un  comportamiento  abusivo  y  dañino,   experimentan  bajos  niveles  de  satisfacción  laboral,  menores  niveles  de  compromiso   afectivo,  mayor  estrés  psicológico  y  mayores  niveles  de  conflicto  trabajo - fa milia.  Los   líderes  que  utilizan  un  estilo  de  liderazgo  transform acional  o  democrático,     tienen    capacidad para controlar  el estrés laboral y favorecer la motivación de los trabajadores.   Estos  líderes     se  esfuerza n     por  hacer  lo que  es correcto  y  justo  para  to das  las  partes   interesadas de la organización y puede n   sacrificar con gusto los propios intereses por   el bien colectivo de su equipo de trabajo o su organización.       Conflictividad laboral    El  conflicto es un enfrentamiento que se produce entre dos o más perso nas, las cuales   tienen distintas inclinaciones que defienden con solidez y determinación. En el momento   que alguien impone su posición y vela porque sus intereses sean los beneficiados, hay   posibilidades de que comience un conflicto laboral. Son muchos los   factores causantes   de  alterar  y  llevar  consigo  un  conflicto  laboral  en  la  empresa ,     como    los    desacuerdos   personales y económicos. No obstante, un líder que resuelva con facilidad y simplicidad   aquellas situa ciones en las que se ocasionen  conflictos de dist inta índole dentro de la   organización ,   entre varios individuos ,   será un líder eficaz. Algunos autores apuestan por   un liderazgo democrático para la resolución de conflictos, sin embargo otros prefieren   un estilo autocrático para resolver con astucia los pr oblemas y conflictos producidos en   la organización.     Como se ha comentado anteriormente, son muchas las clasificaciones sobre los estilos   de liderazgo encontradas en la literatura. En este trabajo nos centraremos en   los tres   tipos  de  liderazgo  más  básico     ( autocrático,  democrático  y  laissez  faire) ,    para  poder   analizar posteriormente el estilo utilizado en las empresas objeto de estudio.           3.    ESTUDIO  DE  CASO:  INFLUENCIA  DEL  ESTILO  DE  LIDERZGO  EN  LA   ORGANIZACIÓN       3.1   Metodología    Para  analizar  los  estilos  de  li derazgo  y  la  influencia  que  esto s  tienen  en  las   organizaciones , se han  seleccionado dos empresas que desarrollan sus actividades en   la comarca. A partir de este estudio se identificarán las diferencias y similitudes dentro   de estos casos, englobando más a llá de las impresiones iniciales para mostrar un mayor   conocimiento  del    tema     a  analizar.  El  motivo  por  el  que  se  acude  a  la  realización  de   estudios bajo esta metodología, está argumentada por la dificultad de recopilar datos a   partir de otras,  ya que   cada  vez son más las organizaciones que se niegan a prestar su   apoyo  a  otro  tipo  de  metodología,  como  los  cuestionarios.    Se    optó  por  desarrollar  el   estudio  en    dos     orga nizacio n es .  Este  método  favoreció  las  comparaciones  de  ambas   empresas   para poder obtener   concl usiones útiles sobre el tema objeto de estudio.    Las empresas que fueron seleccionadas para el estudio   son;   Omnium Lab (empresa 1)   y Adhoc Webs (empresa 2) p ertenecen al sector TIC y de nuevas tecnol ogías. Son dos   empresas  jóvenes   ubicadas  en  el  Campo  de  Gi braltar,   aunque   desarrollan  sus   actividades  en  todo  el  territorio  nacional  gozando  de  una  buena  reputación  en  lo  que   confiere  a  sus  sectores.    Se  llevaron  a  cabo  entrevistas  semi - estructuradas  y  en   profundidad,  que    fueron  realizadas    a     los    directores    generales  de  ambas  compañías,   quienes  respondieron  abiertamente y sin limitaciones a las preguntas formuladas   sobre    cuestiones previamente diseñadas y ordenadas.      \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            189    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    3.2   Análisis e interpretación de datos    En este punto se  recoge   la percepción de  los directivos  sobre los estilos de liderazgo   utilizados  en sus organizaciones ,   con el objetivo de  analizar si  estos estilos influyen de   manera  en diferentes variables   organizativas .  Es decir, si son estilos que fomentan    el   compromiso    en     los  trabajadores  de  cara  a  un  mej or  desempe ño  de  éstos  en  la   organización ,     la  motivación,  favorecen  el  clima  laboral    y     si    son  capaces     de  controlar   situaciones en las que se produ cen   conflicto s   laboral es . Por consiguiente, se procede a   analizar  la  información    obtenida    de     las  entrevistas     para  llegar  a  unas  conclusiones   finales.        El estilo de liderazgo aplicado en las organizaciones     El liderazgo presume de su capacidad  para   influir en un grupo de personas  y alcanzar   un  conjunto  de  metas.  E l  estilo    de  liderazgo    que  se  aplique  va  a  depende r  de  las   facultades y habilidades de la persona a cargo del puesto. Con ello, el directivo de la   empresa 1 adopta en su organización un estilo de liderazgo democrático pues considera   que,       El estilo de liderazgo democrático es una premisa que se sabe en los   orígenes de la   empresa ,     en  la  que  se  quiere  hacer  partícipe     a  los  trabajadores     en  la  toma  de   decisiones y de tomar responsabilida des del puesto al que pertenece.   E s decir, es   más  favorable     este  estilo  con     una  actitud  positiva  a  la  hora  de  desarrollar  sus   habilidades y así se sienta más reforzado para obtener mejores resultados.       Por su parte , el directivo de la empresa 2  también se decanta por un estilo de liderazgo    democrático ,     donde    sus     empleados  tienen  voz  y  voto  en  la  toma  de  decisiones.  Por   tanto, el d irectivo de la empresa 2 afirma que,       Me siento mucho más identificado con el liderazgo democrático. En nuestro equipo   somos 7 personas y todos tienen capacidad de toma de decisión. Cada semana nos   reunimos y se establecen objetivos a corto, medio y largo p lazo juntos.       Ambas  empresas  estudiadas  estiman  que  un  estilo  de  liderazgo  democrático  puede   facilitar  el  desarrollo  de  los  trabajadores  tanto  en  sus  puestos  de  trabajo  como  en  la   consecución de objetivos de la organización.  Asimismo , en los departamentos i nferiores   al puesto directivo se  utiliza   también   el estilo de liderazgo democrático. En el caso de la   empresa 1, el directivo afirma que,       Este estilo se aplica con mayor predominio en toda la organización ,   ya que al tratarse   de una empresa pequeña se impri me el espíritu de realización de actividades de una   sola manera, es decir, no es conveniente utilizar un estilo de liderazgo diferente.       Por tanto, ambos directivos están de acuerdo en la unificación de los diferentes  estilos   de liderazgo para todos los líd eres   que componen la organización. Siguiendo esta pauta,   el directivo de la empresa 1 afirma,       La  forma  de  liderar  en  toda  la  organización  debe  ir  al  unísono,  debido  a  que   permitiría un nivel de gestión alto en cuanto a toda la organización.       Deseos similare s tiene el directivo de la empresa 2, que considera que,        Es esencial que los equipos de trabajo sean proactivos y tengan energías. Para   eso es imprescindible que se les escuche.   \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            190    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95       El liderazgo y el clima organizacional    Las  organizaciones    analizadas     impulsan  la  buena  sintonía  entre todas  las  partes que   componen la organización para el desarrollo de las actividades y por consiguiente  para   la  consecución  de  objetivos.  En  la  empresa  1,  al  tratarse  de  una  empresa  pequeña,   permite la posibilidad de que se   establezca un clima de trabajo categórico y donde fluye   la buena armonía entre los diferentes trabajadores. Asimismo, la influencia del estilo de   liderazgo democrático promueve el buen clima de la organización.  El d irectivo de dicha   empresa m enciona ,       Es f undam ental y una de las bases por la  cu a l aplico el liderazgo   democrático en   mi organización. Y a que en la medida que cada integrante se ve motivado porque   tiene sus cuotas de responsabilidad y pueden gestionar sus actividades, esto se   traduce en un trabaj o más propicio y productivo   y con un buen ambiente laboral .       Siguiendo  la  misma tónica,  el  directivo  de  la  empresa  2    manifiesta     la repercusión  del   estilo de liderazgo en el clima de trabajo y afirma que,       En  el  mundo  en  que  vivimos  se  valora  más  positivament e  la  retribución   emocional  que  la  económica.  Estilos  de  liderazgo  autocráticos  no  generan   equipos productivos, debido al estado emocional de los mismos.   En cambio, los   proyectos  en  los  que  se  tiene  en  cuenta  a  los  compañeros  son  mucho  más   exitosos ,   porque  con  un  estilo  de  liderazgo  democrático  se  aumenta  el   compromiso de cada miembro , además de un buen clima en la empresa .       A su vez, se alude a l hecho  de la im portancia de este estilo en el momento en el  que   pueda surgir un problema   para volver a la situación   de inicio . Por ello, el directivo de la   empresa 1 esclarece que el estilo  democrático es significado de éxito en los casos de   conflictos, así manifiesta,        Al  aplicar  el  estilo  de  liderazgo  democrático  previene  males  mayores  cuando   surgen  problemas  o  conflictos.  Es  una  forma  adecuada  de  reconducir  esos   problemas  de  un  modo  más  sencillo    y    confiable  para  todos.  Entonces,  lo  veo   como una garantía de éxito en est e sentido.       De la misma manera el directivo de la empresa 2 afirma que,       El estilo de liderazgo que se aplica en nuestra organización ayuda a prevenir los   posibles problemas que pueden surgir en el desarrollo del trabajo. Hay que atajar   el problema desde el  principio de la fricción, ya que la fricción genera chispas y   las chispas fuego. Si se llega a ese punto, es muy difícil reconducir la situación.       Liderazgo y  la resolución de  conflictos laborales    El directivo de la empresa 2 es tajante en lo que a resoluc ión de conflictos se refiere. Se   muestra claramente abierto al diálogo para solucionar los problemas que puedan surgir   en el ámbito laboral.  Por lo que manifiesta que,       Los conflictos deben resolverse mediante diálogo .  El diálogo permite a todos los   trabaja dores expresar sus sentimientos sin cortapisas. De esta manera es más   sencillo empatizar con ellos y llegar de una manera más correcta a la resolución   del problema.      \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            191    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    En  la  misma  órbita  se  mueve  el  directivo  de  la  empresa  1.  Cada  vez  que  surge  un   conflicto q ue pueda repercutir en el desarrollo de las actividades diarias de la empresa,   se    gestiona  a  través  de  una  magnífica  colaboración  entre  todos  los  miembros  que   componen  el  equipo  de  trabajo .  El  objetivo  es     resolver  el  problema  desde  su  base  y   evitar que   se  alargue , llegando   a una situación peor.        Intentamos  solucionar  cualquier  conflicto  que  surja  en  la  organización  de  un   modo muy participativo sin mirar a otro lado y con ello descartar una opción que   pueda dar solución a la cuestión, sino que se intenta ata jar el problema desde   su  raíz.  Además,  también  se  procura  que  los  trabajadores  que  no  han  sido   involucrados tengan consideración para la determinación del fin del problema.       Asimismo, el directivo de la empresa 1 cree claramente que la adopción del estilo d e   liderazgo democrático podría simplificar el conflicto de un modo más sencillo y rápido   que  otro  tipo  de  estilo  de  liderazgo,  aunque  esto  siempre  está  condicionado  a  la   magnitud del problema.        Nunca  hemos  tenido  que  recurrir  al  cambio  de  estilo  de  lideraz go  para  poder   tomar solución a un problema, porque creo que no es una manera correcta para   acabar con el problema en sí, ya que puede enrarecer el ambiente organizativo   de la empresa y complicar aún más las cosas.       Dentro de esta misma parcela, el directivo   de la empresa 2 aboga por la transparencia   y  ensalza  las  utilidades  del    estilo     de  liderazgo  democrático  para  la  resolución  de   conflictos.   A la vez, se muestra muy reacio a un sistema autocrático argumentando que,         Quizás los problemas sí queden resueltos  a corto plazo, pero el problema nunca   queda resuelto del todo si se opta por solventarlo de forma dictatorial.       Liderazgo y estrés laboral    Para    reducir  el  estrés  que  se  puede  generar     en  los  trabajadores  en  situaciones   conflictivas , ambas empresas intentan  unificar a todo el equipo de trabajo a través del   apoyo  grupal.    Por  tanto,     para  el  directivo  de  la  empresa  1,  el  líder  debe  realizar  un   esfuerzo  para  apoyar  al  trabajador  que  sufre  esta  presión  y  ayudarle  de  una  manera   clara.        Intento que en todo momento  se vea a la empresa,   al   líder y   a los   compañeros   como  un  apoyo  y  una  solución  a  su  posible  problema.  Considero  que  si  el   empleado  en  cuestión  se  siente  cómodo  se  puede  llegar  a  una  más  rápida   solución. Con un estilo más pasivo también se podría resolver, p ero en la medida   en que se ayude al trabajador, se sentirá más reconfortado y se puede alcanzar   antes una solución   y así  reducir su estrés .       Por  su  parte,  el  directivo  de  la  empresa  2  opta  por  empatizar  con  sus  trabajadores.   Considera  que  ponerse  en  la  piel     de  la  persona  afectada  es  una  buena  manera  de   comprender las cuestiones que generan el problema y ayudarle a la resolución de los   mismos.   Cuando se entra a analizar la aplicación del estilo de liderazgo en este tipo de   cuestiones, ambos coinciden  en   que e l liderazgo democrático es la mejor opción para   liberar de peso a los trabajadores y mantener un buen rendimiento a nivel de resultados.   El   directivo de la empres a 1 afirma que,   \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            192    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    Es cierto que   el estilo   laissez faire puede liberar de más presión al trabajad or,   pero creo que cuando surge un problema es adecuado el estilo democrático para   ayudar a los trabajadores y liberarles de cierta presión y estrés.       Liderazgo y compromiso del trabajador     En cuanto al   compromiso del trabajador y la responsabilidad del directivo para dirigir a   su equipo  hacia   el logro de los objetivos propuestos por la organización,  se obtiene que    la práctica de un estilo de liderazgo democrático puede  incrementar   el compromiso   del   trab ajador  en su puesto de trabajo   e influir de esta forma en el  crecimiento  organizativo .   Por  su  parte,  en  la  empresa  1  aluden  al  compromiso  como  uno  de  sus  prioridades    a   conseguir, por lo que manifiesta,       Absolutamente,  estoy  convencido  de  que  al  actuar  de  ot ra  manera  no  llega  a   producirse la fidelización. Por tanto, opto por un modelo de trabajo en el que el   trabajador  se  siente  partícipe  e  identificado ,  más  comprometido   y,  por   consecuencia,  actúa  y  responde  a  los  objetivos  que  se  plantean  en  la   organización.       El  directivo  de  la  empresa  2    manifiesta     que  resulta  muy  positivo    escuchar  a  los   trabajadores, ya que esto genera un mayor compromiso con la organización.   Por tanto ,   ambos  directivos  coinciden  en  la  relevancia  positiva  que  tiene  el  estilo  de  liderazg o   demo crático  en  el  compromiso  y  en  empresas  con  estas  características,    tal  y  como   argumenta el directivo de la empresa 2,        Con  un  estilo  democrático  obtenemos  trabajadores  comprometidos.  Esta   afirmación  la  aplico  en  nuestro  caso,  que  somos  una  empresa  de  servic ios.   Entiendo que en otros casos más orientados a la producción, la productividad de   los empleados puede medirse con otra vara distinta y centrar menos el foco en   el compromiso del equipo.       Liderazgo y motivación del trabajador    En la empresa 1 creen que la   motivación es un pilar clave para el desempeño de las   funciones a realizar dentro de la empresa. El directivo considera que un clima en el que   reine el estilo democrático de liderazgo es un clima en el que se fomenta la motivación   del  trabajador  y  la  clav e  para  que  exista  este  nivel  de  motivación  viene  dado  por  la   solvencia  del  líder.  En  cuanto  a  otros  estilos  de  liderazgos  aplicados  para  motivar  al   trabajador, en la empresa 1, el líder se muestra muy reticente.       Creo  que  no.  No  creo  en  los  otros  estilos.  E s  cierto  que  personas  concretas   necesitan que estés un poco más encima de ellos o les propongas metas más   concretas  y  definidas,  pero  es  diferente  a  que  esa  persona  se  sienta   responsable.  Si  tú  a  esa  persona  no  la  motivas  y  no  haces  que  se  sienta   responsab le,  no  te  va  a  responder  igual.  Puede  que  ese  caso  concreto  de   persona necesite otros estilos. Ese es el secreto de los recursos humanos, sacar   lo bueno de cada trabajador de una forma diferente.       Por  su  parte,  el  directivo  de  la  empresa  2    manifiesta  la     eficacia  del  estilo  autocrático,   aunque en casos muy concretos   y a corto plazo,   ya que expone que,         El  estilo  autocrático  a  lo  mejor  a  corto  plazo    y  en  casos  concretos    puede  ser   positivo,  aunque   a la larga puede traer problemas.      \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            193    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    Liderazgo y comunicaci ón con el trabajador    Para  ambos directivos   es muy importante que la comunicación fluya, aunque recalca n    el hecho de que no todo debe ser comunicado a sus empleados. Considera n   que utiliza n    el sistema correcto de comunica ción y liderazgo, como pone de manif iesto   el directivo   de la empresa 1 ,       Considero  qu é   utilizando  el  sistema  de  liderazgo  democrático,  la  buena   comunicación  con  la  organización  viene  implícita  dentro  del  concepto.  El   concepto democrático lleva aparejado una buena política de comunicación entr e   los miembros de una organización.       De la misma manera, ambos cuestionan la capacidad de otros estilos de liderazgo para   favorecer  la  comunicación  con  el  resto  del  equipo.    Así     el  directivo  de  la  empresa  2   afirma,       No entiendo como el estilo de liderazgo  autocrático o el laissez faire puede influir   de forma positiva en ningún caso. No favorecen la comunicación y lo que hacen   es  limitarla.  La  desinformación  genera  dudas  y  desconfianzas.  Esto  influye  de   manera directa en la motivación y en el rendimiento del   trabajador.       Liderazgo y resultado de los trabajadores    El liderazgo democrático  influye en   la consecución de los logros de los trabajadores. El   directivo de la empresa 2 cree que,       La motivación es un factor claramente influyente en el desempeño de la  empresa   y en los resultados y el rendimiento individual de cada persona del equipo. Un   trabajador feliz y en sintonía con la empresa es más productivo que un trabajador   infeliz  que  no  se  sienta  parte  de  la  organización.  La  desgana  generada  por  el   segundo c aso influye negativamente en los resultados.       De la misma manera y dado el sector donde se encuadra la empresa 1, su directivo cree   que  otro  estilo  de  liderazgo  tendría  consecuencias  negativas  en  los  resultados  del   trabajo   y en la creatividad .       En mi sector  creo que no sería bueno utilizar otros estilos de liderazgo que no   sea el democrático. Es un sector en el que predominan los equipos pequeños   muy  cohesionados.  La  autoridad  excesiva  merma  la  creatividad  individual.   Lógicamente, debe existir una jerarquía,  pero dando a cada trabajador su punto   de motivación.          4.  CONCLUSIONES       Tras   el análisis  de las entrevistas   realizadas   a dos empresas punteras en el Campo de   Gibraltar  en  el  ámbito  informático ,  se  obtienen  algunas  conclusiones .    El  hecho  de   realizar el estudio con  dos directivos jóvenes pertenecientes a dos empresas    creadas   hace menos de diez años, nos   permite  manifestar  que los resultados  obtenidos  podrían   ser un   reflejo de las corrientes que se avecinan en cuanto a liderazgo  en  la s empresas   de la   Comarca.     Una  de  las  conclusiones  más  destacadas  extraídas  es  la  predominancia evidente  del   estilo de liderazgo democrático frente a los otros estilos estudiados en este trabajo. El   laissez - faire y el estilo autocrático quedan claramente   a la zaga según lo revelado en el  \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            194    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    estudio. Se prefiere un estilo democrático que permita y facilite el buen ambiente en el   entorno laboral de cara al desempeño profesional del trabajador. Ambos directivos son   parejos en sus expresiones cuando se trata de  definir un estilo idóneo de liderazgo que   fomente  la  felicidad  del  asalariado ,     sin  que  esto  repercuta  de  manera  negativa  en  el   rendimiento  laboral  del  trabajador.  Un  estilo  democrático  hace  que  el  trabajador  se   sienta  más  importante  en  el  espacio  laboral ,    lo  que     produce  efectos  positivos  en  la   implicación    y    en    su  compromiso    con     el  trabajo,  y  por  ende,  en  la  consecución  de  los   objetivos marcados por la organización a corto y medio plazo.    Otra  de  las  conclusiones  que    obtenemos  en  este  trabajo    es  la  falta  de  a plicaciones   positivas en la práctica habitual de las otras dos corrientes de pensamiento ,   en lo que a   liderazgo  se  refiere.  Ambos  directivos  estiman  que  no  existe  efectividad  en  un  estilo   extremista que coarte de manera total la capacidad de opinión y deci sión del trabajador.   Tampoco  se  debe  caer en  el  otro  lado  de  la  balanza, que  deja  a  la  plena  libertad  del   trabajador la toma de decisiones.  Por tanto, los otros dos estilos de liderazgo  repercuten   de manera negativa en  el   trabajador,   que puede sentirse des motivado (en el caso del   liderazgo  autocrático)  o  excesivamente  abandonado  por  el  directivo  (en  el  caso  del   liderazgo laissez - faire).      Por último, destacar la suprema importancia que se le otorga al liderazgo. Las empresas   son  lo  que  llegan  a  ser  sus  trab ajadores.  No  solo  importa  la  capacidad  laboral  de  un   trabajador, ya que la falta de motivación desencadena una falta de resultados que de   manera  lógica,  afecta  al  rendimiento  de  la  empresa  como  proveedor  de  productos  y   servicios. Este trabajo ha servido pa ra poner de manifiesto   l a vital importancia que tiene   el liderazgo   en las empresas y cómo influye en la resolución de conflictos laborales, el   estrés, el compromiso, la motivación, la comunicación y los resultados organizativos. Sí   el  líder  falla  en  su  cometido  de  dirigir  al  equipo,  se  pueden  producir  situaciones  que   infl uyan en los diferentes aspectos comentados anteriormente.  P or tanto, el líder   con el   estilo de liderazgo que utilice   es  fundamental en   cualquier empresa.    Para finalizar, comentar que una de las limitaciones de este estudio ha sido no haber   podido entrevist a r   a un líder que utilizara el estilo de liderazgo autocrático o laissez faire   para  poder  comparar  los  resultados.  De  esta  manera,  podríamos  estudiar  las   percepciones    de un líder que opta por un estilo diferente para tratar que sus empleados   alcancen los  objetivos propuestos por la organización. Habría sido interesante conocer   otros estilos de liderazgo  que nos permita n   hacer comparaciones.        BIBLIOGRAFÍA    - Ayoub - Pérez, J. (2011). Estilos de liderazgo y su eficacia en la administración pública mexicana.   Lulu Enterprises, Inc.     - Barbosa, D. ,     y Contreras, F. (2013). Del liderazgo transaccional al liderazgo transformacional:   implicaciones para el cambio organizacional . Revista Virtual de Unive rsidad Católica del Norte,   39,  ( 152 - 164 ) .    - Chiavenato, I. (1999). Introducción a la teoría general de la administración, Santafé de Bogotá,   D.C., Colombia, McGraw - Hill Interamericana, S.A.    - Davis K .,   y Newstrom J. (1991).  Comportam iento humano en el trabajo.  México. Mc Graw Hill.     - F rench, L. ,     y Bell , C. H. (1996).    Desarrollo Organizacional: aportaciones de las ciencias de la   conducta para el mejoramiento de la organización. 5ªedición. México, D.F. Prentice - Hall Hispano -  Americana.   \nGestión Joven   Revista de la Agrupación Joven Iberoamericana   de     Contabilidad y Administración de Empresas (AJOICA)    _______________________________________________________________ ___ __________ __________________            195    Nº 1 8   –   201 8    ISSN 1988 - 9011    pp.  1 83   -   1 95    - Hackman , M.   Z. ,   y     Johnson ,  C.   E. (2013).  Leadership: A  Communication Perspective.  Waveland   Press.     - Lupano, M., y Castro, A. (2008).  Estudios sobre el liderazgo: Teorías y evaluación. Psicodebate   6: Ps icología, Cultura y Sociedad, 8   ( 107 - 122 ) .     - Robbins, S. (2002).  Comportamiento Organizacional.   México: Prentice Hall.      - Stoner  J.    (1996) .    Administración    5a  ed.  Primera  parte.  México,  DF:  Editorial  Prentice -     Hall   Hispanoamericana.    - Tepper  B.  J.  (2000).    Consequences  of  Abusive  Supervision.    The  Academy  of  Management   Journal .  Vol. 43,   2 (178 - 190).                        \n";
+    const PDF_NAME = "LIDERAZGO ORGANIZACIONAL.pdf";
+    const CHATBOT_THEME = "LIDERAZGO ORGANIZACIONAL";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Por qué el liderazgo es clave para la salud laboral y el cumplimiento de objetivos en organizaciones competitivas?","¿Cómo puede pasar una organización de grupos de trabajo descontentos a equipos que se sienten queridos y bien tratados?","¿Qué condiciones hacen que no todas las organizaciones aprovechen de forma positiva la figura del líder?","¿Qué diferencias establece la literatura entre el liderazgo autocrático y el autoritario en la toma de decisiones?","¿Cómo se caracteriza un liderazgo democrático por su participación, sentido de responsabilidad y compromiso?","¿Qué efectos se asocian al liderazgo democrático sobre productividad, compromiso y satisfacción?","¿En qué consiste el liderazgo laissez-faire según el material y por qué se critica su falta de apoyo y control?","¿Cómo se explican las diferencias entre liderazgo transformacional y transaccional en el marco del texto?","¿Por qué el estudio utiliza entrevistas semi-estructuradas en dos empresas del sector TIC (Omnium Lab y Adhoc Webs)?","¿Qué variables organizativas se analizan para interpretar si los estilos de liderazgo influyen en el desempeño (por ejemplo, motivación, clima y conflictos)?","¿Cómo conectan los directivos el liderazgo democrático con el compromiso del trabajador y la fidelización?","Según las conclusiones, ¿por qué los estilos extremos (autocrático o laissez-faire) pueden resultar negativos para la motivación y el bienestar?"];
+    const INITIAL_PALETTE = {"primaryColor":"#b730e8","secondaryColor":"#c559ed","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#b730e8","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

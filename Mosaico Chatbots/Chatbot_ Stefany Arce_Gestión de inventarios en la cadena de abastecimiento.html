@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Gestión de inventarios en la cadena de abastecimiento </title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Gestión de inventarios en la cadena de abastecimiento </p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "Proyecto DES 2024 Modelación y Simulación V M. Díaz, S. Jaramillo y A. Sánchez, eds.  GESTIÓN DE INVENTARIOS EN LA CADENA DE ABASTECIMIENTO SPCI UTILIZANDO SIMULACIÓN DE EVENTOS DISCRETOS  Martín Díaz Vélez mdiazv1@eafit.edu.co Escuela de Ciencias e Ingeniería Universidad EAFIT Sofía Jaramillo Chavarría sjaramil42@eafit.edu.co Escuela de Ciencias e Ingeniería Universidad EAFIT Angy Sánchez Moreno ajsanchezm@eafit.edu.co Escuela de Ciencias e Ingeniería Universidad EAFIT  RESUMEN  Este   estudio   se   enfoca   en   evaluar   la   gestión   del   inventario   durante   la   fase   de   aprovisionamiento   de materias   primas   para   la   fabricación   de   suministros   de   sistemas   de   protección   contra   incendios.   Se   imple- mentó un modelo utilizando simulación de eventos discretos (DES) para representar la naturaleza discreta de   las   cadenas   de   suministro.   Se   analizaron   diversos   niveles   de   punto   de   reorden   y   cantidades   a   orde- nar para el manejo de inventario con el objetivo de mejorar la eficiencia operativa. Los resultados revelan una reducción del 9.0 % en el tiempo del sistema de pedidos y del 8.4 % en la cantidad de pedidos rechazados.  1.   INTRODUCCIÓN  La gestión efectiva de las cadenas de abastecimiento es fundamental para garantizar que los productos o mercancías lleguen a los clientes finales de manera oportuna y eficiente. Desde el aprovisionamiento de materias   primas   hasta   la   entrega   final,   este   proceso   abarca   una   serie   de   operaciones   complejas,   incluyen- do   provisión,   producción,   almacenaje   y   distribución,   cada   una   requiriendo   una   cuidadosa   planificación   y coordinación. Enfocándonos   específicamente   en   la   etapa   de   aprovisionamiento,   esta   fase   se   concentra   en   asegurar la   disponibilidad   y   calidad   de   los   materiales   necesarios   para   la   fabricación   del   producto   final.   Aquí,   la planificación   precisa   es   crucial,   considerando   factores   como   la   cantidad   de   materiales   requeridos,   su   dis- ponibilidad   y   los   tiempos   de   anticipación   necesarios   para   garantizar   un   flujo   constante   en   la   cadena   de abastecimiento.   La   flexibilidad   también   es   clave,   permitiendo   ajustes   ágiles   ante   cambios   en   la   demanda y la oferta. Para   enfrentar   los   desafíos   inherentes   a   esta   compleja   dinámica,   es   pertinente   recurrir   a   herramientas como   simulaciones,   que   permiten   experimentar   con   estrategias   y   mejorar   los   procesos   involucrados   en   la cadena   de   abastecimiento.   En   este   contexto,   nos   enfocamos   en   la   fase   de   aprovisionamiento   de   ciertas materias   primas   principales   de   la   empresa   de   Sistemas   en   Protección   Contra   Incendios   (SPCI),   líder   en soluciones integrales para la protección contra incendios. Dentro de los sistemas contra incendios ofertados \nM. Díaz, S. Jaramillo y A. Sánchez  por la empresa se encuentra el suministro SMART, el cual integra procesos de modelación, prefabricación, empaque y despacho. Sin embargo, la naturaleza personalizada de estos suministros, adaptados a las nece- sidades específicas de cada cliente, presenta desafíos adicionales en la gestión de inventario, especialmente en un mercado dinámico donde las fluctuaciones en la demanda y los tiempos de entrega de los proveedores pueden complicar aún más el proceso. En   este   contexto,   uno   de   los   retos   más   significativos   es   el   manejo   óptimo   del   inventario.   Este   factor tiene implicaciones directas en la eficiencia operativa y la rentabilidad, convirtiéndose en un aspecto crítico para la empresa. La dificultad al abordar este proceso se centra en el inherente conflicto de intereses que se generan dentro de la compañía. Por un lado, se desea cumplir con una promesa de tiempo con los clientes pero   al   mismo   tiempo,   se   pretende   tener   las   cantidades   mínimas   de   inventario   que   permitan   cumplir   con la   demanda.   Esto   resulta   complejo   debido   a   la   naturaleza   dinámica   del   mercado,   donde   las   fluctuaciones en   la   demanda,   la   variabilidad   en   las   materias   primas   y   los   tiempos   de   entrega   de   las   órdenes   de   compra por parte de los proveedores, pueden desestabilizar los sistemas de inventarios establecidos que genera un impacto negativo en el funcionamiento de la cadena de abastecimiento. El presente trabajo está distribuido de la siguiente manera: En la sección 2 se encuentra el modelamiento conceptual donde se define el problema, se plantean los objetivos, el contenido del modelo y otros aspectos relevantes. En la sección 3 presenta los antecedentes del trabajo. Luego, en la sección 4 presenta los datos del modelo junto con los análisis y pruebas estadísticas para los datos de entrada. En la sección 5 explica la implementación en la plataforma de simulación. En la sección 6 se explica la obtención de los resultados y en la sección 7 se hace validación y verificación del modelo. Finalmente, en la sección 8 presenta el análisis de sensibilidad y una optimización con base en los objetivos planteados y en la sección 9 se presentan las conclusiones del modelo además de algunas propuestas con base en los resultados y para trabajos futuros.  2.   MODELAMIENTO CONCEPTUAL 2.1.   Definición del problema  Una red contra incendios mostrada en la Figura 1 se compone de un conjunto de elementos diseñados para actuar de manera eficiente y rápida en caso de incendio, en el sistema se pueden encontrar materiales con   finalidades   diferentes,   ya   sea   para   la   detección   oportuna   del   humo   o   el   aumento   de   la   temperatura   y materiales   cuya   función   es   apagar   y   controlar   las   llamas.   Este   tipo   de   infraestructura   es   crucial   para   la seguridad   de   edificios   y   espacios   industriales,   ya   que   permite   una   respuesta   inmediata   ante   emergencias, reduciendo   significativamente   el   riesgo   de   daños   materiales,   personales,   y   asegurando   un   entorno   más seguro para los ocupantes.  Figura 1: Sistema de protección contra incendios. \nM. Díaz, S. Jaramillo y A. Sánchez  Debido   a   que   los   requerimientos   de   este   mercado   varían   según   necesidades   individuales   la   National Fire   Protection   Association   (NFPA)   asociación   que   establece   más   de   300   códigos   y   normas   que   abarcan las   necesidades   de   diferentes   sectores.   Impone   ciertas   normativas   en   este   contexto   para   que   a   pesar   de la   variabilidad   sea   estándar   la   implementación,   principalmente:   NFPA   10,   NFPA   13,   NFPA   13D,   NFPA 25, NFPA 72, NFPA 70, entre otras. Cada una de estas tiene un enfoque diferente en el mismo mercado, ya   sea   para   determinar   la   cantidad   adecuada   de   materiales   a   usar,   la   distancia   entre   ellos,   las   medidas preventivas,   los   estándares   para   revisión   continua   y   el   mantenimiento   seguro,   y   proporcionar   directrices para la instalación segura de redes contra incendios. Por otro lado, uno de los principales problemas para las empresas es la gestión de inventarios, en donde se debe encontrar un balance para satisfacer la demanda sin entrar en pérdidas por inventario que pueden ser de capital o de espacio. De esta manera, en SPCI se maneja el sistema de gestión de inventarios “Justo a tiempo (JIT)” donde este se centra en fabricar y entregar sólo lo que se necesita, cuando se necesita y en la cantidad necesaria, justo   en   el   momento   que   se   demanda.   Sin   embargo,   el   sistema   JIT   tiene   ciertas   desventajas   ya   que   una errónea instalación del sistema puede implicar retrasos o carencia de inventario en alguna de las fases de la cadena de abastecimiento. Debido a la necesidad que surge de tener una buena coordinación en el manejo del   inventario,   resulta   pertinente   evaluar   el   comportamiento   del   sistema   con   JIT   y   otras   alternativas   de niveles de reorden y cantidad a ordenar que   minimicen   la cantidad de materias primas en la bodega pero que garantice un flujo continuo en la cadena de abastecimiento  2.2.   ¿Por qué DES?  La simulación de eventos discretos (DES) se utiliza en la modelación de inventarios por varias razones fundamentales. En primer lugar, DES permite la representación detallada de eventos específicos que ocurren en   momentos   particulares,   como   la   llegada   de   pedidos,   la   recepción   de   materias   primas   y   las   salidas   de suministros. Estos eventos no suceden de manera continua, sino en instantes discretos que afectan el estado del sistema de manera significativa. Al modelar estos eventos específicos, DES proporciona una visión más precisa y realista del funcionamiento del sistema de inventarios. Además, la simulación de eventos discretos maneja de manera efectiva la variabilidad y la estocasticidad que son inherentes a los sistemas de inventarios. Elementos que tienen un gran impacto como los tiempos de entrega ya sea por parte de proveedores para surtir el inventario o de la misma compañía en la realización total del producto, la demanda de los clientes, las cantidades pedidas y el momento adecuado para pedir suelen ser   inciertos   y   variar   considerablemente.   Utilizando   distribuciones   de   probabilidad,   DES   permite   incor- porar esta variabilidad en el modelo, lo que facilita la simulación de una amplia gama de escenarios posibles. Otra   ventaja   importante   es   su   capacidad   para   modelar   interacciones   complejas   entre   múltiples   com- ponentes del sistema de inventarios. En un entorno real, un sistema de inventarios puede involucrar varias materias primas, múltiples proveedores y diversas políticas de reabastecimiento. DES permite modelar estas interacciones de manera detallada para que tengan un impacto significativo general. Además, la flexibilidad de DES permite a los usuarios experimentar con diferentes configuraciones para evaluar su impacto antes de   implementarlas   en   la   práctica.   Por   ejemplo,   tamaños   de   pedido,   niveles   de   inventario   de   seguridad   y tiempos   de   entrega   para   determinar   cuál   combinación   ofrece   el   mejor   equilibrio   entre   los   intereses   de   la empresa.   Esta   capacidad   de   experimentar   sin   riesgo   en   un   entorno   simulado   tiene   mucho   valorar   para   la toma de decisiones futuras en pro del mejoramiento. En   resumen,   la   simulación   de   eventos   discretos   proporciona   una   herramienta   versátil   para   modelar y   optimizar   sistemas   de   inventarios.   Permite   capturar   la   realidad   de   los   eventos   discretos,   manejar   la variabilidad   y   estocasticidad   inherentes,   modelar   interacciones   complejas   y   experimentar   con   diferentes estrategias de gestión para mejorar así la eficiencia y efectividad de la gestión del inventario. \nM. Díaz, S. Jaramillo y A. Sánchez  2.3.   Objetivos de la modelación 2.3.1.   Propósito del modelo  Evaluar   el   comportamiento   del   modelo   al   modificar   los   niveles   de   orden   y   puntos   de   reorden   en   el inventario, de tal manera que el tiempo en el sistema se reduzca procurando atender la mayor cantidad de pedidos en la medida de lo posible.  2.3.2.   Objetivos específicos del modelo  1.   Considerar   las   principales   materias   primas   que   tienen   impacto   en   el   tiempo   de   realización   de suministro y modelar el reabastecimiento de estos a lo largo de la simulación 2.   Contemplar dos tamaños de pedidos en pro de comparar los tiempos en el sistema para evaluar el funcionamiento del modelo  2.3.3.   Objetivos del proyecto  El alcance del modelo se explica en la Tabla 1  Componente   Descripción  Escala de tiempo   6 meses, en una semana se trabajan 5 días de 7:00 am a 17:00 pm Flexibilidad   Limitada Corridas   Muchos experimentos por correr Visual display   Simple 2D Modo de uso   Únicamente uso del modelar  Tabla 1: Objetivos del proyecto.  2.4.   Entradas y salidas del modelo 2.4.1.   Factores experimentales  El modelo tratará de lograr el objetivo mediante el control de inventario. El inventario tiene dos variables las   cuales   se   utilizarán   como   factores   experimentales   que   se   explicarán   más   a   detalle   en   el   desarrollo   del trabajo. •   Punto de reorden de cada producto almacenado: este valor   R i   indica que si la cantidad almacenada del   i -ésimo producto es menor a   R i   se debe realizar un nuevo pedido para abastecer este producto. •   Cantidad a pedir   Q i : nos indica cuantas nuevas unidades llegarán al realizar un pedido del   i -ésimo producto.  2.4.2.   Respuestas Principales  Para ver si se logró el objetivo necesitamos lograr un tiempo promedio en el sistema menor al actual, mientras   que   los   materiales   no   se   mantienen   mucho   tiempo   en   el   sistema.   Por   último   también   es   clave revisar   que   la   cantidad   de   pedidos   rechazados   por   el   sistema   no   aumente.   Para   evaluar   estos   objetivos necesitamos las siguientes respuestas: •   Tiempo promedio en el sistema. •   Tiempo promedio en bodega (por tipo de producto). \nM. Díaz, S. Jaramillo y A. Sánchez  •   Cantidad de órdenes rechazadas.  2.5.   Contenido del modelo  En la Tabla 2 y 3 se presenta el alcance y nivel de detalle que se desea abordar.  2.5.1.   Alcance  Componente   Incluir/Excluir   Justificación  Entidades:  Pedidos a la empresa   Incluir   Entidades con las que se comienza el proceso. Inventario   Incluir   Importante para determinar si se deben realizar órdenes de pedidos a proveedores.  Actividades:  Formalizar pedido   Excluir   Las gestiones de contrato, cotización y verificación de planos no están dentro de los objetivos. Realizar orden de com- pra Incluir   Si   se   necesitan   materiales   que   no   hay   en   bodega   para la fabricación estos se deben solicitar a proveedores. Fabricar suministro   Incluir   Se realiza la producción. Correcciones   de   fabri- cación Excluir   Las correcciones no van a ser modeladas. Despacho de vehículo   Excluir   No se pretende modelar la disponibilidad de los vehícu- los.  Colas:  Cola de pedidos   Incluir   Capacidad limitada de pedidos. Cola   material   que   re- presenta   el   inventario en bodega esperando a ser utilizado Incluir   Material disponible para trabajar sin necesidad de hacer pedidos. Cola mientras máquina o personal se desocupa Excluir   No se pretende modelar. Cola   disponibilidad transporte Excluir   No se pretende modelar. Cola   material   provee- dores Incluir   Representa el material que va a llegar de una orden de compra.  Recursos:  Empleados   Excluir   La cantidad de personal no se considera para el objetivo de modelado. Máquinas   Excluir   Las máquinas no se consideran en el modelo. Transporte   Excluir   Los vehículos no son relevantes según el objetivo. Estaciones de trabajo   Incluir   Se deben considerar las estaciones de trabajo disponibles para producir un suministro.  Tabla 2: Alcance del modelo. \nM. Díaz, S. Jaramillo y A. Sánchez  2.5.2.   Nivel de detalle  Componente   Detalle   Incluir/Excluir   Justificación  Entidades:  Pedidos a la empre- sa Cantidad limitada   Incluir   Se recibe un máximo de pedidos. FIFO   Incluir   El primero que llega es el primero que sale. Ruta   Incluir   Se   dividen   los   pedidos   dependiendo   del tamaño   del   pedido   y   si   es   nacional   o   in- ternacional. Inventario   Entran materiales al inventario si se rea- liza   un   pedido   pre- vio Incluir   Solo llega material si se realiza una orden previa.  Actividades:  Realizar   orden   de compra Cantidad   estableci- da Incluir   La cantidad a pedir viene dada por Q y el nivel de reorden por R. Fabricar suministro   Capacidad limitada   Incluir   Se realiza de a un suministro. FIFO   Incluir   El primero que llega es el primero que sale.  Colas:  Cola pedidos   Capacidad limitada   Incluir   5 pedidos máximo para pedidos pequeños y medianos nacionales, 2 máximo para me- dianos internacionales. Cola   material   que representa el inven- tario   en   bodega   es- perando   a   ser   utili- zado FIFO   Incluir   El primero que llega es el primero que sale. Cola   material   pro- veedores Duración limitada   Incluir   Mientras   se   cumple   el   tiempo   límite   para entregar la orden.  Recursos:  Estaciones   de   tra- bajo Capacidad   Incluir   Se toma una estación de trabajo ya que se hace un pedido a la vez. Requerido en fabri- cación Incluir   Se necesita para producir el suministro en las actividades.  Tabla 3: Nivel de detalle.  2.5.3.   Supuestos  •   Siempre hay un puesto de trabajo disponible para realizar un proyecto a la vez. Además, no presenta averías ni reparaciones que retrase el tiempo de fabricación de un suministro SMART. •   Los   pedidos   de   materiales   para   el   inventario   siempre   se   pagan   a   tiempo   por   lo   que   estos   no   se retrasan mas de lo habitual. •   No van a haber otros factores que afecten el tiempo de entrega distintos a los considerados. \nM. Díaz, S. Jaramillo y A. Sánchez  2.5.4.   Simplificaciones  •   Solo se va a modelar la sede de Sabaneta. •   Nos vamos a enfocar en un segmento de negocio específico, en este caso es residencial. •   Se trabajará solo sobre tres tipos de materiales de los múltiples manejados por la empresa. •   Se modelara solo la sección del inventario y de producción de los suministros SMART. Se omiten otros procesos como la creación de contratos, visitas a la obra o entrega de materiales en la obra. •   Catalogamos   los   suministros   en   solo   tres   tipos   para   simplificar   el   modelo.   Estos   son   suministros pequeños, suministros medianos y suministros medianos que requieren materiales internacionales. Los proyectos de tamaño grande no son manejados como suministros SMART. •   Una vez los suministros fueron fabricados estos se pueden despachar inmediatamente a la obra.  3.   ANTECEDENTES  La importancia de la simulación de eventos discretos en el seguimiento de los procesos de cadena de abastecimiento   se   puede   ver   reflejada   en   la   literatura   a   través   de   diferentes   estudios   que   han   mostrado   la idoneidad de DES para afrontar problemas de este estilo. Inicialmente, tenemos a (Wang y Ingham, 2008) que   en   “Un enfoque de modelado de eventos discretos para la simulación de la cadena de suministro”  (Pulido   et   al.,   2021)   exponen   la   necesidad   de   las   empresas   de   adaptarse   a   diversos   desafíos,   donde   uno de   ellos   es   crear   cadenas   de   abastecimiento   más   receptivas   y   adaptables   para   satisfacer   la   demanda   del mercado en constante cambio. Por lo que presentan la descripción general de una cadena de abastecimiento, en donde se examina la importancia de los mecanismos de liberación de pedidos y se propone su uso como medida de desempeño de monitoreo. Se   usa   DES   para   investigar   cómo   se   pueden   utilizar   herramientas   de   simulación   para   mejorar   y   opti- mizar   el   rendimiento   de   las   cadenas   de   abastecimiento   en   pro   de   evaluar   el   proceso   de   cumplimiento   de pedidos. Finalmente, al analizar los resultados de las simulaciones se pudo lograr mejoras significativas en la reducción de los costos de inventario, aumento de la producción y el cumplimiento de los pedidos a tiempo. En el estudio \" Simulación de un Sistema de Inventarios para la Determinación de Niveles de Reposición y de Servicios: Un caso de estudio \", se propone la implementación de un modelo de simulación de inventarios discreto   con   el   objetivo   de   determinar   la   cantidad   óptima   de   reposición   que   satisfaga   la   demanda   de   los clientes. Aunque este objetivo se alinea con el enfoque de nuestro documento, el método de abordaje presenta diferencias significativas. En la investigación mencionada, se analiza un modelo que incluye tres productos (1, 2, 3) con demanda probabilística independiente histórica. Para asegurar la confiabilidad del modelo, se consideró   un   período   de   simulación   de   24   meses,   durante   el   cual   cada   producto   fue   replicado   30   veces. Las   métricas   de   desempeño   evaluadas   incluyen   la   utilidad   neta,   la   utilidad   bruta,   los   costos   de   retención y   los   costos   de   incumplimiento.   Según   los   resultados,   al   definir   una   cantidad   de   reposición   promedio   a la   distribución   de   probabilidad,   los   productos   1   y   2   se   beneficiaron,   sin   embargo,   el   producto   3   no   logró cumplir   otros   objetivos   importantes,   como   satisfacer   completamente   la   demanda.   Para   abordar   esto,   los autores sugieren la implementación de niveles de inventario de seguridad. Claramente, aunque el objetivo principal es similar, la metodología implementada en el estudio citado difiere de la nuestra, considerando incluso   diferentes   métricas   de   rendimiento.   Como   se   mencionó   anteriormente,   se   está   trabajando   en   un mercado   con   una   variabilidad   elevada   lo   que   da   cavidad   a   que   un   mismo   problema   sea   abordado   desde diversas perspectivas. Aunque el estudio citado no se sigue al pie de la letra como antecedente, sí reafirma la aplicabilidad de la simulación de eventos discretos (DES) en la modelación y simulación de inventarios, subrayando la estocasticidad inherente al mercado. \nM. Díaz, S. Jaramillo y A. Sánchez  4.   DATOS DEL MODELO 4.1.   Obtención de los datos  Dadas las fechas de este año sobre cuándo SPCI recibió órdenes de suministros SMART, ya que desde este   momento   comenzaron   a   manejar   el   sistema   ERP.   Además,   de   información   sobre   cuantas   de   estas ordenes acabaron y de aquellas que fueron rechazadas debido a que ya tenían muchas órdenes en el sistema. Con   estas   fechas,   fue   posible   calcular   los   tiempos   entre   llegadas   de   cada   orden   y   con   estos   realizar   un ajuste a los datos a una simulación para utilizar en el modelo. La compañía recibió 88 órdenes durante los primeros cuatro meses del año y se llevaron a cabo 48 de estas ordenes. Como se mencionó anteriormente, estos pedidos se dividieron en pedidos pequeños y medianos, además los pedidos medianos pueden utilizar materiales internacionales. La compañía considera que el tamaño de los pedidos es muy variable y que aproximadamente los pedidos pequeños y medianos llegan en la misma cantidad.   Además   comentaron   que   este   año   tuvieron   que   realizar   compras   internacionales   para   4   de   sus pedidos de un total de 88 pedidos, el cual representa el 4 , 54 % del total de pedidos. Con esta información se   decidió   que   el   50 %   de   pedidos   simulados   fueran   pedidos   pequeños,   el   45 %   fueran   pedidos   medianos sin compras internacionales y el 5 % fueran medianos con compras internacionales. Sobre   los   pedidos   que   se   realizan   también   se   sabe   que   tienen   que   rechazarlos   cuando   estos   alcanzan una   alta   cantidad   en   un   mismo   tiempo.   De   esta   manera,   en   el   modelo   se   considera   que   puede   haber   un máximo de 5 pedidos pequeños, 5 medianos y 2 medianos con materiales internacionales encolados. Cada vez que las colas de pedidos vayan a superar estas cantidades los pedidos serán rechazados. También se tienen valores estimados de la cantidad de tiempo de espera hasta que llegan los pedidos de materiales realizados por SPCI, sin embargo no contamos con datos individuales de estos tiempos de espera, solo   con   la   media   estimada   de   estos.   Debido   a   lo   anterior   se   decidió   utilizar   distribuciones   triangulares para estos tiempos de llegada. Para las órdenes nacionales tomamos una distribución con una media de 2 días, un valor mínimo de 1 día y un valor máximo de 3 días. Por el otro lado, las órdenes internacionales toman mucho más tiempo, por lo que se tomó una distribución para las llegadas con un valor medio de 30 días, un valor mínimo de 28 días y un valor máximo de 32 días. Sobre los tiempos de que se tarda la fabricación de los kits, se mencionó que SPCI es capaz de terminar tres pedidos en una semana una vez ya tienen todos los materiales necesarios en bodega, pero nuevamente no se cuenta con datos individuales de estos tiempos de trabajo. Debido a ello, nuevamente se utilizó una distribución triangular para estos tiempos. Para los pedidos pequeños tomamos un valor medio de 1 , 5 días con un valor mínimo de 1 día y un valor máximo de 2 días y para los pedidos medianos tomamos un valor medio   de   2   días   con   un   valor   mínimo   de   1   día   y   un   valor   máximo   de   3   días.   Como   la   mitad   de   pedidos son pequeños y la otra mitad son medianos tenemos que en promedio un kit se demora 1 , 75 días, así que en   el modelo   por   semana (5   días   de   trabajo)   se   pueden   realizar en   promedio   2 , 85   ordenes lo   que   es muy similar al valor real estimado. Adicionalmente,   se   sabe que   entre   los   materiales   más importantes   y   utilizados   en   los sistemas   contra incendios se encuentran las tuberías, las válvulas y los rociadores. Los cuales son los materiales que se van a simular en nuestro modelo. Así, el pedido pequeño cubre proyectos con un área aproximada de 100 m 2   y que los proyectos medianos cubren un área de 290 m 2 . Además, los proyectos son rectangulares y que uno de sus lados mide 10 m 2 . Para   calcular   la   cantidad   de   rociadores   necesarios   seguimos   los   estándares   que   se   pueden   encontrar en   la   norma   NFPA   13,   dado   que   nuestro   proyecto   tiene   un   riesgo   ordinario   de   incendios,   cada   rociador \nM. Díaz, S. Jaramillo y A. Sánchez  debe cubrir como máximo 12 m 2 , por lo que nuestro proyecto pequeño debe tener 9 rociadores organizados en   tres   filas   de   3   rociadores   y   el   proyecto   mediano   debe   tener   15   rociadores   organizados   en   3   filas   de   5 rociadores.   Por   cada   rociador   es   necesario   una   válvula   y   se   necesita   una   más   en   el   puesto   de   control   del sistema   contra   incendios,   así   que   estimaremos   la   cantidad   de   válvulas   como   uno   más   que   la   cantidad   de rociadores. Finalmente para estimar la cantidad de metros de tubería que se usa en los proyectos vamos a utilizar un diseño de tuberías similar al desarrollado por (Ybirma, 2017) y se puede visualizar en la Figura 2.  Figura 2: Diseño tuberías. Para el proyecto mediano, hay dos filas de rociadores a lo largo del lado de 29 m   de la habitación, cada línea tiene 26 m   de tubería dejando 1 , 5 metros a la pared y entre cada par de rociadores habrá una distancia aproximada de 2 m . Además hay una tubería extra que se conecta a estas dos filas de manera perpendicular, la cual debe medir 9 m   ya que deja un metro de distancia a la pared contraria. Finalmente, hay tres metros mas   de   tubería   para   bajar   la   pared   y   llegar   a   el   puesto   de   control.   Así   que   el   total   de   metros   de   tubería seria: 26   ∗ 2   + 9   + 3   =   64 m . Para el proyecto pequeño hay tres filas con tres rociadores, cada fila 9 metros de largo y se deja un espacio de 1 metro hacia una pared, mas la tubería perpendicular de 10 metros y tres metros   mas   para   llegar   al   puesto   de   control   se   tiene   un   total   de   9   ∗ 3   + 10   + 3   =   40 m .   Se   utilizarán   estos valores para la cantidad de materiales necesarios en cada pedido.  4.2.   Análisis estadístico de los datos de entrada 4.2.1.   Pruebas de homogeneidad  El   primer   paso   para   utilizar   nuestros   datos   de   los   tiempos   entre   llegadas,   es   revisar   que   estos   tengan un   mismo   comportamiento   a   lo   largo   del   periodo   de   muestra   de   estos   mismos.   Para   esto   separamos   los tiempos   entre   llegadas   por   meses,   generando   cuatro   grupos   de   datos.   Para   revisar   que   los   tiempos   entre llegadas   se   comporten   de   manera   similar   a   lo   largo   de   los   cuatro   meses   se   uso   el   test   de   Kruskall-Wallis el   cual   tiene   una   hipótesis   nula   de   que   todos   los   grupos   de   datos   vienen   de   una   misma   distribución.   El resultado se observa en la Tabla 4.  Source   SS   df   MS   Chi-sq   Prob>Chi-sq  Groups   4297.7   3   1432.57   7.47   0.0584 Error   45766.3   84   544.84 Total   50064   87  Tabla 4: Prueba de independencia. Un p-valor de 0 , 0584 nos indica que no hay evidencia para rechazar la hipótesis nula bajo una signifi- cancia del 5 %, por lo que no hay evidencia de que nuestros datos provengan de diferentes distribuciones. \nM. Díaz, S. Jaramillo y A. Sánchez  Para confirmar estos resultados la Figura 3 muestra un diagrama de cajas y bigotes comparando los cuatro grupos de datos.  Figura 3: Diagramas cajas y bigotes para los tiempos entre pedidos por meses. Aunque se nota que los valores en el primer mes (Enero) si fueron un poco menores (había menos tiempo entre pedidos) y que los tiempos de Marzo fueron un poco mayores, no hay ninguna diferencia significativa entre los cuatro diagramas, lo que nuevamente nos da un indicio de que los datos son homogéneos durante estos   cuatro   meses.   De   ahora   en   adelante   trabajaremos   suponiendo   que   nuestros   datos   son   homogéneos por lo que utilizaremos del conjunto completo de datos durante los cuatro meses.  4.2.2.   Pruebas de independencia y autocorrelación  Ahora veamos que nuestros datos de tiempos entre llegadas son independientes y no tienen correlación. En la vida real estas condiciones se deberían cumplir ya que los pedidos los realizan diferentes constructoras de forma independiente, esta independencia se puede confirmar para los datos en la Figura 4.  Figura 4: Autocorrelación de los datos. \nM. Díaz, S. Jaramillo y A. Sánchez  Se   observa   que   la   autocorrelación   toma   valores   pequeños   y   además   se   realizo   el   Ljung-Box   Q-test el   cual   tiene   una   hipótesis   nula   de   que   los   datos   no   tienen   autocorrelación   y   no   se   encontró   evidencia suficiente pare rechazar esta hipótesis, lo que nos indica una baja autocorrelación. La Figura 5 nos muestra además   el   gráfico   de   dispersión   el   cual   nos   vuelve   a   confirmar   una   baja   autocorrelación   entre   parejas   de datos seguidos y nos da buenos indicios de que los datos son independientes.  Figura 5: Gráfico de dispersión.  4.3.   Ajuste de distribuciones teóricas  Trataremos de ajustar nuestros datos a distribuciones discretas, ya que los valores entre llegadas toman valores   enteros   de   días   y   los   valores   siempre   están   entre   0   y   13.   La   Figura   6   nos   muestra   el   resultado   de ajustar diferentes distribuciones discretas.  Figura 6: Gráfico ajuste de distribuciones. Como   podemos   observar   en   la   Figura   6,   tanto   la   distribución   geométrica   como   la   binomial   negativa logran   ajustarse   bien   a   los   datos   experimentales.   De   estas   dos   distribuciones   utilizaremos   la   binomial negativa   ya   que   esta   es   una   distribución   mas   general   (cubre   el   caso   de   la   distribución   geométrica).   En la   Figura   7   vemos   la   prueba   de   ajuste   de   la   distribución   binomial   negativa,   se   puede   observar   que   los p-valores de los test de ajuste son muy grandes, lo que significa que hay un buen indicio de que esta distri- bución logra explicar los datos reales. También se puede visualizar el ajuste de esta distribución en la Figura 8 \nM. Díaz, S. Jaramillo y A. Sánchez  Figura 7: Ajuste binomial negativa.  Figura 8: Gráfico de ajuste. Se   escogerá   entonces   la   distribución   binomial   negativa   con   k   =   1   y   p   =   0 , 431   para   utilizar   como   la distribución del tiempo entre llegadas de los pedidos en nuestro modelo.  5.   IMPLEMENTACIÓN EN PLATAFORMA DE SIMULACIÓN 5.1.   Claridad  La implementación del modelo se realizó en el software   Simul8   que permite simular eventos discretos. El   modelo   se   diseñó   buscando   cumplir   los   objetivos   del   proyecto   y   de   la   modelación,   es   por   esto   que   se tuvo en cuenta las distribuciones mencionadas en la sección 4 para intentar representar el comportamiento en el mundo real. En cuanto a las características consideradas en la modelación, tenemos que se simulan 6 meses en donde la unidad de tiempo se toma en días, se consideran 5 días laborales de lunes a viernes con una jornada continua de 7:00 am a 17:00 pm. El   modelo   pretende   representar   el   proceso   de   tres   materias   primas   principales   (tuberías,   válvulas   y rociadores) para la fabricación de un suministro dependiendo del tipo de pedido, esta división de los pedidos y la selección de las materias que se tendrán en consideración para simular en el inventario se explicó con más detalle anteriormente. Teniendo esto en cuenta, se inicia con la llegada de los pedidos que posteriormente deben hacer la cola de su respectivo tipo de pedido: pequeño, mediano nacional o mediano internacional. \nM. Díaz, S. Jaramillo y A. Sánchez  La clasificación de un pedido mediano o pequeño se basa en el tamaño de este, es decir, la cantidad que se necesita   de   cada   material   para   producir   el   suministro.   Por   otro   lado,   los   pedidos   medianos   se   separan   en nacional e internacional que difieren en el tiempo límite, esto se debe a la disponibilidad de algún material dado   a   una   característica   específica   requerida.   En   este   caso,   los   pedidos   internacionales   se   dan   debido a   la   necesidad   de   adquirir   un   tipo   específico   de   rociadores.   Las   colas   de   pedidos   tienen   una   capacidad limitada, es decir, no pueden recibir infinitos proyectos. Estas capacidades están dadas por: 5 pedidos máxi- mo para pedidos pequeños y medianos nacionales, 2 pedidos máximo para pedidos medianos internacionales. Luego, los pedidos pasan a la actividad respectiva en la que se maneja el tipo de pedido. Esta actividad representa la producción del suministro que tiene una distribución para el tiempo que se tardan en realizarlo. La   producción   de   un   suministro   se   da   con   una   cantidad   específica   requerida   de   cada   material.   Por   otro lado, se evalúa la disponibilidad de cada material para concretar la producción de un suministro, en donde a   medida   que   pasa   el   tiempo   y   se   hace   uso   de   ciertos   materiales,   se   va   reduciendo   la   existencia   en   las colas que representa la cantidad de inventario en bodega. Para reabastecer la bodega, se establecen puntos de reorden y la cantidad de material a pedir. Además, las órdenes de pedidos tienen una distribución que determina el lead time. En resumen, en el modelo llegan pedidos que se dividen según su tamaño. Posteriormente, se realiza la   producción   del   suministro   que   requiriere   cierta   cantidad   de   cada   materia   prima,   por   lo   que   se   debe considerar   su   disponibilidad   en   el   inventario.   Esto   da   pie   a   establecer   puntos   de   reorden   y   cantidad   a ordenar para que se puedan seguir produciendo suministros.  5.2.   Presentación del modelo  El proceso que se describió anteriormente está dado por el siguiente diagrama presentado en la Figura 9:  Figura 9: Diagrama del modelo en Simul8. \nM. Díaz, S. Jaramillo y A. Sánchez  5.3.   Uso de técnicas avanzadas  Tenemos varios aspectos importantes a resaltar en el modelo: •   Los pedidos se dividen para hacer cola según el tamaño •   Las actividades requieren cierta cantidad de cada materia para realizar un suministro •   Las órdenes de pedido tienen un nivel para reordenar y una cantidad establecida de cuanto pedir Para   poder   considerar   esto,   se   tuvo   que   hacer   uso   de   distintas   técnicas.   Inicialmente,   para   la   división de los pedidos se hizo uso de “Routing Out” para establecer los porcentajes que distribuían los pedidos.  Figura 10: Routing Out por tipo de pedido. Para recolectar la cantidad de cada materia requerida, se empleó “Routing In” donde se esperaba hasta tener   una   colección   de   40   tuberías,   10   válvulas   y   9   rociadores   para   los   pedidos   pequeños.   Mientras   que para los pedidos medianos se toman 64 tuberías, 26 válvulas y 25 rociadores.  Figura 11: Routing In actividad pequeña.   Figura 12: Routing In actividad mediana. Para   el   proceso   del   manejo   de   inventario   se   crearon   6   variables   globales   de   tipo   numérico   donde   se consideran los niveles de reorden (R) y la cantidad que se pide (Q) para las tres materias primas consideradas. Como se tiene en cuenta el manejo del inventario con JIT, se toman estos dos puntos como el mínimo que se necesita para cumplir la demanda del suministro que requiera más materiales. Al llegar al nivel mínimo, con un booleano se actualiza si se debe pedir a la actividad de órdenes y por medio de “Batching Out” se indica la cantidad que debe llegar. \nM. Díaz, S. Jaramillo y A. Sánchez  Figura 13: Batching Out para la orden 1 tuberías. Como comentario adicional, se estableció un “Work station” que permite que se trabaja en la producción los   suministros   en   cada   actividad,   se   diseñó   de   tal   manera   que   trabaje   en   un   pedido   al   tiempo   pero   que pueda hacer en promedio 3 pedidos a la semana.  5.4.   Presentación de resultados  Los resultados que se obtienen al correr el modelo son: •   Cantidades a ordenar y niveles de reorden utilizados en la simulación: Q1, Q2, Q3, R1, R1 y R3 •   Tiempos promedio en cola para las materias prima: Tubería, válvulas y rociadores •   Número completado de materias en la salida y el tiempo promedio en el sistema de las órdenes •   Pedidos no completados  Figura 14: Presentación de los resultados. Estos resultados son de interés ya que permiten verificar el cumplimiento de los objetivos planteados. \nM. Díaz, S. Jaramillo y A. Sánchez  6.   OBTENCIÓN DE LOS RESULTADOS 6.1.   Naturaleza del modelo  Un   sistema   de   producción   puede   considerarse   una   simulación   sin   terminación,   dado   que   no   presenta un   punto   de   finalización   natural.   La   simulación   no   se   detiene   por   eventos   internos   del   sistema,   sino   que requiere   que   el   modelador   o   usuario   defina   un   punto   de   finalización.   Podría   pensarse   que   la   simulación concluye   al   finalizar   la   jornada   laboral;   sin   embargo,   aunque   el   proceso   se   detiene   temporalmente,   al   día siguiente   se   retoma   desde   las   actividades   pendientes   del   día   anterior.   No   ocurre   un   reinicio   completo   del sistema, sino una continuación de las actividades previas.  6.2.   Naturaleza de las salidas del modelo  En los modelos no terminantes, es común que las salidas tiendan hacia un estado estable. Al iniciar la ejecución del modelo, este parte completamente vacío y se va llenando gradualmente con el tiempo. Como resultado, el rendimiento del modelo comienza en un nivel bajo y aumenta progresivamente hasta alcanzar un estado de estabilidad, también conocido como estado transitorio. Este período inicial en la simulación se denomina transitorio inicial, ya que ocurre durante la inicialización de la ejecución. Los datos obtenidos durante este transitorio inicial son poco realistas en comparación con los sistemas físicos, dado que ningún sistema   de   producción   comienza   sin   ningún   trabajo   en   progreso   algún   día   por   la   mañana.   Incluir   estos datos en el modelo podría introducir algún tipo de sesgo.  6.3.   Manejo de sesgos iniciales  Para   tener   manejo   de   estos   datos   que   introducen   sesgo   inicialmente,   corremos   el   modelo   5   veces recolectando   cada   día   en   el   tiempo   de   simulación   y   en   el   tiempo   promedio   en   el   sistema.   Todo   esto   se realiza con el objetivo de encontrar el instante en la simulación en el cual se alcanza el estado estacionario a través del método de Welch, el cual genera el gráfico a partir de las medias móviles calculadas con una longitud   w   =   5 de los datos obtenidos en las corridas.  Figura 15: Control Sesgos Iniciales. Del anterior gráfico, podemos ubicar como un tiempo factible para iniciar la simulación 40 días, esta modificación se añade al modelo para que se excluya la etapa de calentamiento  6.4.   Número de corridas  Para   calcular   la   cantidad   de   corridas   adecuadas   en   el   modelo   se   usó   la   herramienta   Trial Calculator  que   brinda   el   software   Simul8,   esta   herramienta   recomienda   un   número   de   corridas   adecuadas   para   los trials.   La   recomendación   se   basa   en   una   precisión   establecida   en   los   intervalos   de   confianza   estimados \nM. Díaz, S. Jaramillo y A. Sánchez  alrededor de la media de los indicadores clave de rendimiento (KPIs). En este caso, usamos una precisión del   5 %   de   la   media   esta   elección   asegura   que   el   intervalo   de   confianza   sea   lo   suficientemente   estrecho, garantizando que las estimaciones de la media de los KPIs sean precisas y reflejen con un 95 % de certeza que los resultados reales se encuentran dentro de este rango.  KPI   Corridas recomendadas  Tiempo promedio en sistema (Tipo 2)   31 Número completados   6 Tubería: Tiempo promedio en sistema   15 Válvulas: Tiempo promedio en sistema   16 Rociadores: Tiempo promedio en sistema   13  Tabla 5: KPIs y corridas recomendadas.  6.5.   Espacio de soluciones  Para   obtener   los   intervalos   en   los   cuales   se   encuentran   los   valores   de   las   variables   elegidas   como significativas en el modelo, este se ejecuta 31 corridas en un trial por los resultados obtenidos en el   Trial Calculator   y los resultados son visualizados en la herramienta   Results manager . En estas corridas dejamos los parámetros   R i   y   Q i   en la cantidad mínima necesaria para cumplir cualesquiera de los dos tamaños de pedidos considerados.  KPIs   Inf 95 %   Promedio   Sup 95 %   Riesgo  Tiempo Cola Tubería   1.50   1.54   1.58  Tiempo Cola Válvulas   2.53   2.59   2.66  Tiempo Cola Rociadores   2.74   2.80   2.86  Tiempo Promedio Sistema (Tipo 2)   14.86   15.68   16.43  Número Rechazados   16.79   20.97   25.14  Tabla 6: Intervalos de Confianza KPIs. \nM. Díaz, S. Jaramillo y A. Sánchez  Este   análisis   de   los   resultados   del   modelo   de   simulación   de   inventarios   resalta   varias   observaciones respecto a las métricas seleccionadas como importantes. Se evidencia que la mayoría de las variables actúan sobre   un   espectro   de   valores   estrecho   lo   que   sugiere   una   estabilidad   en   los   procesos   de   producción   e   in- ventario, con la notable excepción del KPI de número de rechazados, donde se observa una mayor variabilidad. En   cuanto   al   manejo   de   materias   primas,   el   hecho   de   que   los   rociadores   permanezcan   más   tiempo promedio en el inventario esperando a ser usados sugiere que la demanda es mucho menor que la cantidad de   materiales   que   se   solicita   a   proveedores.   Esto   contrasta   con   las   tuberías,   que   muestran   un   tiempo   de almacenamiento   menor,   indicando   un   flujo   de   inventario   más   rápido   y   posiblemente   una   mejor   sincroni- zación entre las cantidades que llegan y las que salen a la realización de suministros. El tiempo promedio en el sistema de cada pedido, de aproximadamente 15.68 días, indica que, desde la llegada del pedido hasta la salida del producto terminado como suministro, el proceso toma un poco más de dos semanas, debido a que este en ocasiones debe esperar a la disponibilidad en el punto de fabricación, la   llegada   de   materias   primas   y   se   considera   en   este   espacio   igualmente   los   productos   con   necesidades internacionales, esto genera una inflación debido a que estas materias primas tarden mucho más en llegar. Este   tiempo   es   es   un   indicativo   positivo   de   que   el   modelo   de   simulación   está   alineado   de   buena   manera con las operaciones reales de la empresa.  7.   VERIFICACIÓN Y VALIDACIÓN  Se pretende validar la precisión del modelo de tal manera que se este representado de forma adecuada el sistema del mundo real.  7.1.   Validación caja blanca  En   el   modelo   se   realizaron   ciertos   supuestos   y   simplificaciones   en   los   que   se   procuró   mantenerse   lo más cercano a la realidad sin un incremento significativo en la dificultad de este. Para esto se discutió con los   directivos   de   la   empresa   con   el   objetivo   de   entender   los   puntos   críticos   del   proceso   y   así   enfocarse únicamente en los factores más importantes en la cadena de abastecimiento, lo cual genera precisión en el planteamiento del modelo conceptual. En el desarrollo del código que proporciona la lógica de la dinámica del reabastecimiento del inventario, se manejaron niveles mínimos para el punto de reorden y la cantidad a ordenar siendo fieles a la estrategia de manejo de inventario JIT la cual es la implementada en la empresa. Finalmente,   para   evaluar   que   el   proceso   esté   representando   el   comportamiento   esperado   del   sistema, aumentamos   las   capacidades   que   se   tienen   para   recibir   los   distintos   pedidos.   Como   se   está   manejando el   inventario   de   manera   que   se   pide   la   cantidad   mínima   necesaria   cuando   se   requiere   la   realización   del suministro y los tiempos de llegada de las órdenes de los proveedores son poco variantes, se espera que a pesar de que ingresen más pedidos al sistema, la cantidad de la salida sea la misma. Al implementar estos cambios en las condiciones del modelo, se evidenció el comportamiento esperado ya que se está simulando correctamente esta sección de la cadena de abastecimiento.  7.2.   Validación caja negra  Al intentar validar el comportamiento del sistema real con el modelo no es posible realizar un análisis estadístico robusto debido a la carencia de información. Por dicho motivo, se realiza una comparación entre los pedidos que llegan al sistema en un período de 5 meses y los que salen. \nM. Díaz, S. Jaramillo y A. Sánchez  Para   comenzar   analizaremos   los   datos   de   entrada,   la   empresa   nos   proporcionó   información   en   la   que se evidencia una llegada de 88 pedidos en el tiempo mencionado. En el modelo se obtiene una llegada de 68 pedidos en el mismo período.De igual manera, en el sistema real se terminaron 48 suministros mientras que en el modelo esta cantidad fue de 52. Estas   diferencias   se   pueden   dar   debido   a   la   aproximación   en   la   distribución   de   las   llegadas,   de   los tiempos de fabricación y de materias primas de proveedores. Sin embargo, es un buen resultado dado que para la modelación se consideran distintos supuestos y simplificaciones que introducen esta discrepancia. Además, los datos de por sí tienen una imprecisión dado que solo representan una muestra.  8.   ANÁLISIS DE SENSIBILIDAD Y EXPERIMENTACIÓN 8.1.   Análisis de sensibilidad  El análisis de sensibilidad se basa en cambiar levemente las distribuciones de entrada del modelo. En nuestro   caso   se   incrementan   y   se   reducen   los   parámetros   de   las   distribuciones   en   un   10 %   y   se   revisa   si esto tiene un gran impacto en la salida del modelo. Para esto debemos comparar los datos de salida usuales del modelo con los datos de salida al cambiar los parámetros, los datos usuales se pueden observar en la Tabla 7:  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  Corrida normal inferior   14.86139   1.501711   2.525746   2.738774  Corrida normal promedio   15.64464   1.541312   2.590897   2.799003  Corrida normal alto   16.42788   1.580913   2.656049   2.859232  Tabla 7: Tiempos normales. Primero se realizara el análisis de sensibilidad al cambiar la distribución del tiempo que se tardan en llegar de los pedidos nacionales, los resultados se pueden observar en la Tabla 8:  Tiempo promedio en sistema  Tiempo en inventario tuberias  Tiempo en inventario valvulas  Tiempo en inventario rociadores  Parámetros -10 %   14.72296   1.596094   2.573488   2.769131  Parámetros +10 %   16.47422   1.503635   2.621676   2.865642  sensibilidad   1.117954   1.16738   0.369813   0.801206  Tabla 8: Tiempo que se tardan pedidos nacionales. Se   nota   que   esta   distribución   no   afecta   demasiado   a   las   salidas   del   sistema,   ya   que   la   sensibilidad   se mantiene   cerca   a   1,   lo   que   nos   dice   que   los   cambios   en   la   distribución   son   proporcionales   a   los   cambios en   la   salida.   Que   los   pedidos   nacionales   se   demoren   un   10 %   menos   reduce   el   tiempo   en   el   sistema   en aproximadamente un 10 % y sucede lo contrario cuando se demoran un 10 % mas. Veamos ahora el impacto de modificar los pedidos internacionales en la Tabla 9: \nM. Díaz, S. Jaramillo y A. Sánchez  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  Parámetros -10 %   15.64464   1.541312   2.590897   2.799003  Parámetros +10 %   15.64464   1.541312   2.590897   2.799003  sensibilidad   0   0   0   0  Tabla 9: Tiempo que se tardan los pedidos internacionales. Se puede observar que cambiar esta distribución en una escala pequeña no tiene prácticamente ningún impacto sobre las salidas del sistema. Esto se puede deber a los pocos pedidos internacionales y a la espera larga que estos ya tienen de por si. Ahora   vamos   a   cambiar   las   distribuciones   de   lo   que   se   demoran   en   armar   los   pedidos   medianos,   los resultados se observan en la Tabla 10:  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  Parámetros -10 %   15.27085   1.510493   2.558662   2.770336  Parámetros +10 %   15.99355   1.596256   2.668601   2.877562  sensibilidad   0.461347   1.082839   0.843716   0.89015  Tabla 10: Tiempos para armar suministros medianos. El tiempo para armar suministros pequeños tampoco tiene un impacto demasiado grande en la salida del   modelo,   ya   que   la   sensibilidad   de   las   diferentes   salidas   se   mantuvo   cerca   a   1   y   fue   aun   menor   para el   tiempo   promedio   en   el   sistema.   Observemos   el   efecto   de   realizar   estos   mismos   cambios   pero   para   los suministros pequeños en la Tabla 11:  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  Parámetros -10 %   14.29975   1.439449   2.455959   2.689138  Parámetros +10 %   16.86265   1.671163   2.775714   2.959238  sensibilidad   1.636084   2.925609   2.45393   2.242282  Tabla 11: Tiempos para armar suministros pequeños. A diferencia de los pedidos medianos, los pequeños si tienen una gran sensibilidad sobre el sistema, ya que se obtuvieron valores para la sensibilidad mayores a 2. Esto nos indica que es muy importante estimar el tiempo que se demoran en realizar los pedidos pequeños de manera mas precisa. Por   ultimo,   podemos   observar   el   efecto   de   cambiar   la   distribución   de   los   tiempos   entre   llegadas   de pedidos en la Tabla 12: \nM. Díaz, S. Jaramillo y A. Sánchez  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  Parámetros -10 %   16.71946   1.519562   2.583288   2.804464  Parámetros +10 %   14.38956   1.559216   2.621898   2.808279  sensibilidad   1.487345   0.50067   0.296313   0.031677  Tabla 12: Tiempos entre llegadas. Como se podría esperar, esta distribución no afecta mucho los tiempos en inventario de los materiales, sin embargo si que tiene un efecto considerable en el tiempo promedio para entregar un pedido, por lo que también es importante estimar esta distribución con buena precisión.  8.2.   Análisis de robustez  Las pruebas de robustez consisten en alterar considerablemente las distribuciones del modelo para ver si   este   funciona   en   situaciones   críticas.   Primero   veamos   la   respuesta   del   modelo   cuando   el   valor   p   de   la distribución binomial negativa se duplica. El resultado se observa en la Tabla 13.  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  p=8.0   19.59   1.50   2.53   2.78  Tabla 13: Cambio tiempos entre llegadas. Se observa que el sistema se comporta parecido al original, lo que muestra que el sistema de rechazo de pedidos maneja bien el sistema cuando hay muchos pedidos. Veamos ahora en la Tabla 14 que sucede si los tiempos de espera nacionales por los pedidos se duplican.  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  promedio=4(dias)   29.83   1.65   3.89   4.25  Tabla 14: Cambio tiempos de pedidos nacionales. Como podemos ver ahora si se nota que el sistema es mas sensible a este cambio, ya que los tiempos subieron considerablemente e incluso el tiempo promedio en el sistema subió mas que lo que se demoran extra   los   pedidos.   Sin   embargo   el   modelo   sigue   obteniendo   resultados   lógicos,   por   lo   que   la   lógica   del modelo soporta este cambio. Por ultimo, veamos en la Tabla 15 el resultado de aumentar al doble el tiempo de demora de armar un pedido. \nM. Díaz, S. Jaramillo y A. Sánchez  Tiempo promedio en sistema  Tiempo en inventario tuberías  Tiempo en inventario válvulas  Tiempo en inventario rociadores  promedio=4(dias)   37.65   4.22   5.53   5.70  Tabla 15: Cambio tiempos para armar pedidos. Igual   que   en   el   caso   anterior,   este   cambio   si   es   sensible   en   el   sistema   ya   que   aumento   mucho   los tiempos en inventario y el tiempo promedio en el sistema, pero las salidas del modelo aun son logicas, es decir que el modelo soporta correctamente grandes cambios en las distribuciones del mismo.  8.3.   Simulación y optimización  En   nuestro   modelo   vamos   a   variar   los   valores   de   Q   y   R   para   tratar   de   obtener   mejores   resultados, para   aquello   utilizaremos   de   la   herramienta   Opt-Quest   de   Simul8.   Recordemos   que   nuestro   objetivo   es minimizar   el   tiempo   en   el   sistema   y   al   mismo   tiempo   minimizar   el   tiempo   que   los   materiales   se   quedan en el inventario, ya que esto también tiene un costo. En nuestro modelo el tiempo de los materiales en el inventario se ve representado en el tiempo promedio en cola de los materiales de cada tipo. Supondremos que reducir cada una de estas funciones objetivo tiene una importancia similar por lo que vamos a proponer la siguiente función objetivo a minimizar:  Min   : T-promedio-sistema   + T-promedio-tuberías   + T-promedio-válvulas   + T-promedio-rociadores Sin embargo cuando minimicemos estos valores queremos disminuir la cantidad de pedidos rechazados en la entrada ya que esto significaría una menor cantidad de ganancias, por lo que se añadirá una restricción la cual es que la cantidad de productos rechazados debe ser menor a la cantidad de productos rechazados en la corrida original (La corrida original rechaza 20 pedidos). Observemos primero las funciones objetivo que se agregaron en Opt-Quest en la Figura 16  Figura 16: Funciones objetivo. Los cuales son las mismas funciones objetivo mencionadas anteriormente pero sin ponderarlas aun. En la Figura 17 se observan los rangos que tomamos para variar las variables de decisión: \nM. Díaz, S. Jaramillo y A. Sánchez  Figura 17: Rangos variables de decisión. Notemos   acá   que   es   indispensable   que   el   valor   mínimo   de   Q   y   R   sean   mayores   a   las   cantidades   de materiales que necesitan los pedidos, ya que de otra manera se pueden realizar pedidos y que aun no hayan suficientes   materiales,   lo   que   lleva   a   que   haya   un   error   en   el   modelo.   También   fue   necesario   agregar   las restricciones observadas en la Figura 18:  Figura 18: Restricciones variables de decisión.  Q i   > R i   es   necesario   para   que   una   vez   llegan   materiales   se   garantice   que   la   cantidad   de   materiales actuales sea mayor al punto de reorden. No tendría sentido tener que pedir materiales múltiples veces para salir del punto de reorden. Con estas configuraciones, podemos ver en la Figura 19 los resultados de las funciones objetivo de las diferentes valores de parámetros: \nM. Díaz, S. Jaramillo y A. Sánchez  Figura 19: Funciones objetivo. En   el   eje   x   se   observan   las   corridas   y   en   el   eje   y   se   grafican   las   5   funciones   objetivo   de   una   corrida con 5 colores diferentes. De lo anterior se nota que las salidas mas constantes son el tiempo promedio en el sistema y la cantidad de pedidos rechazados, mientras que los tiempos en inventario si son mucho mas variables al cambiar   Q   y   R . Para escoger el mejor resultado, le damos un valor muy alto al resultado cuando la cantidad de pedidos rechazados   superó   a   los   20   y   luego   graficamos   la   función   objetivo   conjunta   de   los   demás   resultados,   la cual se puede observar en la Figura 20:  Figura 20: Funciones objetivo conjunta. \nM. Díaz, S. Jaramillo y A. Sánchez  En el eje   x   se observan las corridas y en el eje   y   la función objetivo y los valores altos en la gráfica son las corridas que no cumplieron la restricción. El mejor valor lo obtuvo la corrida 80, la cual tomó valores para   Q 1 , Q 2 , Q 3   de   97 , 49 , 26   respectivamente   y   valores   para   R 1 , R 2 , R 3   de   96 , 48 , 25   respectivamente. Las salidas de esta configuración se pueden observar en la Tabla 16.  KPIs   Inf 95 %   Promedio   Sup 95 %   Riesgo  Tiempo Cola Tubería   2.92   3.01   3.10  Tiempo Cola Válvulas   5.71   5.81   5.92  Tiempo Cola Rociadores   2.09   2.17   2.25  Tiempo Promedio Sistema (Tipo 2)   13.34   14.09   14.83  Número Rechazados   13.79   17.71   21.63  Tabla 16: Intervalos de confianza KPIs óptima. Es   interesante   notar   que   si   quitamos   la   restricción   de   que   los   pedidos   rechazados   sea   menor   a   20,   la solución   óptima   es   ahora   la   original,   es   decir   utilizar   los   menores   valores   posibles   para   Q   y   R .   En   otras palabras, variar los valores de   Q , R   aumenta considerablemente el tiempo en inventario de los materiales, por   lo   que   solo   se   deben   utilizar   valores   diferentes   a   los   menores   cuando   se   quiere   aumentar   la   cantidad de pedidos que procesa el sistema.  9.   CONCLUSIONES Y RECOMENDACIONES  El   presente   trabajo   pretende   evaluar   los   puntos   de   reorden   y   cantidades   a   ordenar   para   las   materias primas seleccionadas, buscando evaluar el impacto de estos en los tiempos promedio en el sistema para los pedidos. Luego de implementar el modelo mencionado anteriormente se obtuvo que al usar la gestión de inventario JIT, que es la manejada actualmente en la empresa y comparando con los resultados al aplicar la optimización, se encontraron mejores resultados para las salidas de interés. Esto representa una mejora en el comportamiento del sistema debido a que se reducen los tiempos de respuesta para la fabricación del suministro y hay una disminución en los productos rechazados. Por otro lado, al evaluar la efectividad del modelo los análisis obtenidos muestran un comportamiento esperado como representación de la realidad, a pesar de la poca disponibilidad de datos que representó un \nM. Díaz, S. Jaramillo y A. Sánchez  obstáculo para el desarrollo del proyecto. Sin embargo, otras de las limitaciones encontradas en cuanto al diseño del modelo se relacionan con las simplificaciones y supuestos planteados, por ejemplo la clasificación de los pedidos es una imprecisión con respecto a la realidad. Además, no se considera la periodicidad con la cual se revisan los materiales en bodega, a pesar de que es un factor clave para el correcto desarrollo en la gestión de inventarios. Por último, se podría considerar la introducción de costos para medir de manera más detallada la dinámica del sistema. Finalmente,   luego   de   desarrollar   la   simulación   aplicada   a   este   caso   específico,   se   evidencia   que   es efectivo   el   uso   de   DES   en   este   tipo   de   problemas.   Donde   pudimos   explorar   los   objetivos   que   queríamos alcanzar   y   tenemos   la   posibilidad   de   mejorar   el   modelo   considerando   factores   que   por   diversos   motivos quedaron fuera del alcance en el presente trabajo.  REFERENCIAS  Hillier,   F.   S.,   y   Lieberman,   G.   J.   (1995).   Introducción a la Investigación de Operaciones .   McGrawHill, 9na edición, 805-873. Wang,   Q.,   y   Ingham,   N.   (2008).   Un enfoque de modelado de eventos discretos para simulación de la cadena de abastecimiento . Recuperado de https://www.ijsimm.com/Full_Papers/Fulltext2008/text7-3_ 124-134.pdf AR   Racking.   (2024).   Método   Just-in-Time   (Justo   a   Tiempo)   en   almacén:   ¿Qué es   y   cómo   se   usa? .   Recuperado   de   https://www.ar-racking.com/co/blog/ metodo-just-in-time-justo-a-tiempo-en-almacen-que-es-y-como-se-usa/ AR   Racking.   (2024).   Cadena de suministro o Supply Chain: ¿Qué es y características? .   Recuperado   de https://www.ar-racking.com/co/blog/cadena-de-suministro-o-supply-chain-que-es-y-caracteristicas/ Ybirma,   L.   (2017). Área   de   diseño   para   calculo   de   sistemas   de   rociadores .   Recuperado   de https://www.contraincendio.com.ve/area-de-diseno-sistemas-de-rociadores/ Pulido,   A.,   Ballestas,   C.,   Del   Castillo,   K.,   Navarro,   M.,   Fuentes,   T.,   Pizarro,   A.,   Rodríguez,   Y.   (2021)  Simulación de un Sistema de Inventarios para la Determinación de Niveles de Reposición y de Servicios: Un caso de estudio . Recuperado de https://www.iiis.org/CDs2022/CD2022Spring/papers/CB202EE.pdf NFPA   (2024).   Códigos   y   Normas   NFPA .   Recuperado   de   https://www.nfpa.org/es/for-professionals/ codes-and-standards NFPA (2024).   Lista de Códigos y Normas NFPA . Recuperado de https://www.nfpa.org/es/for-professionals/ codes-and-standards/list-of-codes-and-standards#aq=%40culture%3D%22es) Drexmin   (2024).   ¿Qué   es   una   red   contra   incendios   y   qué   la   conforma? .   Recuperado   de https://drexmin.es/que-es-una-red-contra-incendios-y-que-la-conforma/ NFPA   (1996).   Norma para la Instalación de Sistemas de Rociadores .   Recuperado   de   https://www. academia.edu/40263299/NFPA_13_Norma_para_la_Instalaci%C3%B3n_de_Sistemas_de_Rociadores \n";
+    const PDF_NAME = "Gestión de inventarios en la cadena de abastecimiento SPCI utilizando simulación de eventos discretos.pdf";
+    const CHATBOT_THEME = "Gestión de inventarios en la cadena de abastecimiento ";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Cuál es el objetivo general del estudio sobre gestión de inventarios en la cadena de abastecimiento SPCI?","¿Qué problema de conflicto entre promesa de tiempo al cliente y cantidades mínimas de inventario motiva el uso de simulación?","¿Qué se incluye y qué se excluye en el alcance del modelo (por ejemplo, correcciones de fabricación, despacho, colas y recursos)?","¿Cómo se determina el nivel de detalle de entidades como pedidos, inventario y rutas de pedidos (pequeño, mediano nacional e internacional)?","¿Qué papel cumplen los parámetros de punto de reorden R y cantidad a ordenar Q en la actividad de realizar órdenes de compra?","¿Cómo afectan las capacidades limitadas de las colas de pedidos (por tipo) al comportamiento del sistema?","¿Cuáles son los supuestos principales del modelo sobre disponibilidad de estaciones, pagos a tiempo y causas de variación en tiempos de entrega?","¿Qué simplificaciones del modelo se aplican (solo sede de Sabaneta, solo tres materiales, solo producción/inventario y clasificación en tres tipos)?","¿Por qué se ajustan los datos a distribuciones discretas y qué distribución se elige para el tiempo entre llegadas de pedidos?","¿Cómo se implementa el modelo en Simul8 y qué unidad de tiempo y horizonte de simulación se usan (6 meses, días laborales)?","¿Cómo se realiza la validación caja negra comparando entradas y salidas del sistema entre la realidad y el modelo?","¿Qué revela el análisis de sensibilidad al variar parámetros ±10% (y qué conclusiones se obtienen al final, incluyendo recomendación JIT y posibles limitaciones)?"];
+    const INITIAL_PALETTE = {"primaryColor":"#179bcf","secondaryColor":"#127ca6","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#179bcf","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

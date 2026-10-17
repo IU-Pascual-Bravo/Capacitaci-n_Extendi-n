@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: MariaIsabelArdilaM_Artículo Tecnicas-Auditoria</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>MariaIsabelArdilaM_Artículo Tecnicas-Auditoria</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "                  C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre 2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2       Inge Con   Asesoría Integral en   Inge niería de  Con fiabilidad    www.confiabilidadoperacional.com        Technical Series:    Reliability, Maintenance and Asset Management       Whitepaper # I V :       Técnicas de Auditoría  aplicadas en   los   procesos de  Gest ión del Mantenimiento   y de   la   Confiabilidad      Autor es :    **C arlos  Parra Márquez &   Adolfo Crespo Márquez        Dept.  Industrial Management. University of Seville    School of Engineering, University of Seville, Spain       **Email:  parrac37@yahoo.com          Edi tado por:                   www.ingeman.net        2017                        \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          2    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2       RESUMEN       La  efectividad  de  la  gestión  del  mantenimiento  sólo  puede  ser  evaluada  y  medida   por  el  análisis  exhaustivo  de  una  amplia  variedad  de  factores  que,  en  su  conjunto,   constituyen  la  aportación  del  manteni miento  al  sistema  de  producción.  Este   procedimiento  de  evaluación    se  denomina  con  el  término  de  auditoría,    que  puede   definirse  como  una     “ revisión  sistemática  de  una  actividad  o  de  una  situación  para   evaluar  el  cumplimiento  de  las  reglas  o  criterios  objeti vos  a  que  aquellas  deben    someterse” .         E s  importante  señalar,    que  no  hay  fórmulas  simples  para  \"medir\"  el   mantenimiento, tampoco hay reglas fijas o inmutables con validez para siempre y en   todos los casos. Los resultados de las técnicas de auditorías apli cadas al diagnóstico   de  la  efectividad  del  mantenimiento,  deben  ayudar  a  mejorar  la  rentabilidad  del   sistema  de  producción    y  a  disminuir    la  incertidumbre  en  la  toma  de  decisiones  del   proceso  de  gestión  del  mantenimiento .  En  el  siguiente  artículo,      se  des cribe  la   importancia de los procesos de auditoría en el área del mantenimiento y se describen   algunas  de  las    técnicas  más  utilizadas  para  evaluar  el  desempeño  de  la  gestión  del   mantenimiento.            IV.1. CONCEPTOS BÁSICOS SOBRE AUDITORÍAS EN EL ÁR EA DEL MANT ENIMIENTO    Tomando como referencia el Modelo de Gestión de Mantenimient o (MGM) de 8 fases   (ver  Figura  4.1) ,  la  siguiente     sección  relacionada  con  las  técnicas  de  auditoría  de   gestión del mantenimiento forma parte de la Fase 1 del   MGM.   Fase 1:  Definici ó n de  objetivos,   estrategias y   responsabilidades   de  mantenimiento  Fase 2:  Jerarquizaci ó n  de los equipos de   acuerdo con la   importancia de  su funci ó n  Fase 3:  An á lisis de   puntos d é biles  en equipos de  alto impacto  Fase 4:  Dise ñ o de planes   de mantenimiento   preventivo y de los   recursos necesarios  Fase 5:  Programaci ó n del   mantenimiento y  optimizaci ó n en la   asignaci ó n de   recursos  Fase 7:  An á lisis del ciclo  de vida y de la  posible  renovaci ó n de   los equipos  Fase 6:  Evaluaci ó n y   control de la   ejecuci ó n del  mantenimiento  Fase 8:  Implantaci ó n del   proceso de  mejora continua y   adopci ó n de nuevas  tecnolog í as  Evaluaci ó n   Eficiencia  Eficacia  Mejora       Figura 4.1.   Modelo  del proceso de gestión del mantenimiento  (Crespo, 2007 , Parra y Crespo,   2015 )    \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       3    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  La  efectividad  de  la  gestión  del  mantenimiento  sólo  puede  ser  evaluada  y   medida  por  el  análisis  exhaustivo  de  una  amplia  variedad  de  factores  que,  en  su   conjunto, constituyen la   aportación del mantenimiento al sistema de producción. Este   procedimiento  de  evaluación    se  denomina  con  el  término  de    auditoría ,    que  puede   definirse  como  una     “ revisión  sistemática  de  una  actividad  o  de  una  situación  para   evaluar  el  cumplimiento  de  las  re glas  o  criterios  objetivos  a  que  aquellas  deben    someterse”   (González, 2004) .       El  proceso  de  implantación  de  una  auditoría  debe  pasar  por  un  conjunto  de   etapas  siguiendo  un  orden  lógico  específico,  en  la  F igura  4. 2,  se  presenta  un   procedimiento  básico  de  i mplantación  de  una  auditoría  (Parra,  2008).  Es  importante   señalar,    que  no  hay  fórmulas  simples  para  \"medir\"  el  mantenimiento,  tampoco  hay   reglas fijas o inmutables con validez para siempre y en todos los casos. Los resultados   de  las  técnicas  de  auditorías   aplicadas  al  diagnóstico  de  la  efectividad  del   mantenimiento, deben ayudar a mejorar la rentabilidad del sistema de producción  y a   disminuir    la  incertidumbre  en  la  toma  de  decisiones  del  proceso  de  gestión  del   mantenimiento (Parra, 2008 y González, 2004 ).              Figura  4. 2.   Procedimiento general de implantación de una auditoría       Las auditorías de mantenimiento, deben tener como objetivo principal el evaluar   los procesos más importantes de la gestión del mantenimiento, de tal forma que uno   de  los  aspectos  d e  mayor  relevancia  en  el  desarrollo  de  una  auditoría  de   mantenimiento,  está  relacionado  con  la  definición  de  los  objetivos  claves  a  ser   auditados. A continuación se citan como ejemplo, algunos de los objetivos claves más   comunes del área del mantenimiento  (Woodhouse, 1996):       Garantizar  valores  aceptables  de  riesgo  operacional  de  los  activos  de   producción,    reduciendo  la  probabilidad  de    presencia  de  fallos  (mejorando  la   fiabilidad),    y/o  minimizando  las  consecuencias  de  los  fallos  sobre  las   operaciones, la s eguridad y el ambiente.   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          4    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2       Recuperar    de  forma  rápida  y  eficiente  la  tolerabilidad    de  los    sistemas,  una   vez  que  se  ha  producido  la  interrupción  de  la  función  (mejorando  la    mantenibilidad).       Optimizar  la  continuidad  operacional  (mejorando  la  disponibilidad),     con  el   objetivo de maximizar el desempeño económico de los activos a lo largo de su   ciclo de vida útil (mejorando el nivel de costes).    Una  vez  determinados  los  objetivos  claves  del  proceso  de  gestión  de   mantenimiento, las organizaciones deben identificar  las áreas de mayor oportunidad a   ser evaluadas dentro de la auditoría desarrollada. En términos generales los factores a   ser  evaluados  dentro  de  una  auditoría  de  mantenimiento  se  citan  a  continuación   (González, 2004):       Recursos Gerenciales       Sistemas de manej o de la información (GMAO)       Tecnologías aplicadas al mantenimiento preventivo y predictivo       Procesos de planificación y estimación       Control de calidad en mantenimiento       Procesos de soporte (logística, inventarios)       Planificación paradas de plantas       Integración e ntre Mantenimiento y Producción         Metodologías de Ingeniería de Fiabilidad       Aspectos de motivación y comunicación, etc.    En  resumen,  las  características  más  importantes  que  debe  tener  una  auditoría   orientada a evaluar los diversos procesos de gestión del mant enimiento, se presentan   a continuación (González, 2004):        Deben ser capaces de permitir que se tomen decisiones con datos cualitativos   y/o datos cuantitativos         Deben  ser  capaces  de  evaluar  los  factores  que  agreguen  el  mayor  valor   agregado al negocio       Deben     combinar  el  lenguaje  de  económico  (finanzas)  con  el  lenguaje  técnico   (ingeniería)        Su aplicación ha de ser rápida y de fácil implantación       Las complicaciones matemáticas han de manejarlas los ordenadores       Los  resultados  del  análisis  de  los  factores  auditado s,  deben    generar  acciones   que  permitan  conseguir  los  objetivos  estratégicos  del  negocio  y  maximizar  la   rentabilidad de los activos de producción     En  las  secciones  siguientes,  se  presentan  los  procedimientos  de  aplicación  de   algunas  de  las  técnicas  de  audi toría  más  utilizadas  para  evaluar  los  diversos  procesos   de  gestión  del  mantenimiento ,  incluyendo  la  auditoría    al  proceso  integral  de  Gestión   del Mantenimiento mostrado en la figura 4.1 .      \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       5    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  IV.2.  AUDITORÍA  INTEGRAL DE GESTIÓN DE ACTIVOS, CONFIABILIDAD Y   MANTE NIMIENTO  DENOMINADA: “ ASSET MANAGEMENT, OPERATIONAL   RELIABILITY & MAINTENANCE SURVEY (AMORMS )”    La auditoría denominada AMORMS: ASSET MANAGEMENT, OPERATIONAL RELIABILITY   & MAINTENANCE SURVEY, des arrollada     por Parra y Crespo, 2015, permite evaluar las    8 f ases del modelo de Gestión de Mante nimiento propuestas en la figura 4.1. Las   áreas a ser auditadas con la herramienta  AMORMS  son:        1.   Gestión de Activos, Objetivos del Negocios (KPIS) y organización de soporte    2.   Modelos de Jerarquización basados en Rie sgo (criticidad de equipos)    3.    Análisis de problemas (manejo de fallas)    4.   Procesos de programación y  planificación     5.   Procesos de asignación de recursos, soporte informático y logístico     6.   Procesos de control y análisis de indicadores técnicos RAM    7.   Proceso de análisis de costos de ciclo de vida     8.   Procesos de revisión y mejora continua    El proceso de aplicación de esta auditoría se hará   a partir la línea de supervisión hacia   arriba (nivel de supervisores, ingenieros, superintendentes y gerentes), mín imo de 8   personas.     El  proceso  de  análisis  de    las     8    áreas        a  diagnosticar  se  realiza        a  partir  de  un   cuestionario  guía  de  150  preguntas .  Cada  partici pante  evaluará  cada  uno  de  las   preguntas  propuestas,  asignando     puntuaciones        que    ir án  desde  el  1  hasta  el    5,  en   función de la siguiente escala :      1.  Proceso muy deficiente    2.  Proceso debajo del promedio    3.  Proceso estándar  promedio    4.  Proceso con muy buenas prácticas    5.  Proceso a nivel de  Clase Mundial   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          6    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2       Los resultados de la auditoría se presentan en un format o tipo Radar   (ver figura 4.3.)       Figura 4.3. Ejemplo de resultados de la auditoría: AMORMS       A continuación se presenta el cuestionarío guía para la aplicación de la auditoría   AMORMS:    1.   Gestión de Activos, Objetivos del Negocio ( KPI S) y Organización de Soporte    1.1   Visión Gerencial & Liderazgo     1.1.1   Existen Directrices Corporativas sobre el proceso de Gestión de Activos?    1.1.2   Existe Conciencia de la Gestión de Activos y su Administración?   (Roles/Alcances/Responsabilidades)    1.1.3   Existe  un Control  detallado sobre los objetivos del negocio desde la Gerencia   Corporativa?    1.1.4   Tiene la Gerencia Corporativa un liderazgo integral y sostenible sobre el    negocio? (Control Sostenible)   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       7    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  1.1.5   La Gerencia Corporativa, las gerencias intermedias y l os niveles técnicos y de   ejecución comparten de forma eficiente el liderazgo del negocio? (Empoderamiento)    1.2   Plan Integral de Gestión de Activos    1.2.1   La organización cuenta con un modelo integral de gestión de activos incluida   en su visión y misión?    1.2 .2   Existe un plan integral diseñado para implantar los diversos procesos   propuestos por el modelo de  gestión de activos?    1.2.3   Existe un plan de  Gestión de Activos a largo plazo y está integrado con los   objetivos y metas  del negocio?    1.2.4   Las técnicas  de ingeniería de confiabilidad y mantenimiento  están vinculadas   con los procesos propuestos por el modelo de gestión de activos?    1.2.5   Se tiene definido un proceso integral de auditoría y mejora continua del   modelo de gestión de activos a ser implementado ?    1.3   Políticas Integrales de Mantenimiento (Gerencial)    1.3.1   Existe una política de mantenimiento integrada con la Gestión Corporativa del   negocio?    1.3.2   Las política de mantenimiento de corto, mediano y largo plazo, están ajustadas   a la realidad del nego cio?    1.3.3   La política de mantenimiento ha sido creada de acuerdo con las políticas   estratégicas del negocio?    1.3.4   Las políticas de operación y mantenimiento están vinculadas e integradas con   los objetivos y metas del negocio?    1.3.5   La políticas de Manten imiento y Confiabilidad están integradas con la visión y   misión del negocio?    1.4   Estructura Organizacional    1.4.1   Existe de forma general una estructura organizacional bien definida?    1.4.2   Existe una estructura organizacional eficiente para gestionar los pr ocesos de   mantenimiento y confiabilidad (están claras las responsabilidades de los grupos de   confiabilidad)?    1.4.3   Existe una estructura organizacional eficiente para gestionar  las operaciones?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          8    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    1.4.4   La Organización tiene grupos específicos relacionados c on la implantación de   técnicas en las  áreas de Confiabilidad y Mantenimiento?    1.4.5   La Organización tiene una estructura administrativa y técnica, orientada a   soportar el proceso integral de Gestión de Activos?    1.5   Control Financiero (KPIS claves del nego cio)     1.5.1   Existe un procedimiento bien desarrollado para gestionar el control financiero   (KPIS claves del negocio)?    1.5.2   Los procesos de control financiero se aplican a partir del análisis de los  KPIS    claves de forma continua y no de forma  eventual?    1.5.3   El sistema de control financiero es monitoreado y auditado de forma eficiente?    1.5.4   El control financiero está totalmente vinculado con las metas y objetivos de la   organización?    1.5.5   El proceso de control de los KPIS financieros están integrado con   los procesos   indicadores técnicos y económicos de  las áreas de mantenimiento y confiabilidad?    2.  Modelos de Jerarquización basados en Rie sgo (Criticidad de Activos)      2.1   Gestión de Riesgos    2.1.1   Está definida de forma clara la política integral de gestió n de Riesgos alineada   con el modelo de Gestión de Activos?    2.1.2   Existe un proceso integral  de gestión para el control del riesgo en las áreas  de   mantenimiento y confiabilidad?    2.1.3   Existe un proceso eficiente para comunicar los diferentes niveles de ri esgos   que están expuestos los integrantes de las áreas de mantenimiento y confiabilidad?    2.1.4   Los riesgos en los procesos de mantenimiento y confiabilidad, son analizados,   revisados y actualizados en forma regular?    2.1.5   La organización utiliza modelos de   gestión de riesgo como base para la toma de   decisiones en las áreas de mantenimiento y confiabilidad?    2.2   Priorización de equipos    2.2.1   La organización ha desarrollado un modelo de criticidad de equipos basados en   Riesgo   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       9    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  2.2.2   El modelo de Riesgo prioriza ción de equipos esta alineado con los objetivos del   negocio     2.2.3   La información utilizada para estimar la frecuencia y la  de  las fallas es tomada   de una fuente confiable y veraz    2.2.4   El modelo de priorización de equipos es un modelo estándar para toda   la   organziación y es utilizado en todas las áreas operacionales  de la organización    2.2.5   Los resultados de jerarquización de equipos se utilizan para tomar  decisiones    de mejora en la operación y mantenimiento de los activos    2.3   Gestión de los procesos de Seg uridad, Salud y Ambiente    2.3.1   Existe un plan eficiente de emergencias y contingencias en la organización?    2.3.2   Se ha comunicado al personal sobre las potenciales consecuencias sobre los   eventos que pueden afectar  seguridad, la salud y el ambiente?    2.3.3   Se tiene  desarrollada una política de emergencias y seguridad  bien   documentada y comunicada?    2.3.4   Los planes de emergencias y seguridad son revisados, mejorados y actualizados   de forma  continua?    2.3.5   Los planes de emergencias están certificados por o rganizaciones locales e   internacionales reconocidas?      3.  Proceso de Análisis de Problemas (Análisis de Causa Raíz)      3.1   Gestión de las fallas    3.1.1   Existe un procedimiento estándar para gestionar las fallas en toda la   organización?    3.1.2   El procedimiento d e análisis de fallas es de fácil aplicación y es aceptado por   toda la organización?    3.1.3   Existe un proceso eficiente sobre  la información recopilada en los análisis  de   fallas (proceso eficiente de documentación y registro)?    3.1.4   El proceso de análisis  de fallas es llevado a cabo por equipos interdisciplinarios   que permitan validar con hechos reales las causas encontradas?    3.1.5   El proceso de gestión de  fallas tiene indicadores previamente definidos y   analizados, que permitan medir la eficiencia y la ef ectividad de las recomendaciones   emitidas  (el proceso de análisis de fallas está   incorporado a un proceso de   mejoramiento continuo)?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          10    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    3.2   Equipos multidisciplinarios de optimización    3.2.1   Los trabajadores están bien organizados y motivados para el logro  de los   objetivos del negocio?    3.2.2   El ambiente de trabajo es propicio para realizar análisis que promuevan    cambios y procesos de mejora?    3.2.3   Existe un proceso eficiente de comunicación entre la gerencia de la   organización y  el resto de los niveles adm inistrativos?    3.2.4   La estructura organizacional de los trabajadores está orientada a soportar el   proceso integral de gestión de activos?    3.2.5   Existe un proceso estándar  que promueva a los trabajadores a   participar en    equipos multidisciplinarios?    3.3   Métodos de Análisis de Fallas    3.3.1   La organización utiliza un método estándar de análisis de fallas para toda la   organización?    3.3.2   La metodología de Análisis de Fallas permite identificar el área de oportunidad   en función de nivel  de  Riesgo provocado  por los modos de fallas?    3.3.3   La metodología de Análisis de Fallas propone un procedimiento que permita   validar de forma eficiente las hipótesis planteadas (validación con hechos reales)?    3.3.4   Las recomendaciones generadas de los análisis de fallas son s eleccionadas a   partir de un procedimiento de Análisis Costo Riesgo Beneficio?     3.3.5   Se evalúan y auditan los resultados reales de las acciones recomendadas una   vez finalizados los análisis de fallas?          4.  Procesos de programación, planificación y optimiz ación de planes de   mantenimiento, inspección y operaciones        4.1   Programación y planificación     4.1.1   Existe definida una estrategia a nivel gerencial de optimización del    mantenimiento    4.1.2   Existe un proceso detallado y eficiente de programación y planific ación del   mantenimiento?    4.1.3   Se cumplen de forma eficiente las Estrategias de Planificación y Programación    para el mantenimiento de los equipos?    \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       11    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  4.1.4   Las estrategias de  planificación y programación del mantenimiento están   alineadas con el plan de neg ocio de la organización?    4.1.5   Las estrategias de planificación y programación del mantenimiento se analizan   y se auditan los resultados de aplicación de estas estrategias?    4.2   Procedimientos e instructivos de trabajos    4.2.1   Existe una estructura que permi ta documentar los procedimientos e   instructivos de trabajo?    4.2.2   Existe un marco general de referencia y soporte para generar documentación   sobre los procedimientos e instructivos de trabajo?    4.2.3   Existe un sistema de control documental alineado con algú n estándar local o   internacional?    4.2.4   Los procedimientos de trabajo son utilizados activamente por toda la fuerza de   trabajo?    4.2.5   Las mejoras a los procedimientos de trabajo son realizadas e incluidas en los   planes de adiestramiento del personal?    4.3   P lanes de Mantenimiento por Condición (técnicas predictivas)    4.3.1   Existe un proceso eficiente de gestión del mantenimiento por condición?    4.3.2   Se realizan actividades de mantenimiento por condición de forma organizada y   continua?    4.3.3   Existe un plan de m onitoreo de condiciones basado en el nivel de criticidad por   Riesgo de los activos de la organización?    4.3.4   El monitoreo de condiciones es parte integral de una estrategia de   optimización del mantenimiento?    4.3.5   El proceso de monitoreo de condiciones de  la compañía es auditado y se le   hace seguimiento a la efectividad de las recomendaciones emitidas?    4.4   Técnicas de optimización en las áreas de Confiabilidad, Mantenimiento y   Operaciones    4.4.1   La organización ha desarrollado un modelo guía de implantación  de las   metodologías de Confiabilidad y Mantenimiento, orientado a cumplir con los objetivos   del negocio?    4.4.2   La organización cuenta con un grupo de soporte encargado de administar y   facilitar las herramientas de Confiabilidad y Mantenimiento?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          12    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    4.4.3   Se ap lican de forma organizada y constante los diferentes métodos de   Confiabilidad y Mantenimiento (RCM, RCA, TPM, RBI, Lean.......?    4.4.4   Se miden, auditan y confirman los resultados de las aplicaciones de los   métodos de Confiabilidad y Mantenimiento?    4.4.5   Se rev isan y actualizan los métodos de Confiabilidad y Mantenimiento (se   toman en cuenta las novedades, actualizaciones y desarrollo de nuevos métodos de   optimización)?              5.  Procesos de asignación de recursos, soporte informático  y  soporte logístico a los   p rocesos de Mantenimiento y Confiabilidad      5.1   Sistema de soporte informático de mantenimiento (software de   mantenimiento)    5.1.1   Existe un sistema eficiente de soporte informático para el mantenimiento?    5.1.2   El diseño de las órdenes de trabajo dentro del s oftware es adecuado y se utiliza   de forma eficiente?    5.1.3   El sistema de órdenes de trabajo ayuda a mejorar los procesos de    programación y planificación  del mantenimiento?     5.1.4   El software de mantenimiento es utilizado en forma extensa por toda la   orga nización, incluyendo todos los tipos de paros (correctivos, preventivos, por   condición,  detenciones mayores, seguimiento de componentes de fallas, etc.)?    5.1.5   El sistema de soporte informático de mantenimiento genera de forma   automática indicadores técni cos y económicos, los cuáles son ampliamente usados por   toda la organización para mejorar la toma de decisiones?            5.2   Sistema de control de documentos    5.2.1   Existe un sistema  general de administración de documentos técnicos de   mantenimiento (planos, P&D , flujogramas de procesos, manual de operaciones, etc.)    5.2.2   Existe un sistema de administración de documentos que integre la información   del mantenimiento con las otras áreas de la organización?    5.2.3   Existe un sistema de administración de documentos que   cumpla con alguna   norma o estándar de calidad?    5.2.4   El sistema de administración de la documentación está totalmente   implementado de forma informática?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       13    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  5.2.5   El sistema  de administración de documentos, está en línea para toda la   organización y se usa de   forma amplia y eficiente?        5.3   Manejo de respuestos, materiales (logística)    5.3.1   El proceso de general de abastecimiento y logística de repuestos es eficiente?    5.3.2   El proceso de abastecimiento y planificación de materiales es organizado y   tiene un flu jo ordenado y bien controlado?    5.3.3   El proceso de manejo y planificación  de materiales está desarrollado para toda   la planta?    5.3.4   EL proceso de abastecimiento y planificación de materiales está  integrado de   forma eficiente con el área de mantenimiento ?    5.3.5   EL proceso de Abastecimiento y planificación de materiales tiene indicadores   de optimización integrados a nivel de los objetivos del negocio que son evaluados,   analizados, utilizados y  auditados de forma continua?        5.4   Procesos de administración  de la s   bodegas e inventarios    5.4.1   La administración del inventario es llevada a cabo por una organización bien   estructurada para esta función?    5.4.2   La administración del inventario es llevada y controlada por una herramienta   de soporte informática?    5.4.3   El proceso de administración de la bodega y manejo de inventarios, incluye   indicadores de optimización de repuestos utilizando técnicas de  análisis de Riesgo?    5.4.4   El software de administración de los repuestos, genera de forma automática,   indicadores d e análisis de inventarios que son utilizados para optimizar los diversos   procesos de la gestión de materiales?    5.4.5   Los procesos de  administración de abastecimiento y manejo de inventarios   están orientados a lograr los objetivos del proceso de Gestión de   Activos?      6.  Procesos de control y análisis de indicadores técnicos del negocio (RAM)      6.1   Indicadores de desempeño técnico    6.1.1   Existe un proceso de eficiente de registro de la información histórica de los   equipos?    6.1.2   Se realizan de forma eficiente a nálisis de mejora  sobre la información histórica   de fallas y operación de los equipos?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          14    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    6.1.3   Existe un programa estándar de análisis de indicadores implementado de   forma eficiente?    6.1.4   Se realizan análisis sistemáticos de fallas a partir de indicadores  de riesgo    previamente definidos?    6.1.5   La organización evalúa  y toma decisiones a partir de indicadores de mejora en   confiabilidad y mantenibilidad de forma eficiente (MTTF, MTTR, Disponibilidad....,   etc.?    6.2   Programas de revisión de los planes de manteni miento    6.2.1   Se realizan análisis de mejora sobre los diferentes tipos de mantenimientos   ejecutados?    6.2.2   Se toman acciones sobre los análisis realizados a los diferentes tipos de   mantenimientos ejecutados?    6.2.3   El análisis de los mantenimientos ejecutad os, es realizado de forma  eficiente y   sistemática?    6.2.4   Las recomendaciones realizadas a partir del análisis de los mantenimiento   ejecutados, son tomadas en cuenta y se auditan los resultados de las acciones   emitidas?    6.2.5   Se realiza algún proceso de  b enchmarking en relación a los indicadores de   mantenimiento y confiabilidad?    6.3   Procesos de control de las operaciones    6.3.1   Existe un procedimiento dónde se detallen los procesos operacionales?    6.3.2   Se relacionan los procesos operacionales con todas acti vidades de producción?    6.3.3   Se relaciona las estrategias operacionales con  las estrategias del   mantenimiento?    6.3.4   Están vinculadas de forma eficiente las metas operacionales  con la   planificación de las actividades de mantenimiento?    6.3.5   Están integra das las estrategias de operación y producción con los procesos de    programación y planificación del mantenimiento?    6.4   Control de contratistas    6.4.1   El uso de contratistas es eficiente y se tienen modelos de contratos   establecidos por áreas y tipos de trab ajo?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       15    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  6.4.2   Los contratos de corto y largo  plazo están totalmente estandarizados?    6.4.3   Existe un proceso de validación y auditoría de las credenciales  de las   contratistas que participan en los diferentes procesos de mantenimiento y operación?    6.4.4   Exist en un proceso eficiente de evaluación del desempeño real de los   contratistas, que sea constantemente monitoreado y que permita tomar acciones   sobre las desviaciones encontradas?    6.4.5   Los contratos de negocios establecidos  con los contratistas están total mente   alineados en términos de estrategias con los objetivos y metas del negocio?    6.5   Gestión de talleres    6.5.1   La organización cuenta con un servicio eficiente: propio o contratado de   talleres para actividades de mantenimiento?    6.5.2   Existe un proceso int erno que permita evaluar el desempeño de los servicios   prestados por los talleres?    6.5.3   Existe un modelo de contrato estándar desarrollado para todos los servicios   solicitados a  los  talleres?    6.5.4   Existe un procedimiento específico que permita evaluar  los tiempos de   entrega, los costos y  la calidad de ejecución de los servicios  ofrecidos por los talleres?    6.5.5   Existe un modelo de auditoría y benchmarking certificado bajo una norma local   o internacional, que permita evaluar los Servicios ofrecidos por   los  talleres?         7.  Procesos de Análisis de Costos de Ciclo de Vida       7.1   Asset Life Cycle Cost Management    7.1.1   Existe un procedimiento eficiente de análisis del ciclo de vida de los activos?    7.1.2   Se analiza y se pronostica  el ciclo de vida de los acti vos de la organización?    7.1.3   Existe un proceso de evaluación del  impacto económico de la Confiabilidad en   el ciclo de vida de los activos (Modelos Woodard, Willans and Scott....., etc.)?    7.1.4   El proceso de Análisis de Ciclo de vida de los activos es lleva do a cabo por   equipo  multidisciplinario de toda la organización en dónde participan los grupos de   operaciones y mantenimiento?    7.1.5   Se documenta de forma eficiente la información del ciclo de vida de los activos   y se auditan los resultados de Ciclo de Vi da de los equipos seleccionados?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          16    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    7.2   Manejo de información en el Ciclo de Vida del Activo     7.2.1   ¿La administración de la organización revisa regularmente los factores claves   de su sistema de gestión de activos (incluyendo política de gestión de activos,   e strategia, objetivos, y planes) para asegurar su eficacia, adecuación y conveniencia a   lo largo de todo el Ciclo de Vida?    7.2.2   ¿La información económica y técnica (factores claves de la gestión de activos)   es considerada para la revisión, seguimiento y su stitución de los equipos?    7.2.3   ¿La organización usa la información económica y técnica   para mejorar   continuamente su sistema de gestión de activos global a lo largo de todo el Ciclo de   Vida?     7.2.4   ¿La organización asegura que los resultados de las revi siones realizadas a  los   factores claves de la gestión de activos,  esté disponible, para que la alta dirección   tome en cuenta los resultados obtenidos,  durante el análisis y la revisión  de los    planes estratégicos de la  organización a lo largo de todo  el Ciclo de Vida?     7.2.5   ¿La organización mantiene los registros de las revisiones de los factores claves   de la gestión de activos y comunica información relevante a los empleados,   proveedores de servicios contratados  u otras áreas relacionadas (interesad as  -    stakeholders) con el proceso de gestión de activos a lo largo de todo el Ciclo de Vida?       7.3   Mantenimientos especiales (paradas de plantas, overhauls...)    7.3.1   Las detenciones mayores son implementadas en forma ordenada bajo un   modelo de gestión de gra ndes paradas de plantas?    7.3.2   Las detenciones mayores son implementadas por grupos a dedicación   exclusiva?    7.3.3   Las detenciones mayores son programadas, planificadas y ejecutadas bajo el   uso de herramientas de optimización  de confiabilidad y riesgo?    7.3 .4   Existe un proceso de registro de las detenciones mayores que permita recopilar   las  lecciones aprendidas y todas las actividades son especificadas y estandarizadas?    7.3.5   Existe una estrategia de integral de optimización de los procesos paradas de   plant as, se auditan y se realizan análisis de  benchmarking y de mejora continua?         \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       17    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  8.  Proceso de revisión y mejora continua      8.1   Contro de Calidad    8.1.1   Existe un modelo eficiente de gestión de la calidad dentro del área de   mantenimiento?    8.1.2.   Existe el conoci miento de que la calidad contribuye a la mejora del desempeño   de los procesos de mantenimiento y confiabilidad?    8.1.3.   La organización del mantenimiento está alineada con los programas de   mejoramiento de la calidad?    8.1.4.   La organización de mantenimiento  ha sido acreditada en alguna norma   relacionada con la calidad?    8.1.5   La compañía está acreditada en alguna norma de la  calidad y se ha    incorporado el proceso de gestión de la calidad dentro del mantenimiento?    8.2   Programas de mejora continua    8.2.1   Las mej oras en los procesos de mantenimiento y confiabilidad son llevadas de   forma ordenada y actualizadas  bajo un modelo específico?    8.2.2   Existe un marco de referencia  para incluir mejoras  en los procesos de   mantenimiento y confiabilidad?    8.2.3   Existe un pro grama se seguimiento a las propuestas de  mejoras en las áreas de   mantenimiento y confiabilidad?    8.2.4   El proceso de Mejora continua es una práctica común en las áreas    mantenimiento y confiabilidad?    8.2.5   El proceso de  mejora continua es una práctica est ándar de todos los negocios   que conforman el proceso industrial analizado?    8.3   Programas de desarrollo de personal    8.3.1   La organización cuenta con un departamento que se encargue del proceso de   adiestramiento formal al personal de toda la organización?    8. 3.2   Se provee de adiestramiento eficiente al  personal nuevo de la organización?    8.3.3   Existe un plan de entrenamiento específico y ajustado a todo el ciclo de vida   del trabajador?    8.3.4   El programa de adiestramiento de todo el personal está adecuado al pu esto de   trabajo y está orientado a lograr los objetivos del negocio?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          18    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    8.3.5   El programa de entrenamiento incluye formación en las áreas de técnicas   modernas de mantenimiento, confiabilidad  y gestión de activos?             IV.3 . TÉCNICA DE AUDITORÍA DENOMINADA: “M ATRIZ CUALITATIVA DE EXCELENCIA   EN MANTENIMIENTO (MCEM)”    La     m atriz    c ualitativa  de  excelencia  en    m antenimiento  (MCEM)     está     basada  en  una   matriz  de  5  x  7  (Referencia:  ABS    –     Reliability  and  Risk  Group  JBFA  Training,  Curso:   Reliability  Management). Los ejes d e la matriz se detallan a continuación:       Eje  Horizontal:  corresponde  a  las  5  etapas  de  mejora  del  mantenimiento:   incertidumbre, conciencia, entendimiento, madurez y excelencia       Eje    vertical:  corresponde  a    los  factores  de  gestión  del  mantenimiento  a   evaluar :  aptitud  de  la  alta  gerencia,  status  de  la  organización  mantenimiento,   costes del mantenimiento / costes totales, formas de resolver los problemas en   mantenimiento,  calificación  y  entrenamiento  del  personal  de  mantenimiento,   manejo de la información  y to ma de decisiones,  posición de la organización en    relación al mantenimiento    Las áreas de mantenimiento propuestas a ser evaluadas:       Aptitud de la alta gerencia        Status de la organización mantenimiento       Costes del mantenimiento / costes totales        Formas de res olver los problemas en mantenimiento        Calificación y entrenamiento del personal de mantenimiento        Manejo de la información  y toma de decisiones        Posición de la organización en relación al mantenimiento    El  proceso  de  aplicación  de  esta   auditoría  se   hará  a  nivel  de  personal  de   gerencia,    y  es  común  desarrollarlo  mediante     una  tormenta  de  ideas  (se  recomienda   aplicar el cuestionario de la matriz a la mayor cantidad de participantes posibles para   minimizar la incertidumbre de esta técnica).       El  p roceso  de  cuan tificación  de  las  áreas  de  mantenimiento  a  diagnosticar     se   realiza  tomando    los  resultados  de  cada  una  de  las  evaluaciones  realizadas  por  cada   participante y  promediándolos . Cada participante evaluará cada uno de los 7 factores   propuestos,  las  puntuaciones    irán  desde  el  1  hasta  el  5     ( siendo    1:  Incertidumbre,  2:   Conciencia, 3: Entendimiento, 4: Madurez y 5: Excelencia). Las preguntas desarrolladas   para cada una de las 7 áreas a ser evaluadas se presentan en la Tabla 4.1.                     \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       19    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2                       Etapas   Criterios    Etapa 1   Incertidumbre    Etapa 2   Conciencia    Etapa 3   Entendimiento    Etapa 4       Madurez    Etapa 5                Excelencia    Aptitud gerencial    No existe el   concepto de   prevención  -   solo se    corrige cuando sea   necesario     Reconoce que el   mantenimiento   podría mejorar pero   esta ren uente a   aceptar     Comienza  a   aprender sobre el   impacto  del   mantenimiento en la   rentabilidad  -   se   interesa y promueve   algunos cambios    Genera propuestas   de mejora hacia el   mantenimiento,   reconoce que el   apoyo de la gerencia   es de vital   importancia para   cons olidar las   mejoras    Incluye al   mantenimiento como   parte integral de los   objetivos del negocio.    Status de la    organización   Mantenimiento       REACTIVA:   trabajar sobre los   equipos cuando   estos fallan de   forma imprevista  -     reparar cuando se   rompa    CONCIENTE: se   m antiene corrigiendo   fallas pero tiene   ahora repuestos y   realiza algunos   mantenimientos   mayores      PREVENTIVA:   aplica rutinas   preventivas por   tiempo  de   inspección,   lubricación, ajustes y   servicios menores   con el fin de   aumentar el TPO de   algunos equipos     PR EDICTIVA:   aplica técnicas de   análisis de   vibración,   termografía,   ultrasonido, etc.,   para monitorear la   condición de   algunos equipos.   Realiza análisis de    fallas repetitivas     PROACTIVA: define y   prioriza las actividades   de mant. (preventivo y   predictivo) en   función   de las consecuencias de   las fallas y desarrolla   modelos de decisión   basados en riesgo    Costes totales de   mantenimiento /   Costes totales de   producción    30+%   20 - 30%   10 - 20%   5 - 10%   Menos del 5%    Formas de   resolver los   problemas    Problemas se   resuelven se gún   como vayan   apareciendo    Se reparan las fallas   en tiempos cortos.   Se inician algunos   análisis de fallas   (solo mantenimiento)    Problemas analizan y   se resuelven con   información   proveniente de   mantenimiento y   operaciones    Problemas se   analizan a partir del   e sfuerzo de equipos   de trabajo   (operaciones,   mantenimiento,   ingeniería, logística,   proyectos,   fabricante, etc.)      Problemas se analizan   por equipos de trabajo,   se evalúan los riesgos  y   se  previenen  los    problemas que afectan   la rentabilidad del   negocio    Calificación y   adiestramiento   del personal de   mantenimiento    Trabajos de baja   calidad son   aceptados,   entrenamiento se   considera   innecesario,   ausencia de   procedimientos,   herramientas en mal   estado    Se reconoce la falta   de adiestramiento, se   identifican las   he rramientas   obsoletas, se   identifican algunos   procedimientos de   trabajo    Se entiende la   importancia de la   calidad en el mant.,   se definen los roles y   procedimientos de   trabajo, se   desarrollan algunas   habilidades críticas,   anualmente se   considera un   presupues to para   adiestramiento     Se definen   procedimientos de   certificación de   calidad en   mantenimiento, se   desarrolla personal   de mant. de   multihabilidades, el   entrenamiento se   define por   rendimiento y   desempeño    Altos estándares de   calidad  en la ejecución   del man t., el   adiestramiento se   visualiza como una   inversión y se planifica   en función del impacto   económico de cada   área, muy alta   flexibilidad para la   ejecución del mant.    Manejo de la   información y   proceso de toma   de decisiones    No se maneja   ningún registro de   mantenimiento  -   la   poca data que se   recopila es de muy   baja calidad      Se utiliza un sistema   manual o   computarizado muy   sencillo  -   no hay   apoyo del sistema   para planificar   actividades    Se utiliza un  sistema   que permite    desarrollar órdenes   de trabajo de man t.,   se hace seguimiento   a los costos totales,   (solo tiene acceso   mantenimiento)      Se utiliza un sistema   computarizado de   control del   mantenimiento que   involucra a   mantenimiento y   operaciones, se   registran datos de   costos y    confiabilidad de   forma segura      Se tiene un sistema de   gestión del   mantenimiento   integrado con todas las   áreas del negocio   (finanzas, logística,   materiales, operación,   procesos, etc.), incluye   módulo de análisis de   Riesgo    Posición de la   organización   en   relación al   mantenimiento    Nosotr os no   tenemos ni idea   porque los equipos   fallan. La   continuidad   operacional es muy   baja  pero para   nosotros el   mantenimiento no   es un factor   importante    Nuestros   competidores tienen   menos problemas   que nosotros, su   disponibilidad es   más alta y no   generan ta nto   impacto en la   producción    Un nuevo enfoque de   nuestro proceso de   gestión del   mantenimiento nos   puede ayudar a   identificar los   problemas y a   incrementar la   disponibilidad de   nuestros activos    \"Todo el mundo esta   comprometido a que   la calidad se   convierta  en algo   rutinario dentro del   mantenimiento, que   pase a ser parte de   nuestra filosofía   operacional.   Nosotros no   podremos hacer   productos de calidad   a partir de   actividades de   mantenimiento mal   ejecutadas\"    \"Nosotros no   esperamos paros   imprevistos  y   sorpresa s, cuando ello   ocurre, será sólo en   equipos que   previamente   mantenimiento ha   definido como equipos   de bajo riesgo (es más   barato esperar que   ocurra la falla que hacer   alguna actividad de   mantenimiento   preventivo\"    Tabla 4 .1.   Matriz Cualitativa de Excelenci a en Mantenimiento (MCEM)   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          20    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    IV.3. TÉCNICA DE AUDITORÍA DENOMINADA: “MAINTENANCE EFFECTIVENESS   SURVEY (MES)”    La  auditoria  MES  es  una  auditoria  propuesta  por  el  Instituto  Marshall   ( http://www.marshallinstitute.c om/ )  y  está    basada  en  un    cuestionario  de  evaluación   de  60  preguntas  repartidas  en  5  áreas  del  mantenimiento.  Las  respuestas  a  cada   pregunta,  como  veremos,  se  limitan  a  cinco  posibles  opciones.   Las  áreas  de   mantenimiento evaluadas son:       Recursos Gerenciales         Gerencia de la información (Software de gestión del mantenimiento).        Equipos y técnicas de mantenimiento preventivo       Planificación y ejecución       Soporte, Calidad y Motivación    El  proceso  de  aplicación  de  la  auditoría  es  a  nivel  de  personal  de  gerencia,   super visión, operaciones y mantenimiento, recomendándose pasar el cuestionario a  8   participantes, como mínimo.       El  proceso  de  cuantificación  de  las  áreas  de  mantenimiento  a  diagnosticar  se   realiza  de  la  siguiente  forma:  Las  personas  seleccionadas,  evalúan  la s  12  preguntas   desarrolladas  para  cada  área  (total:  5  áreas  /  60  preguntas)  en  función  de  una escala   del 1 al 5. Para la calificación se puntúa, de acuerdo con la siguiente escala: 1 = no se   cuenta 8muy deficiente), 2 = deficiente, 3 = regular, 4 = bueno y    5 = excelente). Cada   área  a  ser  evaluada  se  considera  con  el  mismo  nivel  de  importancia.  Las  posibles   puntuaciones máximas y mínimas a obtener son:          Puntuación máxima: por área: 60 unidades, por las 5 áreas: 300 unidades.        Puntuación mínima: por área: 12   unidades, por las 5 áreas: 60 unidades.    Las  puntuaciones  totales  se    suman  y  promedian  entre  el  número  de  personas   encuestadas.  Finalmente,  se  estima  la  posición  del  mantenimiento  en  función  de  los   siguientes rangos:       300 – 261: Categoría “Clase Mundial”/niv el de excelencia en mantenimiento       201 – 260: Categoría  “Muy buena”/nivel de buenas prácticas en mantenimiento       141 – 200:  Categoría  “Por  arriba  del  nivel  promedio”/nivel  aceptable  en   mantenimiento         81 – 140:  Categoría    “Por  debajo  del  promedio”/nivel  no  muy  bue no  de    mantenimiento, con oportunidades para mejorar       Menos de 80: Categoría “Muy por debajo del promedio”/nivel muy malo   mantenimiento con muchas  oportunidades para mejorar     A continuación se presentan las 60 preguntas desarrolladas para cada una de las   5   áreas a ser evaluadas (12 preguntas por área)      \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       21    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2     Recursos Gerenciales. Ver preguntas en la Tabla 4.2.       Preguntas  a evaluar   1   2   3   4   5    1. ¿Usted siente que mantenimiento está dotado para realizar su trabajo?                        2. ¿La estructura completa del manteni miento parece ser lógica y favorece al   cumplimiento de  las actividades de mant.?                         3. ¿La organización ayuda a eliminar las barreras que el mantenedor   encuentra en su trabajo y de las cuales no tiene control?                         4. ¿La gerencia estimula a   mantenimiento a alcanzar las metas de   producción?                          5. ¿La gerencia estimula a producción a que ayude a mantenimiento en la   realización de sus actividades?                         6. ¿Se desarrollan equipos de trabajo (mantenimiento y producción), para   resol ver tópicos que afectan a ambos departamentos?                         7. ¿La gerencia  estimula al personal de mantenimiento (mecánicos,   eléctricos....) y a los operadores a que trabajen juntos en la resolución  de   problemas que afectan la disponibilidad de sus procesos ?                            8. ¿El personal de mantenimiento posee las habilidades necesarias para   realizar sus trabajos?                         9. ¿Los trabajadores en general han recibido el  adiestramiento adecuado en   sus áreas de trabajo?                         10. ¿La gerencia involucra   al personal de mantenimiento en la definición de   sus objetivos y metas a cumplir?                         11. ¿La  gerencia revisa y le hace seguimiento a los objetivos de la planta en   reuniones de trabajo con el personal de mantenimiento y operaciones?                          12 . ¿Los objetivos del mantenimiento están alineados con la visión y misión   del negocio?                         Puntuación total por criterio              Tabla  4. 2 .   Área Recursos Gerenciales                      \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          22    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2       Gerencia de la info rmación (Software de   Mantenimiento).  Ver Tabla 4. 3.    Preguntas a evaluar   1   2   3   4   5    13. ¿La organización utiliza de forma eficiente el sistema computarizado de   gestión del mantenimiento (Máximo /SAP PM/... )?                         14. ¿Está cada componente identificado, codificado y asociado a un sistema   dentro de toda  la planta?                         15. ¿La organización mantiene actualizado el Máximo /SAP PM/... ?                        16. ¿Ha sido el personal debidamente entrenado para  su   uso?                         17. ¿Lo organización mantiene registros precisos de fallas de sus sistemas?                        18 . ¿Están los inventarios de repuestos dentro del Máximo /SAP PM/... ?                        19. ¿Se toman decisiones a partir de los reportes generados por  é l?                           20. ¿La organización estima y le hace seguimiento a los cost e s de   mantto.?                         21. ¿La or ganización evalúa los tiempos operativos y  fuera de servicio ?                        22. ¿La organización  de mantenimiento se compara contra otras   organizaciones para medir su desempeño ( “ benchmarking ” )?                         23. ¿El tiempo de realización de l   mantenimiento es  registrado y evaluado?                        24. ¿La  gerencia de mantenimiento utiliza algún tipo de medida de   comparación (costos de mantenimiento/cost e s de producción?                         Puntuación total por criterio              Tabla 4.3 : Área Gerencia de la información         Equip os y técnicas de mantenimiento preventivo.  Ver Tabla 4.4.    Preguntas a evaluar   1   2   3   4   5    25. ¿La organización utiliza órdenes de trabajo para las actividades de MP?                        26. ¿Se revisan periódicamente los planes de MP, aumento/descenso,   necesidades d e adiestramiento, etc.?                         27. ¿La organización tiene personal de mantenimiento dedicado   exclusivamente a realizar actividades de MP?                         28. ¿Los operadores ayudan en las actividades de mantenimiento menor   (limpieza, lubricación, ajustes e  inspección visual)?                          29. ¿La organización utiliza técnicas de mantenimiento predictivo (vibración,   análisis de aceite, ultrasonido, etc.?                         30. ¿La organización le hace seguimiento a los costos de mantenimiento   preventivo y predictivo?                         31. ¿Los grupos de producción y operaciones permiten que el personal de   mantenimiento tenga acceso a los equipos en las fechas estimadas de MP?                            32. ¿La organización tiene la cultura de analizar y evitar las fallas repetitivas?                        33. ¿Se incluye al personal de mantenimiento y producción  en el proceso de   evaluación de equipos nuevos?                         34. ¿Se adiestra de forma adecuada a las personas que van a operar los    equipos nuevos?                         35. ¿Se adiestra de forma adecuad a a las personas que van a mantener los    equipos nuevos?                         36. ¿La organización hace seguimiento y evalúa los costos de operación  y   mantenimiento, a lo largo del ciclo de vida de sus activos?                         Puntuación total por criterio              Tabla  4 . 4:   Área Equipos y técnicas de mantenimiento preventivo   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       23    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2     Planificación y ejecución.  Ver Tabla 4.5.    Preguntas a evaluar   1   2   3   4   5    37. ¿Son priorizadas las actividades de mantenimiento correctivo/preventivo?                        38. ¿La organización utiliza órdenes d e trabajo para las act .  correctivas?                        39. ¿Se le hace seguimiento a la ejecución de las actividades de mantenimiento   correctivo/preventivo?                         40. ¿La organización controla el sobre   tiempo (adicional al planificado)?                         41. ¿La o rganización registra la información obtenida por la ejecución de la actividad   de mantenimiento (correctiva/preventiva)?                         42. ¿Son los trabajadores de mantenimiento asignados a las distintas labores en   función de sus conocimientos y habilidades?                         43. ¿Son las actividades correctivas bien planificadas antes de  ejecutarse ?                           44. ¿La organización utiliza planificadores de mantenimiento para preparar el alcance   de mantenimientos mayores ( “ shutdowns, overhauls ” )?                         45. ¿La   organización utiliza contratistas calificadas para realizar labores de   mantenimiento ( “ outsourcing ” )?                         46. ¿La organización participa en la definición de las actividades de trabajo y en la   estimación de tiempos de ejecución de  los contratistas?                         47. ¿ Se   tiene en cuenta el impacto (seguridad, ambiente y producción) que tiene el   sistema en el cual se va a ejecutar el mantenimiento?                         48. ¿Se define el camino crítico de los mantenimientos mayores y se identifican los   repuestos cr íticos?                          Puntuación total por criterio              Tabla  4. 5 .   Área Planificación y ejecución       Soporte, Calidad y Motivación.   Ver Tabla 4.6.    Preguntas  a evaluar   1   2   3   4   5    49. ¿Están disponibles los repuestos y materiales a la hora de ejecutar activida des de   mantenimiento?                       50. ¿Está el almacén de repuestos bien organizado y sus tiempos de respuesta son   eficientes?                       51. ¿Se control a bien  la salida y entrada de repuestos al almacén?                      52. ¿Se tiene un proceso de cuantificación d e stock de repuestos que incluya el criterio   del impacto de no tener el repuesto en almacén?                        53. ¿Se tienen identificados los tiempos de reposición y los costos de los repuestos?                      54. ¿El criterio de calidad en el desarrollo de las acti vidades de mantenimiento  está   por encima del criterio de rapidez?                       55. ¿Se tiene un proceso que permita verificar la calidad de las actividades de   mantenimiento ejecutadas?                        56. ¿Es la calidad en el área de mantenimiento un objetivo imp ortante?                      57. ¿Tiene la organización un interés real en satisfacer las diferentes necesidades de   sus trabajadores?                       58. ¿El buen desempeño de los trabajadores es bien recompensado dentro de la   organización (económico  -   motivacional)?                       59. ¿El personal de mantenimiento está motivado para realizar su trabajo lo mejor   posible?                       60. ¿El personal de mantenimiento sigue las políticas y procedimientos de seguridad?                      Puntuación total por criterio              Tabla  4. 6 .   Área So porte, Calidad y Motivación   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          24    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    A continuación, en la  T abla  4. 7, se presenta un ejemplo de resultados obtenidos   a  partir  de  la  aplicación  de  la  auditoría  MES.  Personas  evaluadas  a  partir  del   cuestionario  propuesto  por  la  Metodología  MES  (60  preguntas):  27  pers onas   entrevistadas en la compañía petrolera Pet - Con. En resumen la organización Pet - Con,   obtuvo  una  calificación  de  168  puntos  (ver  tabla  4. 7),  quedando  ubicada  en  la   categoría: “Por arriba del nivel promedio / nivel aceptable de mantenimiento”, según   el n ivel de jerarquización propuesto por la auditoría MES.   Resultados por   áreas                  Valor máximo esperado por   área 60 puntos  Desv.   est.  Recursos   Gerenciales   34,65   5,81  Gerencia de la   Información   (Máximo)   31,76   8,33  Equipos y técnicas   de mant. Preventivo   36,29   5,74  Planificación y   Ejecución   33,00   3,26  Soporte, Calidad y   Motivación   32,47   7,37  Totales   168,18     Tabla   4. 7 .   Ejemplo de resultados Auditoria MES / Compañía Pet - Con    Otra forma de presentar los resultados es a partir de un diagrama tipo “Radar”,   en  el  cual  se  presentan  los  valores  promedios  obtenid os  por  cada  una  de  las  5  áreas   evaluadas  (valor  máximo  a  obtener  por  área:  60  puntos).  A  continuación  se  presenta    un ejemplo de resultados a partir del gráfico tipo Radar   en la  Figura 4.4 .        35    32    36   33    32    0    10    20    30    40    50    60   Recursos Gerénciales    Gerencia de la Información (Máximo)    Equipos y técnicas de mant.  Preventivo   Planificación y Ejecución    Soporte , Calidad y Motivación       Figura  4.4 .  Ejemplo de resultados de la  Auditoria MES / Compañí a Pet - Con (formato radar)   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       25    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  IV.4. TÉCNICA DE AUDITORÍA DENOMINADA: “MAINTENANCE WORLD CLASS SURVEY   (MWCS)”    La  auditoria  MES  es  una  auditoria    basada  en  un    cuestionario  de  evaluación  de    1 0 5    preguntas  repartidas  en    9     áreas  del  mantenimiento.  Las  respuestas  a  ca da  pregunta,   como  veremos,  se  limitan     igualmente  a     cinco  posibles  opciones     (Parra  y  Omaña,   2001).  Las áreas de mantenimiento evaluadas son:       Organización del departamento de mantenimiento (18 preguntas)         Clima laboral (10 preguntas)       Medios de soporte técnic o para el mantenimiento (14 preguntas)       Desarrollo de planes de mantenimiento (7 preguntas)       Relación  entre  el  mantenimiento  programado  y  el  mantenimiento  correctivo   (10 preguntas)       Desarrollo  de  procedimientos  para  la  ejecución  del  mantenimiento  (7   preguntas )       Generación de órdenes de trabajo y herramientas informáticas de soporte (12   preguntas)       Manejo de repuestos para mantenimiento (12 preguntas)       Manejo de indicadores técnicos de mantenimiento (15 preguntas)    Nuevamente  el  proceso  de  aplicación  es  a  nivel  de  personal  de  gerencia,   supervisión,  operaciones  y  mantenimiento  (y  se  recomienda  igualmente  aplicar  el   cuestionario a  8 participantes, como mínimo).       El  proceso  de  cuantificación  de  las  áreas  de  mantenimiento  a  diagnosticar  se   realiza  de  la  siguiente  for ma:        l as  personas  seleccionadas,  evalúan  las  105  preguntas   desarrolladas  para  el  total  de  las  9  áreas  en  función  de  una  escala  del  1  al  5.  Para  la   calificación  se  puntúa,  de  acuerdo  con  la  siguiente  escala:  1  =  no  se  cuenta  8muy   deficiente),  2  =  deficiente ,  3  =  regular,  4  =  bueno  y    5  =  excelente).  Cada  área  a  ser   evaluada  se  considera  con  el  mismo  nivel  de  importancia.  Las  posibles  puntuaciones   máximas y mínimas a obtener son:       Puntuación máxima por las 9 áreas: 525 unidades.        Puntuación mínima: por las 9 á reas: 105 unidades.    Las  puntuaciones  totales  se    suman  y  promedian  entre  el  número  de  personas   encuestadas.  Finalmente,  se  estima  la  posición  del  mantenimiento  en  función  de  los   siguientes rangos:       525 – 470: Categoría “Clase Mundial”/nivel de excelencia en m antenimiento ;       469 – 370: Categoría “Muy buena”/nivel de buenas prácticas en mantenimiento       369 – 270:  Categoría    “Por  arriba  del  nivel  promedio”/nivel  aceptable  en   mantenimiento ;         269 – 170:  Categoría  “Por  debajo  del  promedio”/nivel  no  muy  bueno  de    mantenimiento , con oportunidades para mejorar ;       Menos de 169: Categoría “Muy por debajo del promedio” /  nivel muy malo   mantenimiento con muchas  oportunidades para mejorar .     \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          26    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    A continuación se presentan las 105 preguntas desarrolladas para cada una de las   9 áreas a ser  evaluadas:       Organización del departamento de mantenimiento (18 preguntas)    1.   ¿El  organigrama  de  mantenimiento  garantiza  la  presencia  de  personal  de   mantenimiento  preparado  cuando  se  necesite,  de  la  forma  más  rápida   posible?    2.   ¿Hay  personal  que  pueda  considerarse   ‘imprescindible”  cuya  ausencia   afecta a la actividad normal del área de mantenimiento?    3.   ¿El  organigrama  garantiza  que  habrá  personal  disponible  para  realizar   mantenimiento  el  mantenimiento  programado,  incluso  en  el  caso  de  un   aumento del mantenimiento corr ectivo?    4.   ¿El  número  de  horas  extraordinarias  que  se  genera  en  el  área  de   mantenimiento es habitualmente superior al máximo legal autorizado?     5.   ¿La cualificación previa que se exige al personal del área de mantenimiento   es la adecuada?    6.   ¿Se  realiza  una  formaci ón  inicial  efectiva  cuando  se  incorpora  un  nuevo   trabajador al área de mantenimiento?    7.   ¿Hay un plan de formación para el personal de mantenimiento?    8.   ¿Este  plan  de  formación  hace  que  los  conocimientos  en  el  mantenimiento   de la central mejoren?    9.   ¿El  plan  de  for mación  hace  que  los  conocimientos  en  otras  áreas  de  la   central  (operaciones,  seguridad,  medioambiente,  administración,  etc.)   mejoren?     10.   ¿El personal de mantenimiento mecánico puede realizar tareas eléctricas o   de instrumentación sencillas?    11.   ¿El personal de m antenimiento mecánico puede realizar tareas eléctricas o   de instrumentación especializadas?    12.   ¿El  personal  de  mantenimiento  eléctrico  puede  realizar  tareas  mecánicas   sencillas?    13.   ¿El  personal  de  mantenimiento  eléctrico  puede  realizar  tareas  mecánicas   especiali zadas?    14.   ¿El personal de mantenimiento está capacitado para trabajar en otras áreas   (operaciones, seguridad, control químico, etc.)?    15.   ¿Se respeta el horario de entrada y salida?    16.   ¿Se respeta la duración de los descansos?    17.   ¿La media de tiempos muertos no product ivos es la adecuada?    18.   ¿Los tiempos de intervención se ajustan a la duración teórica estimable en   que podrían realizarse los trabajos?         Clima laboral (10 preguntas)    19.   ¿El personal de mantenimiento se siente reconocido en su trabajo?    20.   ¿El  personal  de  mantenimien to  siente  que  la  empresa  se  preocupa  de  sus   necesidades para poder realizar un buen trabajo?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       27    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  21.   ¿El personal de mantenimiento considera que tiene proyección profesional   dentro de la empresa?    22.   ¿El personal de mantenimiento se siente satisfecho con su horario?    23.   ¿ El personal de mantenimiento se considera bien retribuido?    24.   ¿El  personal  de  mantenimiento  está  comprometido  con  los  objetivos de la   empresa?    25.   ¿El personal de mantenimiento tiene un buen concepto de sus mandos?    26.   ¿El  personal  de  mantenimiento  considera  que  el  a mbiente  del  área  de   operaciones es agradable?    27.   ¿El nivel de absentismo entre el personal de mantenimiento es bajo?    28.   ¿El nivel de rotación entre el personal de mantenimiento es bajo?       Medios de soporte técnico para el mantenimiento (14 preguntas)    29.   ¿Mantenimient o  dispone  de  los  medios  de  comunicación  interna  que  se   necesitan?    30.   ¿ Mantenimiento  dispone  de  los  medios  de  comunicación  con  el  exterior   que se necesitan?    31.   ¿Se dispone de los medios de transporte que se necesitan?    32.   ¿Se  dispone  de  los  medios  de  elevación  que  se   necesitan  (carretillas   elevadoras,  carretillas  manuales,  polipastos,  puentes  grúa,  diferenciales,   etc.)    33.   ¿Las herramientas mecánicas se corresponden con lo que se necesita?    34.   ¿Las herramientas eléctricas se corresponden con lo que se necesita?    35.   ¿Las  herramien tas  para  el  mantenimiento  de  la  instrumentación  se   corresponden con lo que se necesita?    36.   ¿Las  herramientas  para  el  mantenimiento  predictivo  se  corresponden  con   lo que se necesita?    37.   ¿Las herramientas de taller se corresponden con lo que se necesita?    38.   ¿Los equi pos de medida están calibrados?    39.   ¿Existe un inventario de herramientas?    40.   ¿Se comprueba periódicamente el inventario de herramientas?    41.   ¿El taller está situado en el lugar apropiado?    42.   ¿Está limpio y ordenado su interior?       Desarrollo de planes de mantenimiento (7  preguntas)    43.   ¿Existe un plan de mantenimiento que afecte a todas las áreas y equipos   significativos de la planta?    44.   ¿Hay una programación de las tareas que incluye el plan de mantenimiento   (está claro quién y cuándo se realiza cada tarea)?    45.   ¿La programación de  las tareas de mantenimiento se cumple?    46.   ¿El Plan de mantenimiento respeta las instrucciones de los fabricantes?    47.   ¿Se han analizado los fallos críticos de la planta?    48.   ¿El Plan está orientado a evitar esos fallos críticos de la planta y/o a reducir   sus consecue ncias?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          28    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    49.   ¿El plan de mantenimiento se realiza de forma efectiva y eficiente?       Relación  entre  el  mantenimiento  programado  y  el  mantenimiento  correctivo   (10 preguntas)    50.   ¿La proporción entre horas/hombre dedicadas a mantenimiento   programado y mantenimiento correc tivo no programado es la adecuada?    51.   ¿El número de averías repetitivas es bajo?    52.   ¿El tiempo medio de resolución de una avería es bajo?    53.   ¿Hay un sistema claro de asignación de prioridades?    54.   ¿Este sistema se utiliza correctamente?    55.   ¿El número de averías con el máx imo nivel de prioridad (o averías urgentes)   es bajo?    56.   ¿El número de averías pendientes de reparación es bajo?    57.   ¿La razón por la que las averías están pendientes está justificada?    58.   ¿Se  realiza  un  análisis  de  los  fallos  que  afectan  a  los  resultados  de  la   planta ?    59.   ¿Las conclusiones de estos análisis se llevan a la práctica?       Desarrollo  de  procedimientos  para  la  ejecución  del  mantenimiento  (7   preguntas)    60.   ¿Todas las tareas habituales de mantenimiento están recogidas en   procedimientos?    61.   ¿Los procedimientos son claros y  perfectamente entendibles?    62.   ¿Los  procedimientos  contienen  toda  la  información  que  se  necesita  para   realizar cada tarea?    63.   ¿El  personal  de mantenimiento recibe formación en estos procedimientos,   especialmente cuando se producen cambios?    64.   ¿El proceso de implanta ción de un nuevo procedimiento es el adecuado?    65.   ¿Cuándo  el  personal  de  mantenimiento  realiza  una  tarea  utiliza  el   procedimiento aprobado?    66.   ¿Los procedimientos de mantenimiento se actualizan periódicamente?       Generación de órdenes de trabajo y herramientas info rmáticas de soporte (12   preguntas)    67.   ¿Todos los trabajos que se realizan se reflejan en una orden de trabajo?    68.   ¿El formato de esta orden de trabajo es adecuado?    69.   ¿Los operarios cumplimentan correctamente estas órdenes?    70.   ¿Las órdenes de trabajo se introducen en  el sistema informático?    71.   ¿El sistema informático de mantenimiento resulta adecuado?    72.   ¿El sistema informático supone una carga burocrática importante?    73.   ¿El sistema informático aporta información útil?    74.   ¿El sistema informático aporta información fiable?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       29    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  75.   ¿Los  man dos  de  mantenimiento  consultan  habitualmente  la  información   contenida en el sistema?    76.   ¿Los  operarios  de  mantenimiento  consultan  habitualmente  la  información   contenida en el sistema?    77.   ¿Se emite un informe periódico que analiza la evolución del departamento   de   mantenimiento?    78.   ¿El informe aporta información útil para la toma de decisiones?       Manejo de repuestos para mantenimiento (12 preguntas)    79.   ¿Se ha elaborado una lista de repuesto mínimo que debe permanecer en   stock?    80.   ¿Los criterios empleados para elaborar esa lis ta son válidos?    81.   ¿Se comprueba periódicamente que se dispone de ese stock?    82.   ¿La lista de stock mínimo se actualiza y mejora periódicamente?    83.   ¿Se realizan periódicamente inventarios de repuesto?    84.   ¿Los movimientos del almacén se registran en el sistema informáti co?    85.   ¿Coincide  lo  que  se  cree  que  se  tiene  (según  los  inventarios  y  el  sistema   informático) con lo que se tiene realmente?    86.   ¿El almacén está limpio y ordenado?    87.   ¿El almacén está situado en el lugar adecuado?    88.   ¿Es fácil localizar cualquier pieza?    89.   ¿Las condicion es de almacenamiento son correctas?    90.   ¿Se realizan comprobaciones del material cuando se recibe?       Manejo de indicadores técnicos de mantenimiento    91.   ¿La disponibilidad media de los equipos significativos es la adecuada?    92.   ¿La disponibilidad media de la planta es l a adecuada?    93.   ¿La  evolución  de  la  disponibilidad  es  positiva  (está  aumentado  la   disponibilidad)?    94.   ¿El tiempo medio entre fallos en equipos significativos es el adecuado?    95.   ¿La  evolución  del  tiempo  medio  entre  fallos  en  equipos  significativos  es   positiva?    96.   ¿El nú mero de O.T. de emergencia es bajo?    97.   ¿El número de O.T. de emergencia está descendiendo?    98.   ¿El tiempo medio de reparación en equipos significativos es bajo?    99.   ¿El  tiempo  medio  de  reparación  en  equipos  significativos  está   descendiendo?    100.     ¿El número de averías repe titivas es bajo?    101.     ¿El número de averías repetitivas está descendiendo?    102.     ¿El  número  de  horas/hombre  invertidas  en  mantenimiento  es  el   adecuado?    103.     ¿El  número  de  horas/hombre  invertidas  en  mantenimiento  está   descendiendo?   \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          30    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    104.     ¿El gasto en repuestos es el adecuado?    105.     ¿E l gasto en repuestos está descendiendo?      A  continuación  se  presentan  un  ejemplo  de  resultados  obtenidos  a  partir  de  la   aplicación  de  la  auditoría  MWCS  aplicada  en  una  refinería  de  la  industria  petrolera   venezolana.  Personas  evaluadas  a  partir  del  cuestiona rio  propuesto  por  la   Metodología MWCS (105 preguntas): 17 personas entrevistadas.      Áreas evaluadas   (número de preguntas)                  Valor  promedio   obtenido (17   entrevistas)     Valor   máximo   esperado   por área  Desv.   est.  Organización del   departamento de   mantenimiento (18)  36,40   90   6,12  Clima laboral (10)   23,50   50   5,40  Medios de soporte técnico   para mantenimiento (14)  33,40   70   6,34  Desarrollo de planes de   mantenimiento (7)  17,20   35   3,45  Relación entre el   mantenimiento programado   y el mantenimiento   correctivo (10)  22,30   50   3,12  Desarrollo de   procedimientos para la   ejecución del   mantenimiento (7)  18,40   35   2,56  Generación de órdenes de   trabajo y herramientas   informáticas de soporte (12)  25,40   60   2,78  Manejo de repuestos para   mantenimiento (12)  27,40   60   3,78  Manejo de indicadores   técnicos de mantenimiento   (15)  31,70   75   6,54  Valor máximo:  Puntuación total    alcanzada:   235,70   525     Tabla  4. 8:  Ejemplo de resultados Auditoria MWCS     En resumen, la refinería evaluada con el método MWCS, obtuvo una calificación de   235  puntos  (ver  Tabla  8),  quedando  ubicad a en la categoría: “Por debajo del nivel   promedio / nivel no muy bueno de mantenimiento, con oportunidades para mejorar”,   según la jerarquización propuesta por la auditoría MWCS.       Para  concluir  este  apartado,  e s  importante  mencionar  que  en  este  capítulo  se     ha   hecho referencia sólo   a   tres métodos de auditoría de mantenimiento, específicamente   se  han  mostrado  tres  metodologías:  MCEM  (Matriz  Cualitativa  de  Excelencia  en   Mantenimiento),  MES  (Maintenance  Effectiveness  Survey)  y  MWCS  (Maintenance  \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       31    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  World  Class  Surv ey),  sobre  las  cuales  hemos  tenido  experiencias  reales  de   implantación  de  las mismas en diversos sistemas de producción. Por otra parte, en la   literatura  existente  sobre  el  tema  de  auditorías  de  mantenimiento,  se  pueden   conseguir  una  cantidad  importante  de   métodos  de  auditoría  adicionales  a  los   presentados  en  este capítulo, que se han desarrollado para evaluar y diagnosticar los   diversos procesos relacionados con la ge stión del mantenimiento.       IV.5. CONSIDERACIONES FINALES SOBRE  LAS  TÉCNICAS DE AUDITORÍA EN    MANTENIMIENTO    Las  auditorias  de  diagnóstico  de  la  gestión  del  mantenimiento  están  diseñadas  para   hacer  a  las  compañías  cada  vez  más  rentables  dentro  de  los  escenarios  de  alta   competitividad existentes. Las auditorías identifican de manera detallada y obje tiva el   estado  de  madurez  y  capacidad  de  una  compañía  en  el  manejo  de  sus  activos  físicos   sin importar su tamaño o su actividad económica, convirtiéndose en una ventaja y en   una  herramienta  estratégica  que  define  el  éxito  de  una  empresa.  Las  auditorias   con templan  un  amplio  conjunto  de  elementos  medibles  utilizados  para  evaluar  la   aplicación de las mejores prácticas de gestión, donde se identifican las oportunidades   de mejora y se conforma la línea base para la implementación de técnicas de soporte   de  ingeni ería  de  Mantenimiento  y  Fiabilidad.  Cualquiera  que  sea  el  objetivo  de  la   organización  deberá  auditar  su  nivel  desempeño  en  los  aspectos  claves  de  la  gestión   del mantenimiento soportado en las normas, estándares y mejores prácticas aplicadas   en la industria , que darán como resultado las acciones a seguir y los recursos óptimos   necesarios  para  desarrollarlas  acordes  a  los  objetivos  establecidos.  Este  conjunto  de   acciones  se  deben  priorizar  y  consolidar  en  un  plan  de  trabajo  enmarcado  en  el  ciclo   de  mejoramien to  continuo,  que  trae  además  de  beneficios  económicos,  un  enfoque   que permite a las organizaciones a direccionar sus esfuerzos de mejora en los aspectos   críticos del negocio (Kaplan, 1992).     En términos generales, las organizaciones en las cuales se desarr ollen auditorías   de mantenimiento deben tener en cuenta los siguientes aspectos:       Evitar sobrecargarse con iniciativas simultáneas de procesos de auditoría,  para   esto  es necesario tener bien claro los factores a evaluar (mejorar) .       Tener  presente  que  no  ha y  una  metodología  única  de  auditoría  del   mantenimiento  y  que  tratar  de    tomar  decisiones  sólo  con  una  gran  cantidad   de  datos  cuantitativos,  requiere  de  esfuerzos  muy  grandes  en  tiempo  y   recursos económicos .         Entender  el  factor  de  insensibilidad  del  proceso   de  captura  del  dato.   Normalmente, se recopilan más  datos de los que en realidad se necesitan .       Diseñar  técnicas  de  auditoría  de  mantenimiento    que  permitan  evaluar  tanto   aspectos técnicos como  económicos .       Comprender que las auditorías   cualitativas/cuanti tativas só lo reflejan parte de   la  realidad,  hasta    esto s  momentos,  no  existe  ningún  modelo  de  auditoría  que  \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net          32    C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2    permita    simular  de  forma  perfecta,  la  complejidad  de  los  diversos  procesos   industriales.  Las  auditorías  s ó lo  ayudan  de  forma  parcial  a  disminuir  la   incertidumbre en los procesos de toma de decisiones .       Tener en cuenta, que la falta de dominio de las distintas técnicas de auditoría,   puede  conducir  a  las  organizaciones  a  que  se  abstengan  de  aprovechar   herramientas  útiles,  o  a  que    se  generen  expectativas     poco  fundadas  sob re  el   alcance de las auditorías.       El  éxito  de  la  implantación  de  un  proceso  de  auditoría  depende  en  gran  parte   del recurso humano involucrado en el desarrollo de la misma .         Finalmente,  no  se  debe  limitar  la  justificación  de  aplicación  de    las  auditorías  de   mantenimiento  a  simples    modas  pasajeras,    la  organización  debe  convertir  estas    técnicas  de  control  en  prácticas  normales  de  trabajo,  es  decir ,     en  un  proceso  de   mejora continua que ayude  a optimizar la toma de decisiones dentro del  pro ceso  de    gestión del mantenimiento.          IV.6. REFERENCIAS BIBLIOGRÁFICAS    -   Parra,  C., y Crespo,  A. 2015.  “Ingeniería de Mantenimiento y Fiabilidad Aplicada   en la Gestión de Activos. Desarrollo y aplicación práctica de un Modelo de Gestión   del Mantenimie nto (MGM)” . Segunda Edición. Editado por INGEMAN, Escuela   Superior de Ingenieros Industriales,  Sevilla,  España    -   Crespo  Márquez  A,  2007.  The  maintenance  management  framework.  Models  and   methods for complex systems maintenance.  London: Springer Verlag.     -   Gon zález   Javier,   2004.  Auditoría del Mantenimiento e Indicadores d e Gestión .    Fundación  Confemetal, Madrid, España.    -   Kaplan RS,  Norton DP , 1992.  The Balanced Scorecard  -   measures that drive   performance .  Harvard Business Review , 70(1): 71 - 9.     -   Parra  C    y  Omaña   C, 2001.  Ponencia: Técnica cualitativa de Auditoria de la Gestión   de  Mantenimiento  para  el  sector  Refinación .   VII  Congreso  de  Ingeniería  de   Mantenimiento de Petróleos de Venezuela , Caracas, Venezuela.    -   Parra  C,   2008.  Implantación piloto de la Auditoría ME S: Maintenance Effectiveness   Survey, en el Campo Petrolero Guando   -   Empresas  PETROBAS.  Informe técnico    INGECON : SN - 08 - 10 - COL, Bogotá, Colombia.    -   Woodhouse J, 1996.   Managing Industrial Risk .   Chapman Hill Inc, London.    -   Internet:     MES  (Maintenance  Effectiveness     Survey),  referencia:  Marshall  Institute,   http://www.marshallinstitute.com/    -   Internet:  ABS  –   Reliability  and  Risk  Group  JBFA  Training,  Curso:  Reliability    Management,   http://www.absconsulting.com/reliability - and - maintenance -  management.cfm               \nInge Con     Asesoría Integral en  Inge niería de  Con fiabilidad     www.confiabilidadoperacional.com   www.ingeman.net       33    C ertif icación ICOGAM    Miami , Florida,   6 al   8 de Diciembre   del  2 017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2  Autor correspondiente:     Carlos A. Parra M.   PhD. MSc. Eng.    Gerente IngeCon    http://www. confiabilidadoperacional.com/    Email:  parrac37@gmail.com      Enlace a Grupo de Ingeniería de Confiabilidad Operacional    http://www.linkedin.com/groups?home=&gid=4134220&trk=groups_management_edit_group_info - h - logo    Grupo de investigación en Ingeniería de Confiabilidad y Mantenimiento    http://tayl or.us.es/sim    http://www.ingeman.net/       Diplomado   y certififcación   ICOGAM:   Ingeniería de Confiabilidad Operacional, Gestión de  Activos   y   Mantenimiento,    Miami ,   Florida,   6 al   8 de Diciembre   del  2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2   \n   C ertif icación ICOGAM    Miami ,   Florida,   6 al   8 de Diciembre 2017    https://app.box.com/s/83tyjazjpuixs4fgnaenfo28nvg9v2n2            \n";
+    const PDF_NAME = "Artículo Tecnicas-Auditoria.pdf";
+    const CHATBOT_THEME = "MariaIsabelArdilaM_Artículo Tecnicas-Auditoria";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Cómo define el documento la auditoría aplicada al mantenimiento y qué busca evaluar?","¿Por qué el texto indica que no existen fórmulas simples para “medir” el mantenimiento?","¿Qué relación se establece entre las técnicas de auditoría, la rentabilidad y la disminución de la incertidumbre en decisiones?","Según el MGM de 8 fases, ¿en qué fase se ubican las técnicas de auditoría de gestión del mantenimiento y cuál es su propósito?","¿Cómo describirías la progresión de mantenimiento REACTIVA a PROACTIVA y qué cambios implica en riesgos y decisiones?","¿Cómo se justifican los análisis de fallas como parte de un proceso de mejoramiento continuo (relación con eficiencia/efectividad de recomendaciones)?","¿Qué papel juegan los equipos multidisciplinarios en la optimización y qué condiciones organizativas se evalúan?","¿Qué características debería tener un método estándar de análisis de fallas para toda la organización según el cuestionario?","¿Cómo se conecta la metodología de análisis de fallas con la validación de hipótesis y con recomendaciones basadas en costo-riesgo-beneficio?","¿Qué verifica el documento sobre la programación y planificación del mantenimiento, incluyendo su alineación con el plan de negocio y su auditoría?","¿Qué preguntas se plantean para evaluar la gestión del mantenimiento por condición (técnicas predictivas) y su monitoreo basado en criticidad/riesgo?","¿Cómo se realiza la cuantificación del diagnóstico (105 preguntas, escala 1-5) y cómo se determina la categoría final de “posición del mantenimiento”?"];
+    const INITIAL_PALETTE = {"primaryColor":"#64e830","secondaryColor":"#83ed59","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#64e830","chatBubbleUserText":"#111827","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

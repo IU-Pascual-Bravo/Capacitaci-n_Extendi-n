@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Informe Final - BURBUJAS ESPECULATIVAS EN EL MERCADO DE MINERALES CRÍTICOS (2021-2025) (1)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Informe Final - BURBUJAS ESPECULATIVAS EN EL MERCADO DE MINERALES CRÍTICOS (2021-2025) (1)</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          BURBUJAS  ESPECULATIVAS  EN EL   MERCADO DE MINERALES CRÍTICOS (2021 -  2025)                            Elizabeth Álvarez Hernández    Yorledy García Tabares    Carlos Enrique Díaz Delgado       Ingeniería Financiera                Sergio Hincapié Ruíz    Mag í ster en Finanzas                            INSTITUTO TECNOLÓGICO METROPOLITANO    0 6   DE  JUNIO   DE 2026      MEDELLÍN      \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025            BURBUJAS  ESPECULATIVAS  EN EL   MERCADO DE MINERALES CRÍTICOS (2021 -  2025)            Resumen    El crecimiento acelerado de la transición energética global, junto con el auge de tecnologías   como  los    vehículos  eléctricos  y  las  energías  renovables,  ha  impulsado  un  aumento   significativo en los precios de metales críticos como el litio, el cobre, el níquel y el cobalto ;   e ste  comportamiento  ha  generado  preocupación  en  la  literatura  económica  debido  a   posibles  distorsiones  en  el  mercado  asociadas  a  procesos  de  sobrevaloración.  En  este   contexto, la presente investigación tiene como objetivo identificar la posible formación de   burbujas especulativas en los precios de estos metales, mediante la aplicación  de pruebas   de  raíz  unitaria  en  ventanas  móviles,  específicamente  los  métodos  GSADF  y  BSADF,   utilizando datos históricos mensuales para el periodo comprendido entre 202 1   y 2025.    Los resultados de la prueba GSADF confirman la existencia de burbujas especulativas en   el litio, el cobalto y el níquel ;   por el contrario, el cobre se consolida como la excepción al   exhibir  un  comportamiento  estructuralmente  estable  y  libre  de  dinámicas  explosivas.   Mediante la secuencia cronológica BSADF, se identifica que el litio es el metal con mayor   persistencia tempora l, impulsado por la expansión de la demanda de baterías y posteriores   correcciones  de  expectativas ;     e l  cobalto  registra  la  mayor  intensi dad  estadística  de  la   muestra debido a restricciones de oferta gubernamentales en la República Democrática del   Congo,  mientras  que  el  níquel  presenta  un  régimen  explosivo  excepcional  y  altamente   localizado.  Finalmente,  la  comparación  con  el  oro  y  la  plata    permite  concluir  que  la   exuberancia  no  es  exclusiva  de  los  metales  tecnológicos,  ya  que  los  metales  preciosos   también experimentan fases de burbuja por refugio financiero.       Palabras clave:    B urbujas  especulativas ,  minerales  críticos,    Generalized  Supremum  Augmented  Dickey -  Fuller (GSADF) ,  Backward Supremum Augmented Dickey - Fuller (BSADF) .     \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Introducción   –   Planteamiento del problema    La  transición  energética  global  se  ha  consolidado  como  uno  de  los  procesos  de   transformación económica y tecnológica más relevantes de los últimos tiempos, impulsado   fuertemente por la necesidad de reducir las emisiones de carbono y migrar hacia fuentes   de   energía más limpias; la progresiva masificación de vehículos eléctricos, la expansión de   la  generación  eléctrica  a  partir  de  fuentes  renovables  y  el  despliegue  de  sistemas  de   almacenamiento de energía a gran escala han convertido a minerales como el litio , el cobre,   el níquel y el cobalto en insumos estratégicos cuyo abastecimiento condiciona la viabilidad   técnica y económica de las tecnologías de descarbonización (International Energy Agency,   2021; Restrepo et al., 2023).     De acuerdo con la International Energy Agency (2021), la expansión de las redes eléctricas   implica  que  la  demanda  de  cobre  para  las  líneas  de  transmisión  se  duplique  con  creces   para  el  año  2040,  mientras  que  la  demanda  de  minerales  para  su  uso  en  vehículos    eléctricos y almacenamiento de baterías es un factor clave que podría tener un crecimiento   de  al  menos  treinta  veces  en  el  mismo  periodo;  así  mismo  reporta  que  el  auge  de  la   generación de energía baja en carbono, implicaría que la demanda de minerales crí ticos se   triplique para el 2040. A su vez, Hund et al. (2020) estiman que la producción de minerales   como el litio, el grafito y el cobalto podría incrementarse en más de 450% hacia 2050 para   satisfacer los objetivos climáticos globales.    Este crecimiento ha transformado a los minerales críticos en activos estratégicos dentro de   la  economía  global,  pasando  de  ser  solo  materias  primas  industriales,  a  convertirse  en   activos  estratégicos  dentro  de  la  seguridad  energética,  la  competitividad  tec nológica  y  la   descarbonización  de  la  economía  mundial  (Carr - Wilson  et  al.,  2024);  y  alerta  sobre  un   posible crecimiento proyectado en la demanda de estos metales críticos, como se muestra   en la Tabla 1, la cual no tiene precedentes históricos (Internationa l Energy Agency, 2024).   Adicionalmente,  los  mercados  de  materias  primas  han  experimentado,  en  las  últimas   décadas,  un  proceso  de  financiarización,  caracterizado  por  la  creciente  participación  de   inversionistas  institucionales,  fondos  de  cobertura  y  agentes     no  comerciales  (Cheng  &   Xiong,  2014;  Tang  &  Xiong,  2012).  Este  fenómeno  ha  modificado  los  mecanismos   tradicionales  de  formación  de  precios,  generando  una  mayor  volatilidad  y  una  posible   desconexión entre los precios de mercado y sus fundamentos económicos .   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Tabla 1    Demanda y proyecciones de minerales críticos para la transición energética    Mineral   Crítico   Uso Principal   Crecimiento   2024   Escenario STEPS (2040)    Litio    Baterías (vehículos   eléctricos y   almacenamiento   energético)    ~30%   Fuerte crecimiento esperado   hacia 2030 - 2040    Cobre   Redes eléctricas y   electrificación   ~3%   Déficit potencial cercano al   30% hacia 2035    Níquel   Baterías (tecnologías   energéticas)   6  -   8%   Oferta alcanzando demanda   bajo escenarios actuales    Cobalto   Baterías y almacenamiento   6  -   8%   Oferta alineada con   crecimiento de demanda    Nota.  Elaboración propia con base en  International Energy Agency (2024).       En este contexto y bajo una perspectiva financiera, cobra relevancia el concepto de burbuja   especulativa,  el  cual  según  Kindleberger  &  Aliber  (2005)  puede  entenderse  desde  dos   dimensiones complementarias: en sentido amplio, como toda desviación en el preci o de un   activo que no puede explicarse en términos de sus fundamentos; y en sentido estricto, como   un  movimiento  ascendente  sostenido  de  precios  durante  un  período  extendido  que   inevitablemente  termina  en  una  implosión.  Por  otra  parte,  Minsky  (1975),  a  tra vés  de  su   reinterpretación de la teoría keynesiana, advierte que los períodos de bonanza económica   tienden a transformarse en auges especulativos e inflacionarios, generando un conjunto de   relaciones  financieras  frágiles  e  insostenibles  que  preparan  las  co ndiciones  para  la   aparición de estos episodios de inestabilidad.    La existencia de burbujas en los precios de los minerales críticos no es un mero tecnicismo   financiero,  sino  un  problema  con  implicaciones  amplias  en  la  economía  real  y  en  la   seguridad climática global. Cuando los precios de insumos como el litio o el níqu el se inflan   artificialmente, se produce una distorsión en la asignación de recursos a gran escala,    las   decisiones  de  inversión  minera  pueden  distorsionarse,  las  señales  de  escasez  relativa   pueden  volverse  menos  confiables  y  los  costos  de    producción  de  tec nologías  limpias   pueden aumentar de forma transitoria o persistente.    La Agencia Internacional de Energía   ha documentado, por ejemplo, que los aumentos en los precios de los metales para baterías   a comienzos de 2022 se tradujeron en un incremento cercano al 10% en el precio global de  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          las baterías frente a 2021, después de varios años de reducciones continuas. Esto sugiere   que la volatilidad y la exuberancia en estos mercados no solo afectan a los inversionistas,   sino  también  a  fabricantes,  gobiernos  y  consumidores  que  dependen  de  una  t ransición   energética asequible y estable (International Energy Agency,  2021, 2023).    A partir de lo anterior,  la presente investigación se plantea  la siguiente pregunta: ¿Existen   comportamientos explosivos consistentes con burbujas especulativas en los precios de los   minerales críticos  - litio, cobre, níquel y cobalto -   entre 2021 y 2025? Para responder a esta   interrogante, se emplean las pruebas GSADF y BSADF propuestas por Phillips et al. (2015),   las cuales constituyen el estándar metodológico más robusto y ampliamente utilizado en la   literatura  para  la  detección  y  fec hado  de  múltiples  burb ujas  en  series  temporales   financieras. Siendo de esta manera un estudio relevante al permitir comprender mejor si la   creciente centralidad de estos minerales en la transición energética está acompañada por   dinámicas  de  sobrevaloración  que  puedan  compromete r  la  estabilidad  de  precios,  la   seguridad  de  abastecimiento  y  la  viabilidad  económica  de  las  tecnologías  limpias   (International Energy  Agency, 2024).       2.     Objetivos    2.1  Objetivo General    Identificar  la  posible  existencia  de  burbujas  especulativas  en  las  series  de  precios  de   metales  críticos  (litio,  níquel,  cobalto  y  cobre)  en  la    transición  energética  y  avances   tecnológicos  durante  el  periodo  2021 - 2025,  mediante  la  aplicación  de  pruebas  de  raíz   unitaria de cola derecha.       2.2  Objetivos Específicos    •   Aplicar la prueba Generalized Supremum Augmented   Dickey - Fuller (GSADF) a las   series  de  precios  de  los  metales  analizados  para  la  detección  de  episodios  de   comportamiento explosivo compatibles con burbujas especulativas.    •   Identificar  mediante  la  secuencia  Backward  Supremum  Augmented  Dickey - Fuller   (BSADF) las fechas de inicio y terminación de los episodios explosivos en las series   de precios analizadas.     \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          •   Comparar el comportamiento de los precios del oro y la plata frente a los metales   críticos  analizados  (litio,  cobre,  níquel  y  cobalto),  considerando  la  exuberancia   especulativa  observada  en  los  mercados  de  metales  vinculados  a  la  transición   energética y en   el mercado global de metales.       3.     Estado del arte     El  estudio  de  burbujas  especulativas  en  metales  críticos  ha  cobrado  una  relevancia   creciente  en  la  literatura  económica  y  financiera,  especialmente  en  el  contexto  de  la   acelerada  transición  energética  global  y  por  su  exposición  a  choques  de  demanda,   restri cciones de oferta y alta concentración geográfica, lo que amplifica su volatilidad. En   consecuencia,  desde  la  academia  se  han  adoptado  herramientas  econométricas   avanzadas  que  buscan  diferenciar  entre  variaciones  consistentes  con  fundamentos  y   dinámicas ex plosivas transitorias que pueden distorsionar señales de inversión, cobertura   y planeación industrial.    Una     contribución  fundamental  en  este  campo  es  la  investigación  de  Ozgur  et  al.  (2021),   quienes analizaron las series de precios de once metales preciosos e industriales durante   el periodo 1980 - 2019; el propósito principal de su estudio fue detectar burbujas d e precios   mediante  la  aplicación  de  la  prueba  de  Dickey - Fuller  Aumentada  con  el  Máximo   Generalizado  (GSADF).    Sus  hallazgos  revelaron  evidencia  significativa  de  burbujas   explosivas  en  los  precios  del  oro,  paladio,  platino,  rodio,  cobre,  plomo,  níquel  y  ace ro,   mientras que no se detectaron burbujas significativas en los precios de la plata, el aluminio   y el estaño durante el período analizado.    En una línea de investigación más específica, Peng et al. (2023) se centraron en el mercado   del  cobre,  metal  esencial  para  la  infraestructura  eléctrica  y  las  energías  renovables;  el   objetivo  de  este  trabajo fue  identificar  la  existencia  de  múltiples  burbuj as  en  el  precio  de   este metal desde enero de 1980 hasta marzo de 2023 utilizando igualmente la metodología   GSADF. Los resultados les permitieron identificar siete episodios de burbujas, los cuales   fueron  asociados  a  factores  como  la  demanda  industrial  de  J apón,  el  rápido  crecimiento   económico  de  China,  la  crisis  financiera  global  y  la  recuperación  económica  tras  la   pandemia de COVID - 19.    \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          En el caso del litio, metal esencial en la fabricación de baterías recargables para vehículos   eléctricos, dispositivos electrónicos y sistemas de almacenamiento de energía renovable,   Restrepo et al. (2023) analizaron ocho mercados de contratos de litio, ta nto de carbonato   como  de  hidróxido,  en  Asia,  Europa,  Norteamérica  y  Sudamérica,  con  el  propósito  de   identificar  comportamientos  explosivos  en  sus  precios;  para  ello,  emplearon  un  esquema   de  pruebas  recursivas  tipo  ADF,  utilizando  la  prueba  GSADF  para  detec tar  episodios  de   exuberancia y la BSADF para precisar el fechado de las fases de burbuja. Sus resultados   muestran evidencia robusta de una burbuja de gran magnitud entre 2016 y mediados de   2018, así como de otra fase explosiva que comenzó alrededor de 2021   y se extendió hasta   el final de la muestra ;   a simismo, los autores señalan que el fuerte repunte observado entre   2016  y  2018  podría  estar  relacionado  con  dinámicas  especulativas  y  con  una   sobrerreacción  frente  a  factores  fundamentales,  en  particular  al  imp ulso  de  la  demanda   asociado  al  crecimiento  del  mercado  de  vehículos  eléctricos.  Finalmente,  concluyen  que   estos episodios de burbuja generan una incertidumbre extrema que puede poner en riesgo   la  continuidad  del  suministro  necesario  para  la  fabricación  de    este  tipo  de  baterías ,     p or   tanto , recomiendan implementar mecanismos como fondos de estabilización y reservas de   capital, orientados a amortiguar la incertidumbre y mitigar los riesgos operativos derivados   de las bruscas reversiones de precios.    A partir de la revisión de estas investigaciones, se observa un consenso generalizado en la   literatura sobre la eficacia de la prueba GSADF y sus secuencias BSADF para identificar   con precisión el inicio y el colapso de las burbujas en los metales críticos , confirmando su   superioridad  sobre  los  métodos  convencionales  de  raíz  unitaria  que  no  logran  capturar   comportamientos explosivos periódicamente colapsantes (Evans, 1991). Existe un acuerdo   en  la  importancia  de  variables  macroeconómicas  y  financieras  como    la  tasa  de  política   monetaria, la producción industrial y las condiciones de demanda global especialmente de   China  en  la  formación  de  burbujas  en  metales  industriales;  sin  embargo,  se  percibe  un   debate  en  torno  al  papel  de  la  especulación:  mientras  algunos     autores  la  consideran  un   factor intrínseco a la formación de burbujas, otros encuentran dificultades para capturar su   impacto  estadísticamente  en  comparación  con  los  fundamentos  económicos;  esta   divergencia resalta la necesidad de continuar profundizando  en el estudio de los metales   críticos.      \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          4.     Marco referencial      4.1.   Marco Teórico:     La formación de precios en los mercados de commodities   constituye un campo de tensión   permanente  entre  dos  paradigmas  de  la  economía  financiera.  La  Hipótesis  de  Mercados   Eficientes (HME), formulada por Fama (1970), sostiene que el precio de un activo refleja en   todo  momento  la  totalidad  de  la  información  disp onible,  de  modo  que  las  desviaciones   respecto al valor fundamental son transitorias y se corrigen mediante el arbitraje racional.   Bajo  esta  perspectiva,  los  incrementos  sostenidos  en  los  precios  de  los  metales   responderían exclusivamente a cambios en los f undamentos económicos , como lo son la   oferta, demanda, costos de extracción, tasas de descuento ,   y no a dinámicas especulativas   autónomas.    Frente  a  esta  postura,  Blanchard  y  Watson  (1982)  formalizaron  el  concepto  de  burbuja   racional al demostrar que la ecuación estándar de valoración de activos admite una solución   general  compuesta  por  dos  componentes:  el  valor  fundamental,  definido  como  el  v alor   presente  descontado  de  los  flujos  futuros  esperados,  y  un  componente  de  burbuja  que   satisface  la  propiedad  de  submartingala  (Huang  &  Wang,  2024;  Peng  et  al.,  2023).  Esta   propiedad implica que la burbuja crece en expectativa al menos a la tasa de descu ento; por   tanto,  no  constituye  un  error  de  valoración  (mispricing),  sino  un  componente  del  precio   consistente con  la  condición  de  no  arbitraje (Gürkaynak,  2008).  Cuando    𝛽 𝑇   = 0     el  precio   coincide con los fundamentos; cuando  𝛽 𝑇   ≠ 0 , se manifiestan ciclos de auge y colapso cuya   identificación resulta empíricamente relevante para la gestión de riesgos  financieros.    Evans  (1991)  amplió  esta  línea  de  investigación  al  proponer  el  modelo  de  burbujas   periódicamente colapsantes (PCRB), en el cual el componente explosivo crece a una tasa   superior  a     ( 1 + 𝑟 )     una  vez  que  supera  un  umbral  determinado,  pero  colapsa  de  manera   estocástica hacia un valor positivo, desde el cual el proceso se reinicia. Este modelo puso   en evidencia una limitación importante de las pruebas convencionales de raíz unitaria, como   la  Dick ey - Fuller  Aumentada  (ADF)  y  la  Phillips - Perron,  las  cuales  pierden  ca pacidad  de   discriminación  cuando  la  serie  alterna  repetidamente  entre  un  régimen  de  raíz  unitaria  y   otro ligeramente explosivo (Ozgur et al., 2021; Wang et al., 2023).    Para superar esta limitación, Phillips y Yu (2011) desarrollaron la prueba Supremum ADF   (SADF),  basada  en  la  estimación  recursiva  de  estadísticos  ADF  de  cola  derecha  sobre  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          submuestras que se expanden hacia adelante. No obstante, dado que el SADF fija el punto   de inicio de la recursión, su potencia se reduce ante múltiples episodios de burbuja (Phillips   et al., 2015). La prueba Generalized Supremum ADF (GSADF), propuesta por  Phillips et al.   (2015), resuelve esta restricción al permitir que tanto el punto inicial como el punto final de   la submuestra varíen simultáneamente, lo que amplía la cobertura muestral y posibilita la   detección  de  múltiples  episodios  de  exuberancia  en  una   misma  serie  temporal.  El   estadístico  GSADF  se  obtiene  como  el  supremo  del  conjunto  de  estadísticos  ADF   estimados  sobre  todas  las  combinaciones  factibles  de  ventanas,  y  su  complemento    ( la   secuencia  BSADF ),     permite  fechar  con  precisión  el  inicio  y  el  colapso  de  cada  episodio   mediante  la  comparación  del  estadístico  recursivo  con  valores  críticos  obtenidos  por   simulación de Monte Carlo (Huang & Wang, 2024; Restrepo et al., 2023).    La articulación entre la teoría de burbujas racionales y la metodología GSADF proporciona   así un marco coherente: la primera establece las condiciones bajo las cuales el componente   explosivo  es  teóricamente  admisible  en  series  de    precios  de  activos,  mientras  que  la   segunda  ofrece  el  instrumento  econométrico  capaz  de  contrastar  empíricamente  la   hipótesis  nula  de  raíz  unitaria  frente  a  la  alternativa  de  comportamiento  explosivo,  con   propiedades de tamaño y potencia superiores a las p ruebas convencionales (Phillips et al.,   2015; Ozgur et al., 2021).       4.2.   Marco Conceptual:     Para el desarrollo de la presente investigación, orientada al análisis de la posible existencia   de burbujas especulativas en los precios de metales críticos, específicamente litio, cobre,   cobalto  y  níquel,  se  emplearon  series  históricas  de  precios  con  frec uencia  diaria.    La   información utilizada en esta investigación proviene de la   London Metal Exchange, Asian   Metal  Database  y    London  Bullion  Market  Association ,     como  fuentes  de  información   primaria.    El  periodo  de  análisis  comprende  desde  enero de  2021  hasta  diciembre  de  2025,  lo  que   corresponde a un horizonte temporal de cinco años. La selección de este intervalo responde   tanto  a  la  disponibilidad  de  información  homogénea  como  a  consideraciones  de  car ácter   computacional,  dado  que  el  procesamiento  de  series  de  alta  frecuencia  con  un  mayor   número de observaciones puede resultar significativamente exigente en términos de tiempo  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          y recursos.  En  este  sentido,  el  periodo  elegido  permite  garantizar  un  equilibrio  adecuado   entre la robustez del análisis econométrico y la viabilidad operativa del estudio.    En este contexto, resulta fundamental considerar las características estructurales propias   de los mercados de metales críticos, las cuales contribuyen a explicar la dinámica de sus   precios.  En  particular,  estos  metales  comparten  una  condición  que  los  difer encia ,     de  los   activos financieros convencionales: la inelasticidad de su oferta en el corto y mediano plazo.   La  apertura  de  una  nueva mina  de  litio  o  cobre puede tardar  entre  5  y  15  años  desde  la   etapa  de  exploración  hasta  el  inicio  de  la  producción  comerc ial,  lo  que  implica  que,  ante   choques positivos de demanda, la oferta no logra ajustarse con la rapidez necesaria para   estabilizar  los  precios (Martin  et  al.,  2017;  Restrepo  et  al.,  2023).  Esta rigidez  genera  un   desequilibrio persistente entre la oferta y  la demanda, amplificando la volatilidad y creando   condiciones  propicias  para  la  aparición  de  comportamientos  explosivos  en  las  series  de   precios.  La transición energética hacia tecnologías de baja emisión de carbono opera como   un  choque  estructural  de  dema nda  sobre  estos  minerales.  La  Agencia  Internacional  de   Energía (IEA) proyecta que la demanda de litio se quintuplique hacia 2040, la de níquel se   duplique y la de cobalto aumente entre un 50% y un 60%, impulsadas por la expansión de   los vehículos eléctrico s, los sistemas de almacenamiento con baterías y la modernización   de las redes eléctricas (International Energy Agency, 2021, 2025). Este incremento altera   el  valor  intrínseco  de  los  metales  al  modificar  de  forma  permanente  la  estructura  de   demanda  futura    esperada,  lo  cual,  en  el  marco  del  modelo  de  valoración  de  activos,  se   refleja  como  un  aumento  del  componente  fundamental.  Sin  embargo,  cuando  las   expectativas  del  mercado  amplifican  la  magnitud  del  choque  más  allá  de  lo  que  los   fundamentos justifican, se  configura un componente de burbuja  𝛽 𝑇   ≠ 0 ,   que se propaga a   lo largo de la cadena de suministro (Wang et al., 2023).    La concentración geográfica de la producción y la refinación refuerza esta vulnerabilidad.   La extracción de cobalto depende en gran medida de la República Democrática del Congo,   la  de  níquel  de  Indonesia,  y  China  controla  entre  el  60%  y  el  90%  de  la  capaci dad  de   refinación según el mineral (International Energy Agency, 2023). Esta estructura oligopólica   expone los precios a perturbaciones geopolíticas, restricciones comerciales y disrupciones   logísticas que, combinadas con la financiarización creciente de l os mercados de materias   primas  documentada  por  Cheng  y  Xiong  (2014),  generan  dinámicas  donde  la  actividad  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          especulativa  y  los  flujos  de  inversión  indexada  pueden  desacoplar  transitoriamente  los   precios de mercado respecto a los fundamentos de oferta y demanda.    En consecuencia, la búsqueda de comportamientos explosivos en las series de precios de   estos  metales  no responde  a  un  ejercicio meramente  estadístico,  sino  a  la  necesidad  de   distinguir  entre  variaciones  de  precios  consistentes  con  ajustes fundamentales  der ivados   de  la  transición  energética  y  episodios  de  exuberancia  especulativa  que,  al  colapsar,   generan  incertidumbre  extrema  capaz  de  comprometer  la  seguridad  del  suministro  de   minerales estratégicos (Restrepo et al., 2023; Ozgur et al., 2021).       5.     Materiales y Métodos    Con el fin de detectar  estadísticamente este comportamiento explosivo, esta investigación   emplea  una  secuencia  de  pruebas  de  raíz  unitaria  de  cola  derecha.  Según  Ozgur  et  al.,   (2021),  el  instrumento  analítico  de  partida  es  la  regresión  de  Dickey - Fuller  Aumentada   (ADF), la cual s e estima mediante la siguiente especificación:      𝛥 𝑦 𝑡   = 𝛼 + 𝛽 𝑦 𝑡 − 1   + ∑ 𝜓 1  𝑘  𝑖 = 1  𝛥 𝑦 𝑡 − 𝑖   + 𝜖 𝑡   [1]    Donde  𝑦 𝑡   es el logaritmo   natural   del precio del metal crítico bajo estudio; en este marco, la   hipótesis nula de una raíz unitaria  ( 𝐻 0   ∶   𝛽   = 0 )   se contrasta frente a la hipótesis alternativa   de un comportamiento ligeramente explosivo  ( 𝐻 1   ∶   𝛽   > 0 ) .    Sin embargo, como demostró   Evans  (1991),    este  enfoque  presenta  limitaciones  importantes  cuando  se  aplica  a  la   detección  de  burbujas  que  colapsan  periódicamente,  en  particular,  es  susceptible  a  la   transición  de  una  raíz  unitaria  a  una  raíz  ligeramente  explosiva  y  viceversa,  lo  cual   caracteriza  los     ciclos  de  auge  y  caída  propios  de  las  burbujas  especulativas.  Además,   Phillips y Yu (2011) confirmaron que el poder discriminatorio disminuye sustancialmente en   presencia de comportamiento de colapso periódico a   lo largo de la muestra.     Para abordar las limitaciones de las pruebas de raíz unitaria convencionales, Phillips y Yu   (2011) propusieron el test Supremum ADF (SADF), el cual determina si existe una burbuja   mediante  la  estimación  repetida  del  test  ADF  de  cola  derecha  sobre  una  secue ncia  de   submuestras que se expanden hacia adelante. Por lo cual,    según Huang y Wang (2024),  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          para una muestra normalizada al intervalo   [ 0 , 1 ] , el test SADF fija el punto de inicio de la   regresión en  𝑟 1   = 0   y permite que el punto final  𝑟 2   varíe desde el tamaño mínimo   de ventana   𝑟 0   hasta la muestra completa  𝑟 2   = 1 ; en consecuencia, el ancho de ventana  𝑟 𝑤   se expande   progresivamente  desde    𝑟 0     hasta    1 .  Por  consiguiente,  como  lo  especifica  Phillips  et  al.   (2011),  el  estadístico  del  test  SADF  se  define  como  el  supremo  de  la  secuencia   correspondiente de estadísticos ADF de la siguiente manera:      𝑆𝐴𝐷𝐹   ( 𝑟 0 ) =  𝑠𝑢𝑝  𝑟 2   ∈ [ 𝑟 0 , 1 ]   { 𝐴𝐷𝐹 𝑟 2  0 }   [2]    Phillips  y  Yu     (2011)  y  Phillips  et  al.  (2015)  recomiendan  una  regla  para  seleccionar  el   tamaño  mínimo  de  ventana    𝑟 0     que  se  basa  en  un  límite  inferior  del  uno  por  ciento  de  la   muestra total y presenta un desempeño de potencia satisfactorio en un amplio número de   simulaciones. Esta regla adopta la siguiente forma funcional:      𝑟 0   =  0 , 01 + 1 , 8  √ 𝑇   [3]    donde  𝑇   es el número total de observaciones en la muestra.    Aunque el test SADF representa una mejora significativa respecto a los tests de raíz unitaria   convencionales, está diseñado principalmente para detectar un único episodio de burbuja   dentro del período muestral (Peng et al., 2023). Cuando existen múltiples  burbujas, como   es probable en series temporales extensas o en mercados que cambian rápidamente, como   los  de  metales  críticos,  el  test  SADF  puede  arrojar  resultados  inconsistentes  (Nguyen  &   Waters, 2022   como se citó en Phillips et al .,   2015 ).    Es por lo anterior que la presente investigación emplea la prueba GSADF, la cual generaliza   el  procedimiento  anterior  al  permitir  que  tanto  el  punto  inicial  como  el  punto  final  de  la   submuestra varíen (Phillips et al., 2015); es decir, mientras que el test   SADF fija el punto   de inicio de la recursión en la observación inicial, el test GSADF permite que tanto el punto   de inicio  𝑟 1   como el punto final  𝑟 2   varíen. Específicamente, el punto de inicio  𝑟 1   varía desde   0   hasta  𝑟 2   −   𝑟 0 , mientras que el punto final  𝑟 2   varía desde  𝑟 0   hasta  1   (Huang & Wang, 2024).   Al mover ambos extremos simultáneamente, el test GSADF logra una cobertura muestral   más  amplia,  lo  que  incrementa  sustancialmente  su  potencia  para  detectar  múltiples   episodios de burbuja   (Ozgur et al., 2021) .   De acuerdo con Wang y Kim (2022), e l estadístico  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          del test GSADF se obtiene tomando el mayor estadístico ADF sobre el rango flexible de  𝑟 1    y  𝑟 2 , de la siguiente manera:       𝐺𝑆𝐴𝐷𝐹   ( 𝑟 0 )   =   𝑠𝑢𝑝  𝑟 2   ∈ [ 𝑟 0 , 1 ]    𝑟 1   ∈ [ 0 , 𝑟 2   −   𝑟 0 ]    { 𝐴𝐷𝐹 𝑟 1 𝑟 2 }       [4]    Si el  valor estimado del estadístico GSADF supera su valor crítico de cola derecha, definido   a un nivel de confianza del 95% corresponde , según la  extensa  literatura   empírica (Huang   &  Wang,  2024;  Phillips  et  al.,  2015) ,    a    𝐶𝑉 0 , 05   = 2 , 41 ,  se  rechaza  la  hipótesis  nula  de  raíz   unitaria en favor de la hipótesis de explosividad (Qin et al., 2023); en ese caso, se concluye   que la serie presenta al menos un episodio compatible con una burbuja especulativa.    Una ventaja fundamental de este enfoque es que no solo permite detectar la existencia de   explosividad en algún punto de la muestra, sino también identificar el momento en el que   comienza  y termina  cada  episodio  (Phillips  et  al.,  2015).  Para  ello  se  utiliza     la  secuencia   BSADF, que fija el extremo final de la ventana en  𝑟 2   y permite que el punto inicial  𝑟 1   varíe   dentro del rango factible (Wang  &   Kim, 2022). El estadístico BSADF se define como:      𝐵𝑆𝐴𝐷𝐹 𝑟 2   ( 𝑟 0 )   =  𝑠𝑢𝑝  𝑟 1   ∈ [ 0 , 𝑟 2   −   𝑟 0 ]   { 𝐴𝐷𝐹 𝑟 1 𝑟 2 }   [5]    A  partir  de  esta  secuencia,  la  fecha  estimada  de  origen  de    una  burbuja  corresponde  al   primer periodo en el que el estadístico BSADF excede el valor crítico correspondiente; de   manera análoga, la fecha de terminación corresponde al primer periodo posterior en el que   el  estadístico  vuelve  a  ubicarse  por  debajo  del  v alor  crítico,  una  vez  se ha  cumplido  una   duración  mínima  (Wang  &  Kim,  2022).  Formalmente,  estas  fechas  se  determinan  de  la   siguiente manera:      𝑟 ̂ 𝑒   =   í 𝑛𝑓   { 𝑟 2   ∈ [   𝑟 0 , 1 ] ∶   𝐵𝑆𝐴𝐷𝐹 𝑟 2   ( 𝑟 0 ) > 𝑠𝑐𝑣 𝑟 2  𝛽 𝑇 } ,   [6]      𝑟 ̂ 𝑓   =   í 𝑛𝑓   { 𝑟 2   ∈ [   𝑟 ̂ 𝑒   + 𝛿 ln ( 𝑇 )  𝑇   , 1 ] :   𝐵𝑆𝐴𝐷𝐹 𝑟 2 ( 𝑟 0 ) < 𝑠𝑐𝑣 𝑟 2  𝛽 𝑇 }   [7]    Donde  𝑠𝑐𝑣 𝑟 2  𝛽 𝑇   denota el valor crítico al  100 ( 1 −   𝛽 𝑇 ) %   del estadístico  𝑠𝑢𝑝   ADF basado en el   intervalo de observación  [ 0 , 𝑟 2 ] .   El nivel de significancia  𝛽 𝑇   depende del tamaño muestral  𝑇   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          y se asume que satisface  𝛽 𝑇   → 0   cuando  𝑇 →   ∞ ;   en la práctica, puede fijarse en un nivel   predeterminado  como    0 , 05     (Huang  &  Wang,  2024).  La  condición    𝛿 ln ( 𝑇 ) / 𝑇     impone  un   requisito    de  duración  mínima  a  los  episodios  de  burbuja  identificados,  lo  que  sirve  para   excluir  fluctuaciones  anómalas  transitorias  de  ser  clasificadas  como  burbujas  (Huang  &   Wang, 2024). El parámetro  𝛿   es un coeficiente dependiente de la frecuencia de los datos   que generalmente se establece en  𝛿   = 1   para datos mensuales (Phillips et al., 2011).    En  suma,  este  procedimiento  resulta  especialmente  útil  para  el  estudio  de  los  metales   críticos,  ya  que  sus  precios  están  expuestos  a  choques  recurrentes  derivados  de  la   transición  energética,  restricciones  de  oferta,  concentración  geográfica  de  la  producci ón,   cambios tecnológicos, tensiones geopolíticas y movimientos especulativos en los mercados   financieros.  Es  por  tanto  que  las  metodologías  GSADF  y  BSADF  constituyen  una   herramienta  rigurosa  y  flexible  para  distinguir  entre  aumentos  de  precios  asociados  a   fundamentos  del  mercado  y  episodios  de  exuberancia  especulativa  en  las  series   analizadas.    Es  por  lo  anterior  que  esta  investigación  se  clasifica  metodológicamente  como  una   investigación  cuantitativa  con  alcance  descriptivo  debido  a  la  naturaleza  empírica  y   estructurada  de  su  diseño.  En  primer  lugar,  se enmarca  en  la  definición  de  investigación   cuantitativa propuesta por Hernández et al. (2014), ya que ejecuta un proceso secuencial y   probatorio fundamentado en la recolección de datos históricos de las series de precios de   los  metales;  esto  permite  utilizar  el  análisis  estadístico  mediante  las  pru ebas  GSADF  y   BSADF  para  determinar  comportamientos  explosivos.  Asimismo,  el  estudio  adopta  un   enfoque descriptivo bajo los preceptos de Martínez (2018 ,   como se citó en Guevara et al.,   2020), puesto que su objetivo consiste en detallar sistemáticamente la estructura temporal   y  el  comportamiento  de  estos  fenómenos  financieros;  específicamente,  se  pretende  no   solamente  detectar  comportamientos  de  explosivid ad  en  las  series  sino  identificar   cronológicamente los momentos exactos en los que comienza y termina cada episodio de   burbuja. De este modo, la metodología proporciona información estandarizada, comparable   y objetiva que permite delinear el comportamiento   especulativo derivado de las presiones   del mercado y la transición energética.         \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          6.     Resultados    Las series analizadas corresponden a los precios históricos de contratos futuros del Lithium   Carbonate 99.5%min China Spot, Cobalt (CO), Copper Grade A (CA) y Primary Nickel (NI);    como metales críticos   debido a su importante papel en la transición energética, la movilidad   eléctrica, el almacenamiento energético y las cadenas de suministro de tecnologías limpias ;   adicionalmente , se  analizaron  las  series  de  precios  del  oro  (Gold  Price) y  la  plata  (Silver   Price), los cuales fueron utilizados como metales de re ferencia comparativa   en la parte final   de esta sección .     Los resultados generales del estadístico GSADF,  presentados en la Figura 1 , muestran que   la  hipótesis  nula  de  raíz  unitaria  se  rechaza  en  favor  de  la  hipótesis  alternativa  de   explosividad para  tres de los cuatro metales analizados: litio, cobalto y níquel ; e n contraste ,    el cobre no presenta evidencia estadísticamente suficiente para rechazar la hipótesis nula   al nivel de significancia del 5%; por lo tanto, exhibe un comportamiento no explosivo durante   el horizonte de estudio .         Figura 1    Resultados de la prueba GSADF para los metales críticos analizados (2021 – 2025)         \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Por lo cual se  evidencia una marcada heterogeneidad en la dinámica especulativa de los   metales críticos. El cobalto  presenta el estadístico más elevado (10,64 34 ), seguido por el   litio  (8,02 18 );  ambos  valores  superan  el  valor  crítico  en  una  proporción  cercana  a  cuatro   veces, lo que sugiere episodios de explosividad estadísticamente robustos.  Por su parte, e l   estadístico  del  níquel (2,81 33 )  excede marginalmente  el  nivel  crítico,  mientras  que  el  del   cobre  (2,3 066 )  se  sitúa  ligeramente  por  debajo,  sin  permitir  rechazar  la  hipótesis  de  raíz   unitaria.    La cronología de los periodos de explosividad, establecida mediante la secuencia BSADF,   indica que la explosividad no se distribuye homogéneamente entre metales puesto que el   litio  muestra  la  mayor  persistencia  temporal,  con  16  episodios  y  195  días  calenda rio   acumulados en zona explosiva, equivalentes al 11 , 40% del periodo analizado; de manera   similar, el cobalto, aunque registra menos episodios que el litio, alcanza la mayor intensidad   estadística,  con  un  máximo  BSADF  de  10 , 6434  y  113  días  calendario  acumu lados.  El   níquel,  por  su  parte,  presenta  solo  dos  episodios,  equivalentes  al  0 , 51%  del  tiempo   analizado,  lo  que  sugiere  un  comportamiento  explosivo  altamente  localizado.  Por  el   contrario, el cobre no presenta ningún intervalo fechado como burbuja, a pesar de que su   valor máximo BSADF se aproxima al umbral crítico.    Estos resultados son consistentes con la naturaleza de los mercados de metales críticos   durante el periodo de estudio, marcada por la transición energética que elevó la relevancia   económica  de  minerales  asociados  a  baterías,  vehículos  eléctricos,  almacenam iento   energético  y  redes  eléctricas,  generando  presiones  recurrentes  sobre  demanda,  oferta  e   inventarios  (International  Energy  Agency,  2021,  2024,  2025).  A  su  vez,  el  aumento  de   restricciones  comerciales,  concentración  geográfica  de  producción  y  riesgos  de    fragmentación  económica  ha  ampliado  la  sensibilidad  de  estos  mercados  a  choques  de   oferta  y  cambios  de  expectativas  ( Organisation  for  Economic  Co - operation  and   Development [OECD] , 2025).                  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Figura 2    Resultados de la prueba BSADF y detección de burbujas en  metales críticos            \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Los resultados expuestos ,  permiten contrastar la existencia de   burbujas especulativas en   tres  de  los    cuatro     metales  críticos  estudiados  y  vincular  las     ventanas  de  explosividad   detectadas con acontecimientos económicos,  geopolíticos y   de mercado documentados en   la literatura especializada.  En este contexto, la discusión se organiza de manera individual   por  metal,  diferenciando  entre  los  choques  estructurales  relacionados  con  la  transición   energética  y  los  eventos  coyunturales  o  regulatorios  que  dieron  lugar  a  episodios   específicos de explosi vidad en las series de precios analizadas.    La  Figura   2 presenta los episodios explosivos identificados mediante la secuencia   BSADF   donde  se  observa  que  e l  litio  constituye  el  caso  más  persistente  de  exuberancia   especulativa, con dieciséis episodios explosivos y un 11,4 0 % del tiempo total en zona de   burbuja ,  donde  l os  episodios  más  relevantes  se  concentraron  entre     los  periodos     agosto -  octubre de 2021, enero - febrero de 2022, agosto - diciembre de 2023, julio de 2024 y mayo -  diciembre de 2025.  Además, al presentar  mediana positiva del estadístico BSADF y   e levada   frecuencia  de  observaciones  superiores  a  la  unidad  reflejan  un  mercado  sometido  a   presiones explosivas recurrentes.   Estos resultados coinciden con el crecimiento acelerado   de  la  demanda  de  vehículos  eléctricos  y  con  expectativas  de  escasez  asociadas  a  la   transición energética (International Energy Agency, 2021; Reuters, 2021). Posteriormente,   entre 2023 y 2025, los epis odios se relacionan con procesos de corrección del mercado,   exceso  de  oferta  y  revisiones  de  expectativas,  aunque  en  2025  se  observa  una   recuperación  parcial  impulsada  por  mejores  perspectivas  para  el  almacenamiento   energético  (International  Energy  Agency,  2024;  International  Energy  Agency,  2025;   Reuters, 2023).    Por  su  parte ,     el    cobalto  presenta     diez  episodios  explosivos  distribuidos  a  lo  largo  del   periodo,  equivalentes  al  7 ,00 %  del  horizonte  estudiado ,    registran do    los  episodios  más   relevantes   entre noviembre de 2023 y octubre - noviembre de 2025.  Esta   dinámica explosiva   se explica por la interacción entre el crecimiento de la demanda de baterías, la expansión   acelerada  de  la  producción  minera  y  las  intervenciones  regulatorias  implementadas    por   países  productores     (Cobalt  Institute,  2022;  Cobalt  Institute,  2023;  Reuters,  2025) ;     e n   particular, el pico BSADF máximo de la muestra (10,64 34 ) se registra el 11/12/2023, en un   contexto  de  persistencia  del  superávit  estructural  y  aumento  de  la  oferta  proven iente  del   Congo e Indonesia (Cobalt Institute, 2024).   Mientras que los  episodios de 2025 estuvieron   asociados a medidas gubernamentales  en  la República Democrática del Congo ,   tales   como  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          la  suspensión  de  exportaciones  y  la  imposición  de  cuotas,  las  cuales  alteraron   abruptamente las expectativas del mercado (Reuters, 2025).    E l   comportamiento   del  Níquel   responde  a la  naturaleza idiosincrática del shock subyacente    asociado a la invasión de Ucrania por parte de Rusia y al posterior  short - squeeze   registrado   en la London Metal Exchange (LME) ; lo cual est á   alineado con una   media BSADF   negativa   ( - 0 , 6262), lo que indica que el régimen explosivo fue excepcional  dentro de   la muestra . La   combinación de expectativas de disrupción de oferta, posiciones cortas concentradas y baja   liquidez  provocó  incrementos  superiores  al  250%  en  aproximadamente  tres  sesiones     de   negociación , llevando incluso a la suspensión temporal del mercado el 8 de marzo de 2022   (London Metal Exchange, 2023; Reuters, 2022). Fuera de este episodio, el níquel mostró   un  comportamiento  consistente  con  sus  fundamentos,  lo  que  se  refleja  en  un  bajo   porcentaje  de tiempo en zona de  burbuja  equivalente   al  0 ,51%   del periodo estudiado .    Finalmente,  e l  cobre  no  presenta  evidencia  estadística  de  explosividad     lo  cual    puede   explicarse  por  la  mayor  diversificación  geográfica  de  la  oferta,  la  elevada  profundidad  y   liquidez de sus mercados de futuros y una demanda más distribuida dentro de la transición   energética  (International  Energy  Agency,  2025).  Aunque  estudios  previo s  identificaron   episodios explosivos en el cobre durante el  ciclo de auge   de materias primas de 2003 - 2009   (Ozgur  et  al.,  2021),  dichos  eventos  se  encuentran  fuera  de  la  ventana    analizada.  La   ausencia de explosividad en el cobre fortalece la validez del análisis al demostrar que no   todos  los  metales  críticos  presentan  dinámicas  especulativas  en  el  periodo  de  estudio     y   descarta  la  posibilidad  de  que  las  pruebas  estén  identificando     explosividad  espuria  en   cualquier serie de precios sometida a la transición energética.    Con  el  propósito  de  evaluar  si  el  comportamiento  explosivo  identificado  en  los  metales    críticos  constituye  un  patrón  exclusivo  de  este  grupo  de  commodities  o,  por  el  contrario,    refleja una dinámica generalizada de los mercados de metales, se replicó el procedimiento    metodológico GSADF y BSADF (Phillips et al., 2015) sobre las series diarias de precios   del   oro  y  la  plata  para  el  mismo  horizonte  temporal .  En  este  caso,  l a  inclusión  de    estos  dos   metales preciosos  permite rechazar una interpretación excesivamente   restrictiva según la   cual los episodios explosivos serían un fenómeno exclusivo de l os   metales críticos ; por el   contrario,  estos  fungen    como  grupo  de  contraste  metodológicamente  apropiado  porque   ambos  metales  constituyen  activos  refugio  con  factores  fundamentales  tradicionalmente   vinculados  a  la  política  monetaria,  la  inflación  y  el  riesgo  geopolítico,     antes  que  a  la  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          transición energética, y poseen mercados profundos, líquidos y  maduros, lo que reduce la   posibilidad  de  explosividad  inducida  por  iliquidez  o  microestructura  del  mercado    (Baur  &   Lucey, 2010; O’Connor et al., 2015).       Tabla  2    Comparación de resultados GSADF/BSADF entre metales críticos y metales preciosos    Metal   GSADF   N.° episodios   % tiempo en   burbuja    N.° días en   burbuja    Metales Críticos    Litio   8,0218   16   11,40%   195    Cobalto   10,6434   10   7,00%   113    Níquel   2,8133   2   0,51%   14    Cobre   2,3066   0   0,00%   0    Metales Preciosos    Oro   3,5250   5   3,42%   52    Plata   2,9478   4   1,11%   22    Nota. Valor crítico al 95%:  𝑐𝑣 0 , 95   = 2 , 41 . Periodo común de análisis: 4 de enero de 2021   a  31 de   diciembre de 2025 .       Acorde a los resultados obtenidos en la Tabla 2, se evidencia que  tanto   el oro ( 𝐺𝑆𝐴𝐷𝐹   =  3 , 5250 ) como la plata ( 𝐺𝑆𝐴𝐷𝐹   =   2 , 9478 ) superan el umbral crítico, por lo que se rechaza   la hipótesis nula de ausencia de explosividad ; s in embargo, la magnitud de los estadísticos   es sustancialmente inferior a la observada en litio ( 𝐺𝑆𝐴𝐷𝐹   =   8 , 0218 ) y cobalto ( 𝐺𝑆𝐴𝐷𝐹   =  10 , 6434 ),  lo  que  constituye  una  primera  evidencia  de  que  la  intensidad  de  la  dinámica   explosiva difiere entre grupos de metales.    La  secuencia BSADF identificó cinco episodios de burbuja en el precio del oro durante   el   periodo analizado, los cuales se concentran en eventos macroeconómicos y geopolíticos    puntuales  de  alto  impacto .    El  primer  episodio  (7 - 10  de  marzo  de  2022)  coincide  con  el   escalamiento  inicial  de  la  guerra  entre  Rusia  y  Ucrania,  cuando  el  oro  alcanzó  valores   cercanos a USD 2000 por onza impulsado por la demanda refugio, el endurecimiento de   sanciones a Rusia y las presiones inflacionarias   derivadas del encarecimiento de la   energía   y  los  commodities  (International  Monetary  Fund,  2022;  World  Bank,  2022).  El  segundo   episodio (2 – 19 de abril de 2024) responde a una combinación de tres factores: expectativas  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          de flexibilización monetaria por parte de la Reserva Federal, compras sostenidas por parte   de  bancos  centrales    ( en     particular  en  economías  emergentes )     y  el  recrudecimiento  del   conflicto entre Irán e Israel (World Gold Council, 2024; Federal Reserve Board, 2024). El   tercer  y  cuarto  episodio  (16  de  octubre    -     6  de  noviembre  de  2024)  se  enmarcan  en  la   elevada volatilidad asociada al ciclo electoral estadounidense y a la incertidumbre sobre la   futura  política  monetaria,  fiscal  y  comercial  (Congressional  Research     Service,  2024).  El   quinto  y  más  reciente  episodio  (13 - 21  de  octubre  de  2025)  requiere  especial  atención    puesto que d urante esta ventana el oro superó por primera vez los USD 4000/oz el 10 de   octubre  y  alcanzó  un  máximo  histórico  de  USD  4381,52/oz  el  20  de  octubre,  antes  de   registrar el 21 de octubre la mayor caída diaria en doce años ( - 6,3%) (Bloomberg, 2025a;   Morgan  Stanley   Research ,  2025) ;   l os  factores  convergentes  incluyen:  tensiones   comerciales  entre  Estados  Unidos  y  China;  debilitamiento  del  dólar  est adounidense;   expectativas  de  recortes  adicionales  de  tasas  por  parte  de  la  Reserva  Federal;  compras   récord por parte de bancos (J.P. Morgan Global Research, 2025); y el cierre del gobierno   federal estadounidense.     En el caso de la plata se identificaron cuatro episodios de burbuja los cuales ,   a diferencia   del oro ,   se concentran exclusivamente en los años 2024 y 2025. Los dos primeros episodios   (12 - 17 de abril de 2024) se explican por la conjunción de tensiones geopolíticas en Medio   Oriente, expectativas de flexibilización monetaria y un efecto de arrastre desde el oro   puesto   que     ambos  metales  mantienen  una  correlación  histórica  elevada  (Lucey    &     Tully,  200 6 ) ;    a dicionalmente, en este episodio comenzó a manifestarse el componente industrial de la   demanda  de  plata  vinculado  a  la  transición  energética,  particularmente  paneles   fotovoltaicos y semiconductores (Silver Institute, 2024). El tercer episodio (10 - 17 de octubre   de 2025) corresponde al momento en que la   plata alcanzó un máximo histórico cercano a   USD 54 por onza, en paralelo al rally del oro (World Bank, 2025) ;   l a naturaleza dual de la   plata ,   como activo refugio y como insumo industrial estratégico ,   amplificó  el efecto   debido   a que sumado a   los factores monetarios y geopolíticos compartidos con el oro ,   se sumó el   déficit  estructural  derivado  de  la  creciente  demanda  industrial  en  energías  renovables  y   vehículos eléctricos. El cuarto episodio (22 - 30 de diciembre de 2025) constituye el evento   más intenso identificado en la serie , debido a que l a plata superó por primera vez los USD   80/oz el 28 de diciembre, alcanzando un máximo intradía de USD 84/oz, y registró el 29 de   diciembre una caída del 11%, la mayor desde s eptiembre de 2020 (Bloomberg, 2025b) ; l os  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          catalizadores  específicos  incluyeron:  el  anuncio  de  restricciones  a  las  exportaciones  de   plata  por  parte  de  China  con  vigencia  desde  el  1  de  enero  de  2026;  el  tercer  recorte   consecutivo de la tasa de la Reserva Federal en diciembre de 2025; la baja liquide z típica   de  fin  de  año,  que  amplificó  las  oscilaciones  intradía;  y  el  rebalanceo  de  portafolios   institucionales.    Es por lo anterior que l a evidencia no indica que las burbujas sean exclusivas de los metales   críticos ,     m ás  bien,  sugiere  que  los  mercados  de  metales,  en  general,  pueden  presentar   episodios  explosivos  cuando  enfrentan  choques  de  expectativas  suficientemente  fuertes.   Lo específico de los metales críticos no es la existencia de explosividad, sino la combinación    de mayor persistencia, mayor intensidad en algunos casos y una narrativa económica ligada   a  la  transición  energética.  En  este  sentido,  oro  y  plata  ope ran  como  grupo  de  control  o   contraste   al   confirma r   que  la  metodología  detecta  explosividad  en  otros  mercados   metálicos,  pero  también  muestran  que  los  episodios  de  metales  críticos  no  pueden   reducirse a un fenómeno general de commodities sin atender los fundamentos particulares   de cada cadena de suministro .       Conclusiones   y recomendaciones      La presente investigación confirma la existencia de burbujas especulativas en el sector de   los metales críticos en el contexto de la transición energética y los avances tecnológicos   durante  el  periodo  2021 - 2025,  aunque  este  fenómeno  no  se  manifiesta  de  for ma   homogénea en todos los activos. Los hallazgos evidencian que  e l cobalto presentó la mayor   intensidad estadística, el litio la mayor persistencia temporal y el níquel un episodio breve   pero extremo asociado a la crisis de marzo de 2022 ; e l cobre, aunque  fundamental para la   transición energética, no mostró evidencia de burbuja bajo el criterio estadístico aplicado.   Estos  hallazgos  sugieren  que  la  formación  de  episodios  explosivos  en  metales  críticos   depende  de  la  interacción  entre  expectativas  de  demanda,  rigideces  de  oferta,   concentración geográfica, choques regulatorios y condiciones financieras de mercado.    Respecto  a  la  aplicación  de  la  prueba  Generalized  Supremum  Augmented  Dickey - Fuller   (GSADF),  los  análisis  estadísticos  demuestran  una  marcada  heterogeneidad  en  la   detección  de  comportamientos  explosivos  compatibles  con  burbujas  especulativas.  La   hipótesis n ula de raíz unitaria se rechaza de manera contundente para el cobalto y el litio,  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          cuyos  estadísticos  superan  en  casi  cuatro  veces  el  valor  crítico  de  la  muestra,   consolidándolos como los mercados más vulnerables a las distorsiones especulativas ; por   su  parte,  e l  níquel  también  valida  la  presencia  de  regímenes  explosivos,  aunque  su   estadístico  supera  el  umbral  de  forma  marginal.  En  sentido  opuesto,  el  cobre  no  aporta   evidencia estadística suficiente para rechazar la hipótesis nula, posicionándose por debajo   del v alor crítico y confirmándose como un activo con una dinámica de precios no ex plosiva   durante todo el horizonte temporal estudiado.    En relación con la identificación cronológica mediante la secuencia Backward Supremum   Augmented Dickey - Fuller (BSADF), se constata que la persistencia, frecuencia e intensidad   de los episodios explosivos varían significativamente entre los metales analizad os. El litio   se posiciona como el caso más crítico y persistente, registrando  16   episodios que acumulan   el 11 , 40% del tiempo total, concentrados mayormente en las expansiones de demanda de   vehículos eléctricos entre 2021 y 2022, y en las posteriores revisi ones y correcciones de   expectativas  entre  2023  y  2025.  El  cobalto  registra  la  mayor  intensidad  estadística  de  la   muestra, acumulando  10   episodios (7 , 0 0 % del periodo) fuertemente condicionados por las   restricciones regulatorias de exportación en la República Democrática del Congo durante   2023  y  2025.  Por  su  parte,  el  níquel  exhibe  un  comportamiento  explosivo  altamente   localizado y excepcional (solo  2   episodios que representan el 0.51% del tiempo), originado   exclusivamente  por  el  choque  geopolítico  de  la  inva sión  a  Ucrania  y  el  posterior    short -  squeeze   en la London Metal Exchange en marzo de 2022. Finalmente, el cobre valida su   estabilidad sectorial al registrar  0   intervalos catalogados como burbuja especulativa.    Por último, la comparación de los metales críticos frente al oro y la plata permite concluir   que  las  burbujas  especulativas  no  constituyen  un  fenómeno  exclusivo  de  las  materias   primas  tecnológicas,  sino  que  reflejan  una  vulnerabilidad  general  de  los  mercad os  de   metales  ante  choques  severos  de  expectativas.  Tanto  el  oro  como  la  plata  rechazan  la   hipótesis  de  ausencia  de  explosividad,  exhibiendo  episodios  de  burbuja  vinculados  a   tensiones  macroeconómicas,  políticas  monetarias  de  la  Reserva  Federal  y  eventos   c oyunturales  extremos  a  finales  de  2025.  No  obstante,  la  intensidad  de  los  estadísticos   GSADF de los metales preciosos es sustancialmente inferior a la observada en el litio y el   cobalto. Esto demuestra que, mientras el oro y la plata responden a dinámicas  globales de   refugio  financiero  e  inflación,  los  metales  críticos  poseen  una  narrativa  de  exuberancia  \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          particular y más severa, estrechamente ligada a los desequilibrios e inelasticidades de sus   propias cadenas de suministro.    Debido a que este estudio se centra exclusivamente en el análisis  estadístico de las series   de precios financieros, se recomienda para futuras investigaciones integrar variables como   los  niveles  de  inventarios  globales,  los  costos  de  extracción,  las  tasas  de  reciclaje  y  la   capacidad  instalada  de  refinación ;   e sto  permitiría  discriminar  con  mayor  precisión   matemática  qué  porcentaje  de  la  explosividad  responde  a  presiones  reales  de  escasez   física y qué fracción deriva puramente del comercio especulativo.       Referencias    Baur, D. G., & Lucey, B. M. (2010). Is gold a hedge or a safe haven? An analysis of stocks,   bonds  and  gold.    Financial  Review,  45 (2),  217 – 229.    https://doi.org/10.1111/j.1540 -  6288.2010.00244.x    Blanchard,  O.  J.,  &  Watson,  M.  W.  (1982).    Bubbles,  rational  expectations  and  financial   markets   (Working  Paper  No.  945).  National  Bureau  of  Economic  Research.   https://doi.org/10.3386/w0945    Bloomberg  News.  (2025 a ,  octubre).    Gold  reaches  record  highs  above  $4,000  per  ounce   amid  geopolitical  tensions  and  expectations  of  Federal  Reserve  rate  cuts .   Bloomberg.  https://www.bloomberg.com    Bloomberg  News.  (2025 b ,  diciembre).    Silver  reaches  record  highs  amid  strong  industrial   demand and market volatility . Bloomberg.  https://www.bloomberg.com    Board  of  Governors  of  the  Federal  Reserve  System.  (2024).    Monetary  policy  report   submitted to  the  Congress  pursuant to the  Federal  Reserve  Act .  Federal  Reserve   Board.  https://www.federalreserve.gov/monetarypolicy.htm    Carr - Wilson,  S.,  Pattanayak,  S.  K.,  &  Weinthal,  E.  (2024).  Critical  mineral  mining  in  the   energy  transition:  A  systematic  review  of  environmental,  social,  and    governance   risks  and  opportunities.  Energy  Research  &  Social  Science,  116 ,  103672.   https://doi.org/10.1016/j.erss.2024.103672   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Cheng, I. - H., & Xiong, W. (2014). Financialization of commodity markets.  Annual Review of   Financial  Economics,  6 (1),  419 – 441.  https://doi.org/10.1146/annurev - financial -  110613 - 034432    Cobalt  Institute.  (2022).  Cobalt  market  report  2021 .   https://www.cobaltinstitute.org/resource/cobalt - market - report - 2021/      Cobalt  Institute.  (2023).  Cobalt  market  report  2022 .   https://www.cobaltinstitute.org/resource/cobalt - market - report - 2022/    Cobalt  Institute.  (2024).  Cobalt  market  report  2023 .   https://www.cobaltinstitute.org/resource/cobalt - market - report - 2023/    Cobalt  Institute.  (2025).  Cobalt  market  report  2024 .   https://www.cobaltinstitute.org/resource/cobalt - market - report - 2024/    Congressional  Research  Service.  (2024).    2024  U.S.  elections:  Issues  and  policy  outlook .   Congressional  Research  Service.    URL:  https://crsreports.congress.gov    Evans, G. W. (1991). Pitfalls in testing for explosive bubbles in asset prices.  The American   Economic Review, 81 (4), 922 – 930.  https://www.jstor.org/stable/2006651    Fama,  E.  F.  (1970).  Efficient  capital  markets:  A review  of  theory  and  empirical  work.    The   Journal of Finance, 25 (2), 383 – 417.  https://doi.org/10.2307/2325486    Guevara  Albán,  G.  P.,  Verdesoto  Arguello,  A.  E.,  &  Castro  Molina,  N.  E.  (2020).   Metodologías  de  investigación  educativa  (descriptivas,  experimentales,   participativas,  y  de  investigación - acción).  RECIMUNDO,  4 (3),  163 – 173.   https://doi.org/10.26820/recimundo/4.(3).julio.2020.163 - 173    Gürkaynak, R. S. (2008). Econometric tests of asset price bubbles: Taking stock.  Journal of   Economic  Surveys,  22 (1),  166 – 186.  https://doi.org/10.1111/j.1467 -  6419.2007.00530.x    Hernández Sampieri, R., Fernández Collado, C., & Baptista Lucio, P. (2014).  Metodología   de  la  investigación   (6.ª  ed.).  McGraw - Hill  Education.   https://apiperiodico.jalisco.gob.mx/api/sites/periodicooficial.jalisco.gob.mx/files/met  odologia_de_la_investigacion_ - _roberto_hernandez_sampieri.pdf   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Huang, W., & Wang, Y. (2024). Identifying price bubbles in global carbon markets: Evidence   from  the  SADF  test,  GSADF  test  and  LPPLS  method.    Energy  Economics,  134 ,   107626.  https://doi.org/10.1016/j.eneco.2024.107626    Hund, K., La Porta, D., Fabregas, T. P., Laing, T., & Drexhage, J. (2020).  Minerals for climate   action:  The  mineral  intensity  of  the  clean  energy  transition .  World  Bank.   https://doi.org/10.1596/40002    International  Energy  Agency.  (2021),    The  Role  of  Critical  Minerals  in  Clean  Energy   Transitions ,  IEA,  Paris  https://www.iea.org/reports/the - role - of - critical - minerals - in -  clean - energy - transitions   Licence: CC BY 4.0    International  Energy  Agency.     (2023),    Energy  Technology  Perspectives  2023 ,  IEA,  Paris   https://www.iea.org/reports/energy - technology - perspectives - 2023     Licence:  CC  BY   4.0    International  Energy  Agency.  (2024).    Global  Critical  Minerals  Outlook  2024 ,  IEA,  Paris   https://www.iea.org/reports/global - critical - minerals - outlook - 2024   Licence:  CC  BY   4.0    International  Energy  Agency.  (2025).    Global  Critical  Minerals  Outlook  2025 ,  IEA,  Paris   https://www.iea.org/reports/global - critical - minerals - outlook - 2025   Licence:  CC  BY   4.0    International Monetary Fund. (2022).  World economic outlook: Countering the cost - of - living   crisis .  International  Monetary  Fund.   https://www.imf.org/en/Publications/WEO/Issues/2022/10/11/world - economic -  outlook - october - 2022    J.P. Morgan Global Research. (2025).  Gold price outlook: Gold prices crossing $4,000/oz   by  2026 .  J.P.  Morgan.  https://www.jpmorgan.com/insights/global -  research/commodities/gold - prices    Kindleberger, C. P., & Aliber, R. Z. (2005).  Manias, panics and crashes: A history of financial   crises   (5th ed.). Palgrave Macmillan.  https://doi.org/10.1057/9780230628045    London  Metal  Exchange.  (2023).  Independent  nickel  market  review .   https://www.lme.com/Trading/Initiatives/Nickel - market - independent - review   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          London  Bullion  Market  Association.  (2025).    LBMA  silver  price  historical  data .  LBMA.   https://www.lbma.org.uk/prices - and - data/precious - metal - prices    Lucey, B. M., & Tully, E. (2006).  The evolving relationship between gold and silver 1978 –  2002:  Evidence  from  a  dynamic  cointegration  analysis:  A  note .    Applied  Financial   Economics Letters, 2 (1), 47 – 53.  https://doi.org/10.1080/17446540500426789    Martin, G., Rentsch, L., Höck, M., & Bertau, M. (2017). Lithium market research    –   Global   supply, future  demand  and  price  development.    Energy  Storage  Materials,  6 , 171 –  179.  https://doi.org/10.1016/j.ensm.2016.11.004    Minsky,  H.  P.  (1975).  Financial  resources  in  a  fragile  financial  environment.    Challenge,   18 (3), 6 – 13.  https://doi.org/10.1080/05775132.1975.11470124    Morgan Stanley Research . (2025).  Gold reaches record highs amid geopolitical uncertainty   and  monetary  easing  expectations .  Morgan  Stanley  Research.   https://www.morganstanley.com/ideas    Nguyen, Q. N., & Waters, G. A. (2022). Detecting periodically collapsing bubbles in the S&P   500.  The  Quarterly  Review  of  Economics  and  Finance,  83 ,  83 – 91.   https://doi.org/10.1016/j.qref.2021.11.004    O'Connor, F. A., Lucey, B. M., Batten, J. A., & Baur, D. G. (2015). The financial economics   of  gold    —     A  survey.    International  Review  of  Financial  Analysis,  41 ,  186 – 205.   https://doi.org/10.1016/j.irfa.2015.07.005    Organisation for Economic Co - operation and Development. (2025).  The changing dynamics   in global metal markets .  OECD.  https://www.oecd.org/en/publications/the - changing -  dynamics - in - global - metal - markets_b0182773 - en.html    Ozgur,  O.,  Yilanci,  V.,  &  Ozbugday ,  F.  C.  (2021).  Detecting  speculative  bubbles  in  metal   prices:  Evidence  from  GSADF  test  and  machine  learning  approaches.    Resources   Policy ,  74 , 102306.  https://doi.org/10.1016/j.resourpol.2021.102306 .    Peng, Y., Ni, M., & Wang, X. (2023). Identifying price bubbles in copper market: Evidence   from  a  GSADF  test  approach.  PLOS  ONE ,  18 (11),  e0290983.   https://doi.org/10.1371/journal.pone.0290983 .   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Phillips, P. C. B., Wu, Y., & Yu, J. (2011). Explosive behavior in the 1990s Nasdaq: When   did exuberance escalate asset values?  International Economic Review, 52 (1), 201 –  226.  https://doi.org/10.1111/j.1468 - 2354.2010.00625.x    Phillips, P. C. B., & Yu, J. (2011). Dating the timeline of financial bubbles during the subprime   crisis.  Quantitative Economics, 2 (3), 455 – 491.  https://doi.org/10.3982/QE82    Phillips, P. C., Shi, S., & Yu, J. (2015). Testing for multiple bubbles: Historical episodes of   exuberance  and  collapse  in  the  S&P  500.    International  Economic  Review ,    56 (4),   1043 - 1078.  https://doi.org/10.1111/iere.12132    Qin, M., Mirza, N., Su, C. W., & Umar, M. (2023). Exploring bubbles in the digital economy:   the  case  of  China.  Global  Finance  Journal ,  57 ,  100871.   https://doi.org/10.1016/j.gfj.2023.100871    Restrepo, N., Uribe, J. M., & Guillén, M. (2023). Price bubbles in lithium markets around the   world.  Frontiers  in  Energy  Research ,  11 ,  1204179.   https://doi.org/10.3389/fenrg.2023.1204179    Reuters. (14 de diciembre   de 2021 ).    Lithium prices soar, turbocharged by electric - vehicle   demand  and  scant  supply .  Fox  Business.   https://www.foxbusiness.com/markets/lithium - prices - soar - turbocharged - by - electric -  vehicle - demand - and - scant - supply    Reuters. ( 8 de marzo de 2022 ).  LME forced to halt nickel trading, cancel deals, after prices   top $100,000 . Euronews.  https://www.euronews.com/2022/03/08/ukraine - crisis - lme -  nickel    Reuters. ( 11 de octubre de 2025 ).  Congo to revoke cobalt quotas for companies that fail to   export  full  volume .  MINING.com.  https://www.mining.com/web/congo - to - revoke -  cobalt - quotas - for - companies - that - fail - to - export - full - volume/    Reuters.  (30  de  octubre  de  2023).    Lower  prices,  oversupply  to  weigh  on  lithium  miners .   https://www.reuters.com/markets/commodities/lower - prices - oversupply - weigh -  lithium - miners - 2023 - 10 - 30/    Silver  Institute.  (2024).  World  silver  survey  2024 .  Silver  Institute.   https://www.silverinstitute.org/world - silver - survey - 2024/   \n  INFORME FINAL DE     TRABAJO DE GRADO  -   FCEyAdm    Código   FDE 169    Versión   04    Fecha   31 - 07 - 2025          Tang,  K.,  &  Xiong,  W.  (2012).  Index  investment  and  the  financialization  of  commodities.   Financial Analysts Journal ,  68 (6), 54 - 74.  https://doi.org/10.2469/faj.v68.n6.5    Wang,  Z.,  &  Kim,  M.  K.  (2022).  Price  bubbles  in  oil  &  gas  markets  and  their  transfer.   Resources Policy ,  79 , 103059.  https://doi.org/10.1016/j.resourpol.2022.103059    Wang, X. Q., Qin, M., Moldovan, N. C., & Su, C. W. (2023). Bubble behaviors in lithium price   and  the  contagion  effect:  An  industry  chain  perspective.    Resources  Policy ,    83 ,   103725.  https://doi.org/10.1016/j.resourpol.2023.103725 .    World  Bank.  (2022).    Commodity  markets  outlook:  The  impact  of  the  war  in  Ukraine  on   commodity markets . World Bank.  https://openknowledge.worldbank.org    World  Bank.  (2025).    Commodity  markets  outlook:  Risks  from  trade  fragmentation  and   geopolitical  tensions .  World  Bank.   https://www.worldbank.org/en/research/commodity - markets    World  Gold  Council.  (2024).    Gold  demand  trends:  Full  year  2024 .  World  Gold  Council.   https://www.gold.org/goldhub/research/gold - demand - trends    Xiong,  W.  (2014).  The  financialization  of  commodity  markets.    NBER  Reporter ,  20 - 23.   https://www.nber.org/reporter/2014number2/financialization - commodity - markets         \n";
+    const PDF_NAME = "Informe Final - BURBUJAS ESPECULATIVAS EN EL MERCADO DE MINERALES CRÍTICOS (2021-2025) (1).pdf";
+    const CHATBOT_THEME = "Informe Final - BURBUJAS ESPECULATIVAS EN EL MERCADO DE MINERALES CRÍTICOS (2021-2025) (1)";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué objetivo plantea la investigación sobre burbujas especulativas en precios de minerales críticos entre 2021 y 2025?","¿Por qué la transición energética y el auge de vehículos eléctricos vuelven estratégicos al litio, el cobre, el níquel y el cobalto?","¿Qué relevancia tiene estudiar condiciones de oferta y demanda (incluida la de China) para explicar posibles burbujas?","¿Cómo contrasta la Hipótesis de Mercados Eficientes (Fama, 1970) con la idea de burbuja racional?","¿Qué es un “componente de burbuja” según Blanchard y Watson (1982) y qué implica la propiedad de submartingala?","¿En qué consiste el modelo de burbujas periódicamente colapsantes (Evans, 1991) y por qué desafía pruebas tradicionales como ADF/Phillips-Perron?","¿Cómo funciona la prueba Supremum ADF (SADF) y qué limitación tiene cuando hay múltiples episodios de burbuja?","¿Qué mejora introduce la prueba GSADF frente a SADF al permitir que varíen inicio y fin de las submuestras?","¿Qué conclusiones se obtienen con la prueba GSADF para litio, cobalto, níquel y cobre (y por qué el cobre resulta diferente)?","¿Qué muestran la secuencia cronológica BSADF sobre la persistencia temporal y la intensidad de los episodios por metal?","¿Cómo se interpretan los análisis usando oro y plata como metales de referencia o contraste en la sección final de resultados?","¿Cuáles son las principales conclusiones y recomendaciones sobre qué factores (expectativas, oferta, concentración geográfica, regulación y condiciones financieras) explican mejor la explosividad?"];
+    const INITIAL_PALETTE = {"primaryColor":"#30e8c9","secondaryColor":"#59edd4","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#30e8c9","chatBubbleUserText":"#111827","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: reglamentoestudiantil</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>reglamentoestudiantil</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "\n\nVigilada por Mineducación  Medellín - Colombia \nReglamento Estudiantil  Institución Universitaria Pascual Bravo, 2018  Vigilada Mineducación  Diseño, diagramación:  Oficina Asesora de Comunicaciones.  Fondo Editorial Pascual Bravo  Medellín, Colombia  PBX:  (+57 4) 448 0520  Fax:  (+57 4) 493 6363  Dirección:  Calle 73 No. 73A - 226, Robledo, Vía El Volador  Web:  http:// www.pascualbravo.edu.co  Línea gratuita:  01 8000 510944 \nArt. 12o.   Art. 13o.   Art. 14o.   Art. 15o.   Art. 16o.     Art. 17o.   Art. 18o.     Art. 19o.   Art. 20o.   Art. 21o.   Art. 22o.   Art. 23o.   Art. 24o.   Art. 25o.   Art. 26o.   Art. 27o.     La inscripción  Aspirante  Admisión  Estudiante nuevo  Estudiante de Transferencia  Interna  Transferencia Interna  Estudiante de Transferencia   Externa  Estudiante de reingreso  Estudiante de   segundo programa  Estudiante egresado -   no graduado  Estudiante en   situación especial  La matrícula  La matrícula ordinaria  La matrícula extraordinaria  Renovación de matrícula  Registro de asignaturas  Art.  2o.  Misión  Art.  3o.  Visión  Art.  4o.  Valores  Art.  5o.  Principios  Art.  6o.  Objetivos  CAPÍTULO I.  INSCRIPCIÓN Y  ADMISIÓN  FILOSOFÍA INSTITUCIONAL  Pág.  Pág.  Pág.  ADMISIÓN, MATRÍCULA Y   NORMAS ACADÉMICAS  CAPÍTULO II.  MATRÍCULA \nArt. 32o.   Art. 33o.   Art. 34o.   Art. 35o.   Art. 36o.     Art. 38o.   Art. 39o.   Art. 40o.   Art. 41o.   Art. 45o.   Art. 52o.   Art. 53o.   Art. 57o.   Art. 59o.   Art. 60o.   Art. 61o.   Art. 69o.   Art. 79o.   Art. 80o.   Programa académico  Componente de   formación humanística  Asignaturas  Créditos  Modificación a un plan de    estudio  Curso regular  Curso dirigido  Curso intensivo  Cupos  La calidad de estudiante  Modificado. Acuerdo 014   de 2017  La evaluación  Evaluación de validación  Procedimiento para   la validación  Prueba supletoria  Evaluación de habilitación  Promedio crédito  Título Homonorífico  Título Póstumo  CAPÍTULO iII.  PROGRAMA  ACADÉMICO  CAPÍTULO iV.  CURSOS Y  CUPOS  CAPÍTULO V.  CALIDAD DE ESTUDIANTE  CAPÍTULO VI. ASISTENCIA A LOS   CURSOS Y CANCELACIÓN  DE ASIGNATURAS  CAPÍTULO VII. SISTEMA DE EVALUACIÓN  Y CALIFICACIÓN DE  ASIGNATURAS  CAPÍTULO IX.  RENDIMIENTO  ACADÉMICO  CAPÍTULO VIII.  REGISTRO DE  CALIFICACIONES Y  ASIGNATURAS  CAPÍTULO X.  TÍTULOS ACADÉMICOS  DERECHOS, DEBERES,   ESTÍMULOS Y SERVICIOS  Pág.   Pág.  Pág.  Pág.  Pág.  Pág.  Pág.  Pág. \nArt. 87o.   Art. 88o.   Art. 89o.   Art. 90o.   Art. 91o.  Art. 92o.   Art. 93o.    Art. 99 o.   Art. 100o.   Matrícula sobresaliente  Estudiantes  destacados  por    la  participación  artística  y    deportiva  Estudiante auxiliar  Estudiante investigador  Mención de honor  Mención  de  honor  por  labor    investigativa  Mención de honor por labor   social, cultural y/o deportiva  Objetivo de las Normas  Disciplinarias.   Conductas que atentan contra  el orden académico  CAPÍTULO II.  DEBERES DE LOS  ESTUDIANTES  CAPÍTULO IV.  INCENTIVOS Y  ESTÍMULOS  CAPÍTULO IIi.  DE LAS ACTIVIDADES  ACADÉMICAS  REALIZADAS FUERA DE  LA INSTITUCIÓN  CAPÍTULO V.  SERVICIOS  NSTITUCIONALES  CAPÍTULO ii.  CALIFICACIÓN DE LAS   FALTAS Y GRADO DE LA  SANCIÓN  CAPÍTULO iii.  COMPETENCIA PARA  SANCIONAR  CAPÍTULO iV.  PROCEDIMIENTO   DISCIPLINARIO  CAPÍTULO I.  DERECHOS DE LOS  ESTUDIANTES  CAPÍTULO I.  CONDUCTAS  QUE ATENTAN CONTRA  EL ORDEN ACADÉMICO  Y DISCIPLINARIO  NORMAS DISCIPLINARIAS Pág.  Pág.   Pág.  Pág.  Pág.  Pág.  Pág.  Pág.  Pág. \nReglamento Estudiantil  www.pascualbravo.edu.co 8  REGLAMENTO ESTUDIANTIL  CONSEJO DIRECTIVO  ACUERDO No. 003  21 de marzo de 2013  Por  medio  del  cual  se  expide  el  Reglamento  Estudiantil  de  la  Institución    Universitaria Pascual Bravo.  El H. Consejo Directivo de la Institución Universitaria Pascual Bravo, en ejercicio   de sus funciones legales y en especial de las que le confiere el Artículo 14, literal   E, del Estatuto general.  ACUERDA  Art. 1o.  Expedir el Reglamento Estudiantil de la Institución Universitaria Pascual   Bravo, al tenor del siguiente articulado. \n\n\nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 11  FILOSOFÍA INSTITUCIONAL  Art. 2o. Misión.  Somos una Institución Universitaria, líder en Educación Superior   Tecnológica,  comprometida  socialmente  con  la  formación  de  profesionales    íntegros, con  certificación de calidad en nuestros procesos y en busca de   la  excelencia  académica,  a  través  de  modelos  pedagógicos  dinámicos  que    respondan a las necesidades de la región y del país.  Art. 3o. Visión.  En el 2020 seremos una Institución pública de educación   superior  con  acreditación  de  alta  calidad  institucional  y  de  sus  programas    académicos,  mediante  la  modernización,  innovación  y  la  incursión  a  nivel    internacional, con un sistema de gestión integral certificado, con transparencia   y responsabilidad social.  Art. 4o. Valores.   Son Valores Institucionales, los siguientes:   Respeto  Equidad  Participación  Pluralidad  Solidaridad  Creatividad  Competitividad  Art. 5o. Principios.   La  Institución  adopta  como  sus  principios  generales  los    contenidos en el Título Primero de la Ley 30 de 1992:  La Educación Superior es un proceso permanente que posibilita el desarrollo   de las potencialidades del ser humano de una manera integral, se realiza con   posterioridad a la educación media o secundaria y tiene por objeto el pleno   desarrollo de los alumnos y su formación académica o profesional.  La Educación Superior es un servicio público cultural, inherente a la finalidad   social del Estado.   El Estado, de conformidad con la Constitución Política de Colombia y con la   presente  Ley,  garantiza  la  autonomía  universitaria  y  vela  por  la  calidad  del    servicio educativo a través del ejercicio de la suprema inspección y vigilancia   de la Educación Superior.   La Educación Superior, sin perjuicio de los fines específicos de cada campo   del saber, despertará en los educandos un espíritu reflexivo, orientado al   ·  ·  ·  · \nReglamento Estudiantil  www.pascualbravo.edu.co 12  logro de la autonomía personal, en un marco de libertad de pensamiento y   de pluralismo ideológico que tenga en cuenta la universalidad de los saberes   y la particularidad de las formas culturales existentes en el país. Por ello, la   Educación Superior se desarrollará en un marco de libertades de enseñanza,   de aprendizaje, de investigación y de cátedra.   La  Educación  Superior  será  accesible  a  quienes  demuestren  poseer  las    capacidades requeridas y cumplan con las condiciones académicas exigidas   en cada caso.  Y los principios específicos concordantes con su misión, en los que la Institución   Universitaria Pascual Bravo:  Orienta  sus  esfuerzos  hacia  la  consolidación  como  centro  de  cultura,  de    ciencia y tecnología que por su naturaleza tiene una especial responsabilidad   con la sociedad, a la cual se debe; se compromete en la búsqueda de nuevos   conocimientos y de las soluciones a los problemas de la sociedad, con alto   sentido humanístico en el marco de una concepción universal.   Se reconoce como espacio de controversia racional, regida por el respeto a   las libertades de conciencia, opinión, información, enseñanza, aprendizaje,   investigación y cátedra, orientadas por las exigencias de los criterios éticos   que se traducen en una real convivencia universitaria, y con una alta vocación   de servicio orientada prioritariamente hacia los sectores más vulnerables de   la sociedad.   Tiene un carácter democrático y pluralista, por lo cual no limita ni restringe   los  derechos,  libertades  y  oportunidades  por  consideraciones  sociales,    económicas, políticas, ideológicas, de raza, sexo o credo. Está siempre abierto   a quienes en igualdad de oportunidades demuestren tener las capacidades   requeridas y cumplir las condiciones académicas y administrativas exigidas.   Es  permeable  a  todas  las  manifestaciones  del  pensamiento,  está  abierta    a  todos  los  saberes  científicos  y  expresiones  culturales;  y  propicia  la   comunicación  con  todos  los  pueblos  del  mundo,  particularmente  con  los    países  de  América  Latina,  y  en  especial  con  universidades,  institutos  de    investigación  y  entidades  públicas  y  privadas,  para  incorporar  en  los   programas académicos propios los adelantos de la investigación.  Art. 6o. Objetivos.  En desarrollo de los principios a que se refiere el artículo   anterior, la Institución tendrá los siguientes objetivos:  a.    Formar profesionales integrales, de acuerdo con las exigencias del desarrollo   de la región y del país.  b.    Preparar el talento humano, técnico, tecnológico y científico indispensable   para  el  desarrollo  socioeconómico  del  Municipio  de  Medellín,  del    ·  ·  ·  ·  · \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 13  Departamento  de  Antioquia,  y  del  país  y  propender  por  la  integración  al    proceso  nacional  de  desarrollo  preservando  sus  valores  ambientales,    culturales y sociales.  c.    Ampliar las oportunidades de ingreso a la Educación Superior, especialmente   de las personas con mayores dificultades económicas.  d.     Adelantar programas que propicien la integración al sistema de Educación   Superior  de  aspirantes  provenientes  de  las  zonas  urbanas  deprimidas,    rurales,  grupos  indígenas,  afrodescendientes,  personas  con  discapacidad    física  o  cognitiva,  que  por  su  condición  son  marginados  del  desarrollo    económico y social.  e.     Fomentar  la  investigación  científica  y  tecnológica  en  el  campo  de  las   áreas del conocimiento propias de su actividad académica que respondan   a  las  necesidades  del  Municipio  de  Medellín,  del  Área  Metropolitana,  del    Departamento de Antioquia y del país.  f.      Articular su actuación en todos los campos con la red de instituciones del   Municipio de Medellín.  g.     Liderar el desarrollo científico, técnico, tecnológico, artístico, económico y   político, y ser paradigma ético en la región y en el país.  h.       Contribuir  al  mejoramiento  de  la  calidad  de  los  niveles  precedentes  de  la    educación, formales o no, mediante procesos de investigación, actualización   y profesionalización.  i.      Apoyar los procesos de acercamiento, coordinación y acción conjunta con   otras naciones y sociedades.  j.      Formar y consolidar comunidades académicas y científicas capaces de   articularse con sus homólogas nacionales e internacionales.  k.       Impulsar,  por  medio  de  acciones  investigativas,  docentes  y  de  extensión,    la  preservación  y  racional  utilización  del  medio  ambiente  y  fomentar  la    consolidación de una adecuada cultura ecológica.  l.     Promover el conocimiento, la investigación y la difusión del patrimonio cultural   de  la  región  y  del  país;  y  contribuir  a  su  enriquecimiento,  conservación  y    defensa.  m.    Propiciar el desarrollo investigativo del país y su integración con las corrientes   científicas mundiales.  n.     Implementar el Proyecto Educativo Institucional que permita el fomento del   razonamiento,  el  pensamiento  crítico  y  creativo,  y  que  propicie  hábitos  de    disciplina y de trabajo productivo.  o.    Adelantar programas y proyectos orientados a impulsar el desarrollo innovador   y un espíritu empresarial con clara conciencia de su responsabilidad social,   tanto en el sector público como en el privado.  p.     Evaluar de manera continua los múltiples elementos de la vida académica   y  administrativa,  teniendo  en  cuenta  el  interés  social,  los  objetivos  de    planeación regional y nacional, y la pertinencia científica y pedagógica de  \nReglamento Estudiantil  www.pascualbravo.edu.co 14  los diversos programas.  q.     Fortalecer y mantener actualizada la gestión institucional.  r.    Generar y difundir una cultura de respeto por los derechos humanos mediante   la  adopción  de  actitudes  y  prácticas  que  favorezcan  la  formación  y  el    progreso de la sociedad civil.  Art. 7o.   Para  cumplir  la  Filosofía  Institucional,  el  proceso  de  formación  debe    desarrollarse  dentro  de  claros  criterios  éticos  y  académicos,  de  tal  forma  que    se cree un ambiente donde imperen la razón, el respeto mutuo entre docentes y   dicentes, la libertad de cátedra y libertad de aprendizaje.  Art.  8o.    La  Institución  proveerá  constantemente  la  actualización  de  los    programas  académicos,  el  perfeccionamiento  docente  y  la  objetividad  de  los    sistemas de evaluación, con el fin de ofrecer a los estudiantes una formación   acorde con criterios de excelencia académica.  Art. 9o.  La  participación  de  los  estudiantes  en  los  organismos  de  dirección  y    asesores, como en los demás consejos y comités a que tengan derecho, estará   sujeta a lo dispuesto en la Ley, en los estatutos y en el presente reglamento.  Art. 10o.   El  reglamento  estudiantil,  además  de  regular  las  relaciones  entre    éstos  y  la  Institución,  contiene  los  lineamientos  para  el  perfeccionamiento  en    su  formación  profesional  y  de  estímulos  al  trabajo  en  los  campos  académico,    científico, cultural y tecnológico.  Art.  11o.   Las  normas  disciplinarias  procuran  prevenir  aquellas  conductas    contrarias  a  la  vida  en  la  Institución  y  preservar  la  normalidad  de  la  misma  y    definen con precisión el régimen de sanciones a las causales de retiro de la   Institución Universitaria Pascual Bravo. \nADMISIÓN, MATRÍCULA Y   NORMAS ACADÉMICAS \n\nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 17  ADMISIÓN, MATRÍCULA Y NORMAS ACADÉMICAS  CAPITULO I  INSCRIPCIÓN Y ADMISIÓN  Art. 12o. La Inscripción.  Es el requisito previo para el  ingreso a la Institución,   debe  cumplirse  de  acuerdo  con  los  trámites  y  requisitos  determinados  por  el    Consejo  Académico  y  ceñirse  al  Plan  de  Estudios  vigente  en  el  momento  del    ingreso, reingreso y transferencia interna o externa.  Art. 13o. Aspirante.  Quien aspire a ingresar a uno de los programas académicos   formales ofrecidos por la Institución, puede hacerlo bajo una de las siguientes   formas:  a.    Como aspirante nuevo.  b.    Como aspirante de transferencia interna o externa.   c.    Como aspirante de reingreso.  d.    Como aspirante a estudiante de segundo programa.  e.    Estudiante egresado – no graduado.   f.    Como  estudiante  en  situación  especial  (estudiantes  provenientes  de    convenios de movilidad o de articulación).  Art. 14o. Admisión.  Es el procedimiento en el cual se decide si el estudiante   inscrito cumple con las calidades y requisitos para ser estudiante de la Institución   Universitaria Pascual Bravo.  Art.  15o.  Estudiante  nuevo.    Es  aquel  que  ingresa  por  primera  vez  a  la    Institución, previo cumplimiento de los siguientes requisitos:   a.    Acreditar su condición de bachiller con certificado de registro del diploma.   b.    Adjuntar constancia de los resultados del examen de Estado.  c.    Presentar y aprobar las pruebas de admisión establecidas por la Institución.   d.   Realizar las diligencias de matrícula en los plazos previstos por el Consejo   Académico.   e.      Cumplir  los  demás  requisitos  de  admisión  exigidos  por  la  Institución  o  las    normas legales.   PARÁGRAFO  1.   La  Institución  reserva  el  cupo  al  estudiante  nuevo  cuando   \nReglamento Estudiantil  www.pascualbravo.edu.co 18  éste  no  puede  matricularse  por  motivo  del  servicio  militar  obligatorio,  para  lo    cual debe presentar el respectivo certificado o constancia del distrito militar   correspondiente.  El  estudiante  deberá  hacer  uso  de  la  reserva  del  cupo  en  el    semestre académico inmediatamente siguiente a la terminación de su servicio   militar. Este trámite lo hará ante la oficina de Admisiones, Registro y Control   Académico.   PARÁGRAFO  2.   Aquellos  estudiantes  de  instituciones  que  tengan  suscritos    convenios  de  articulación  con  la  Institución,  en  el  marco  de  las  políticas  de    ciclos  propedéuticos  y  que  están  matriculados  en  Grado  Diez  (10)  u  Once   (11)  en  una  Institución  de  Educación  Media  podrán  ingresar  a  la  Institución   sin cumplir el proceso de selección y sin acreditar la condición de bachilleres,   pero  sometiéndose  al  cumplimiento  de  los  trámites  del  proceso  de  inscripción    y matrícula.  PARÁGRAFO 3.  Los estudiantes que terminen el nivel de técnico profesional,   podrán continuar con el nivel tecnológico, en concordancia con lo establecido en   la formación por ciclos propedéuticos y, en el mismo sentido, los que terminen el   nivel tecnológico podrán continuar el profesional universitario.  PARÁGRAFO 4.  Un estudiante podrá estar matriculado en dos programas previa   reglamentación del Consejo Académico.  Art.  16o.  Estudiante  de  transferencia  interna.   Es  aquel  que  estando    matriculado  en  la  Institución,  solicite  cambios  entre  metodología  (presencial,    distancia o virtual) o entre programas.  PARÁGRAFO ÚNICO.  Es competencia de los Consejos de Facultad estudiar y   definir las solicitudes de transferencia interna de metodología o de programas,   teniendo  en  cuenta  la  disponibilidad  de  cupos  y  el  rendimiento  académico    acumulado obtenido.    Art.  17o.  Transferencia  interna.   La  transferencia  interna  de  programa  o    de metodología es el derecho que tiene el estudiante de solicitar cambio para   continuar sus estudios en otro programa académico de la Institución o en otra   metodología.   PARÁGRAFO  1.    La  solicitud  de  transferencia  interna  de  programa  o  de    modalidad de estudio la hará el estudiante en la sección de Admisiones, Registro   y Control Académico mediante el formato establecido, quien lo presentará ante   el Comité de Admisiones para su estudio. La aprobación de la solicitud estará   sujeta  a  la  disponibilidad  de  cupos  y  al  cumplimiento  de  los  demás  requisitos   \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 19  establecidos en este reglamento. El estudiante podrá solicitar cambio interno de   programa o modalidad una vez haya cursado el primer nivel.  PARÁGRAFO 2.  El Consejo de Facultad, previa solicitud escrita del estudiante,   podrá reconocer las asignaturas del programa del que este proviene y al cual se   le aceptó el cambio interno, teniendo en cuenta los siguientes aspectos:   a.   Igual número de créditos.   b.    Intensidad horaria similar.   c.    Objetivos iguales o similares.  Art. 18o.   Estudiante de transferencia externa.  Es aquel que estuvo o está   matriculado en otra institución de educación superior debidamente reconocida   por el ministerio de Educación Nacional, en programas con registro vigente en   el  momento  que  cursó  las  asignaturas  y  solicita  ser  admitido  en  uno  de  los    programas académicos de la Institución.   PARÁGRAFO  1.   El  trámite  de  solicitud  de  inscripción  como  estudiante  de    transferencia externa, debe reunir los siguientes requisitos:   a.      Diligenciar  formulario  de  inscripción  como  estudiante  de  transferencia,  en    los tiempos previstos por la Institución.   b.    Haber cursado y aprobado como mínimo su primer nivel en la Institución de   procedencia.  c.    Tramitar  la  solicitud  ante  la  oficina  de  Admisiones,  Registro  y  Control   Académico.   d.    Adjuntar constancia de los resultados del examen de Estado y certificado del   registro del diploma de bachiller.  e.    Certificado disciplinario emitido por autoridades competentes de la Institución   de procedencia.  f.    Sólo se reconocerán las asignaturas que desde el momento del retiro de la   Institución de procedencia y la solicitud, no han transcurrido más de cuatro   (4) periodos académicos.  PARÁGRAFO 2.  Es competencia del Consejo de Facultad, estudiar y definir las   solicitudes de transferencia externa, teniendo en cuenta los siguientes criterios:   ·  Disponibilidad de cupos.   ·  Motivo de solicitud de la transferencia.   ·  Promedio crédito general mínimo de tres punto cinco (3.5) de la institución   de procedencia.   ·  Aprobar las pruebas de selección exigidas por la Institución.  \nReglamento Estudiantil  www.pascualbravo.edu.co 20  ·    Presentar, en medio físico o digital, el certificado de calificaciones de las   asignaturas cursadas en papel membrete de la Institución de procedencia.  ·  Entregar, en medio físico o digital, los contenidos de las asignaturas en papel   membrete y con las firmas correspondientes de las autoridades académicas   o administrativas competentes de la Institución de procedencia, de cada una   de las asignaturas susceptibles a reconocimiento.  ·  El Consejo de Facultad, estudiará y analizará la documentación presentada   por el estudiante y determinará las materias  que pueden ser reconocidas.    PARÁGRAFO 3.  Para efectos de reconocimiento de asignaturas, estas deben   tener igual cantidad de créditos y mínimo el 80% en contenidos similares. El   reconocimiento de asignaturas se hará una sola vez, al momento de ingresar a la   Institución. También podrán reconocerse a partir del estudio de las competencias   desarrolladas y las esperadas en la Institución para esa asignatura.  PARÁGRAFO 4.  Los contenidos de varias asignaturas de una Institución externa   pueden corresponder a una sola del programa que ofrece la Institución, evento   en el cual la nota de reconocimiento estará dada por el promedio ponderado de   las mismas.  Art.  19o.  Estudiante  de  reingreso.   Es  aquel  que  estuvo  matriculado  en    algún programa de la Institución y se retiró reglamentariamente, el que salió   de la Institución por bajo rendimiento académico y se incorpora nuevamente de   acuerdo con lo estipulado en el presente reglamento, o el que por alguna razón   no renovó su matrícula por más de un período académico.   PARÁGRAFO 1.   El  estudiante  que  solicite  reingreso  deberá  cancelar  el  valor    establecido y cumplir con todos los requisitos estipulados por la Institución.  PARÁGRAFO 2.  El estudiante que sale por bajo rendimiento y desea continuar   sus estudios en el semestre inmediatamente siguiente podrá tramitar la solicitud   de ingreso en las fechas asignadas en el calendario académico.  PARÁGRAFO 3.  Es competencia del Consejo de Facultad, analizar y definir las   solicitudes de reingreso, teniendo en cuenta los siguientes criterios:   a.    Disponibilidad de cupos.   b.     Que  el  aspirante  a  reingreso  no  tenga  sanciones  disciplinarias  vigentes  al    momento de solicitar el reingreso .  c.      No  exceder  de  tres  (3)  años  desde  el  momento  de  retiro  y  la  solicitud  de    reingreso,  acogiéndose  al  plan  de  estudios  vigente  en  el  momento  de    reingreso. Debe someter a evaluación del Consejo de Facultad las asignaturas  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 21  cursadas y aprobadas y que puedan ser objeto de reconocimiento.  PARÁGRAFO  4.    Todo  estudiante  podrá  solicitar  hasta  dos  reingresos  a  la    Institución. Si el retiro del estudiante se debió a motivos de fuerza mayor (laboral   o enfermedad justificada clínicamente) el Comité de Admisiones estará facultado   para aprobar más de dos (2) reingresos.  PARÁGRAFO 5.   Todo  estudiante  podrá  solicitar  reingreso  con  transferencia    interna de programa.  Art. 20o. Estudiante de segundo programa.  Es aquel estudiante interno o   externo que ha recibido un título profesional y desea ingresar a la Institución a   un segundo programa.   PARÁGRAFO 1.   Todo  aspirante  a  cursar  un  segundo  programa  debe  cumplir    con el proceso de inscripción y selección.  a.    Diligenciar formulario de inscripción  b.    Adjuntar fotocopia del título universitario previa presentación del original  PARÁGRAFO 2.  Es competencia del Consejo de Facultad, analizar y definir   las solicitudes de los estudiantes de segundo programa teniendo en cuenta los   siguientes criterios:     a.    Certificar un promedio crédito general mínimo de 3,5.   b.   No haber sido sancionado disciplinariamente en la institución de procedencia.  c.    Disponibilidad de cupos.   PARÁGRAFO 3.  El  aspirante  de  segundo  programa  procedente  de  otra  IES    debidamente registrada ante el Ministerio de Educación Nacional, debe presentar   de manera obligatoria el diploma o acta de grado que lo acredite.  Art. 21o. Estudiante egresado – no graduado.  Es  aquel  estudiante  que    ha  cursado  y  aprobado  todas  las  asignaturas  de  su  plan  de  estudio  y  que  se    encuentra  realizando  su  trabajo  de  grado  en  cualquiera  de  las  modalidades    aprobadas por la Institución.  PARÁGRAFO ÚNICO.  El estudiante que no matricule proyecto de grado por un   periodo académico deberá acogerse al proceso de reingreso y al reglamento de   trabajo de grado vigente.  Art.  22o.     Estudiante  en  situación  especial.   Es  aquel  que  ingresa  a  la   \nReglamento Estudiantil  www.pascualbravo.edu.co 22  Institución a través de uno de los siguientes programas:  a.   Estudiante de articulación:  Estudiante  que  está  matriculado  en  Grado    Diez (10) u Once (11) en una Institución de Educación Media y que ingrese a   un programa Técnico Profesional.   b.   Estudiante  de  movilidad:   Estudiante  que  está  activo  en  programas    académicos  registrados  debidamente  en  el  SNIES  y  pertenecientes    a    cualquier  IES  que  por  medio  de  convenios  o  programas  de  orden    interinstitucional pueden cursar asignaturas en la Institución.  c.   Pasante:  Estudiante de otra IES, nacional o extranjera, que viene a realizar   una práctica a la Institución.  CAPÍTULO II  MATRÍCULA  Art. 23o. La matrícula.  Es un contrato entre el estudiante y la Institución, por   medio del cual se generan y/o renuevan obligaciones independientes para cada   periodo académico de forma voluntaria.  Al firmar la matrícula el estudiante se compromete a:   a.  Cumplir  todas  las  obligaciones  inherentes  a  su  calidad  de  estudiante  y  los    deberes establecidos en los reglamentos de la Institución.   b.    Pagar  oportunamente  los  derechos  de  matrícula  y  los  demás  derechos    pecuniarios  complementarios  fijados  para  los  respectivos  programas   académicos.   Por su parte la Institución se compromete a:   a.    Reconocer los derechos del estudiante.  b.    Darle una formación profesional integral  PARÁGRAFO 1.  El periodo académico es el tiempo necesario para desarrollar   las actividades académicas correspondientes a un periodo del plan de estudio   y  cuya  duración  será  aprobada  por  el  Consejo  Académico  en  el  calendario    académico.  PARÁGRAFO  2.   La  liquidación  de  los  derechos  de  matrícula  se  hará  de    conformidad con las disposiciones que sobre la materia dicte el Consejo Directivo.  PARÁGRAFO 3.  Ningún estudiante podrá matricularse si su pago no se ha  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 23  validado  y  habilitado  desde  Gestión  Financiera.  En  los  casos  de  acuerdos  o    convenios  de  apoyo  con  instituciones  oficiales  o  privadas,  también  deben   tramitar su pago en Gestión Financiera. Todo estudiante deberá cumplir con los   procedimientos establecidos para cada caso.  Art. 24o. La matrícula ordinaria.  Es el proceso relacionado con el pago de   derechos de matrícula, asesoría y registro de asignaturas, que deberá efectuarse   para  cada  período  académico  de  acuerdo  con  las  fechas  establecidas  por  el    Consejo  Académico.  El  solo  pago  de  los  derechos  no  formaliza  la  matrícula    ordinaria.  Art. 25o. La matrícula extraordinaria.  Es la realizada posteriormente a las   fechas dadas para la matrícula ordinaria, dentro de los plazos establecidos en el   calendario académico. La matrícula extraordinaria tendrá un recargo del  20%   sobre el valor de la matrícula ordinaria.  Art. 26o. Renovación de matrícula.  El estudiante deberá renovar su matrícula   de  acuerdo  al  procedimiento  estipulado  en  el  instructivo  de  matrícula  en  cada    periodo académico.  PARÁGRAFO 1.  El proceso de asesoría se hará a través del Jefe de Departamento   por  solicitud  del  estudiante  teniendo  en  cuenta  los  diferentes  procedimientos    académicos,  de  tal  forma  que  se  realice  la  más  adecuada  selección  de  las    asignaturas  que  tiene  derecho  a  cursar,  respetando  prerrequisitos,  horarios  y    demás normas reglamentarias.   PARÁGRAFO 2.   Las  adiciones  de  asignaturas  solo  se  podrán  tramitar  en  las    fechas  determinadas  en  el  calendario  académico  aprobado  por  el  Consejo    Académico.  Art.  27o.  Registro  de  asignaturas.   El  estudiante  registrará  primero  las    asignaturas  reprobadas  y  si  los  prerrequisitos,  cupos,  créditos  y  el  horario  lo    permiten;  podrá  registrar  otras  asignaturas.  El  número  total  de  créditos  a   registrar no podrá ser mayor que el asignado en el plan de estudio vigente para   el nivel académico en el cual resulta matriculado.   PARÁGRAFO ÚNICO.  Por ningún motivo se permiten cruces de horarios entre   las asignaturas matriculadas.  Art. 28o.  Ningún estudiante podrá matricularse simultáneamente en más de un   programa académico. Salvo en la condición en que el estudiante se encuentre   en la situación de admitido por segundo programa. \nReglamento Estudiantil  www.pascualbravo.edu.co 24  Art. 29o.  Para efectos del presente reglamento se determinará la ubicación de   un estudiante, en el nivel cuyo porcentaje de créditos acumulados sea inferior o   igual al porcentaje del acumulado de créditos aprobados más los matriculados.    PARÁGRAFO ÚNICO.  El porcentaje de créditos acumulados se calcula dividiendo   el número de créditos acumulados entre el total de créditos del programa y   multiplicado por 100.  Art. 30o.  Por ningún motivo la Institución acepta asistentes en asignaturas   no matriculadas y es deber del Jefe del Departamento académico velar por su   cumplimiento.  Art.  31o.  La Oficina de Admisiones, Registro y Control Académico invalidará   la matrícula del estudiante que no cumpla con todos los requisitos establecidos.   Además  cancelará  las  asignaturas  registradas  cuando  incumplan  normas    específicas.  CAPÍTULO III  PROGRAMA ACADÉMICO  Art. 32o. Programa académico.   Es  la  integración  armónica  del  objeto  de    estudio con los objetivos, las competencias profesionales y el plan de estudios.  PARÁGRAFO  1.   El  plan  de  estudios  está  compuesto  por  las  competencias    académicas,  las  asignaturas,  metodologías  de  enseñanza  y  de  aprendizaje,    investigación y proyección social, organizado en componentes de fundamentación   científica,  componentes  de  fundamentación  básica,  componentes  de   fundamentación  específica  del  programa  y  componentes  de  formación   humanística,  con  sus  respectivas  asignaciones  de  créditos  y  su  relación    armónica de secuencialidad, orientados  hacia el desarrollo y la aplicación del   conocimiento en un campo de acción así como la formación en una ocupación,   disciplina o profesión conducente a título.    PARÁGRAFO  2.   Los  Proyectos  Educativos  de  Programa  que  explicitan  la    correspondencia entre la pertinencia social y académica y, en consecuencia, la   correspondencia entre las competencias profesionales y académicas, deben ser   actualizados, al menos, cada dos años.  PARÁGRAFO 3.   Los  Proyectos  Educativos  de  Programa  deben  ajustarse  a  lo    establecido en la política de créditos y política de flexibilidad curricular, las cuales  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 25  serán aprobadas por el Consejo Académico.  Art. 33o. Componente de formación humanística.   En  este  se  integran    conocimientos de la economía, la administración, aspectos sociales y éticos. El   componente de formación humanística ha de corresponder con aspectos en el   desarrollo de habilidades interpersonales y trabajo en grupos interdisciplinarios,   competente  en  la  comprensión  de  la  organización  para  ayudar  a  solucionar    problemas de grupos y coordinar personas, con capacidad de innovar, controlar   y  organizar  información  referida  a  grupos  de  personas  relevantes  en  la    organización empresarial.  Art. 34o. - Asignaturas.  Las asignaturas se clasifican así:   a.  Asignaturas  Básicas.      Son  aquellas  que  aportan  los  contenidos    científicos y métodos que permiten al profesional no solamente servirse de   los  conocimientos  sino  descubrirlos,  crearlos,  elaborarlos,  comprobarlos,    demostrarlos o invalidarlos.  b.   Asignaturas de Formación Específica.   Son  aquellas  que  aportan  los    conocimientos  y  habilidades  necesarios  para  el  quehacer  profesional,  sea    éste  instrumental  o  académico,  acorde  con  las  necesidades  del  sector    empleador.  c.   Asignaturas  Profesionales  o  Complementarias.    Son  aquellas  que    contribuyen a la formación integral del hombre considerado como sujeto de   conocimiento, como creador de cultura y como persona.  d.   Asignaturas  Electivas.    Son  aquellas  que  el  estudiante  puede  cursar    libremente.  Permiten  al  estudiante,  con  base  en  las  áreas  establecidas    previamente en su plan de estudio, una formación académica complementaria.    La  Institución,  de  acuerdo  con  la  disponibilidad  de  sus  recursos,  podrá    ofrecer diferentes opciones para que el estudiante elija libremente.  e.   Asignatura Requisito u obligatoria.   Es  la  que  hace  parte  de  un  plan    de estudios de un Programa de Formación Académica cuya aprobación es   necesaria para optar un título académico.  f.   Asignatura Prerrequisito.   Es  aquella  cuya  aprobación  es  indispensable    para  tener  derecho  a  matricularse  en  otra  u  otras  de  un  nivel  superior  del    Plan de Estudios de un Programa de Formación Académica.  g.   Asignaturas Prácticas.  Son  aquellas  en  las  que  más  de  la  mitad  del    programa se desarrolla mediante actividad práctica del estudiante o trabajo   independiente  mediando  asesoría  del  docente  y  presupone  un  trabajo    anterior y posterior de estudiante.  h.   Asignaturas Teórico Prácticas.  Son aquellas en las que más de la mitad   del programa se desarrolla mediante la actividad combinada trabajo directo   en clase y trabajo independiente. \nReglamento Estudiantil  www.pascualbravo.edu.co 26  i.   Asignaturas  Teóricas.   Son  aquellas  en  las  que  más  de  la  mitad  del    programa  se  desarrolla  en  el  aula  de  clase  y  presupone  igualmente  un    trabajo independiente por parte del estudiante.  Art. 35o. Créditos.  La medida de trabajo académico será el crédito, este permite   medir las actividades académicas evaluables realizadas por el estudiante en el   proceso docente educativo, a través de experiencias de aprendizaje previstas en   los programas. Un crédito equivale a cuarenta y ocho horas de trabajo académico   del  estudiante,  teniendo  en  cuenta  que  una  (1)  hora  con  acompañamiento   directo de docente supone dos (2) horas adicionales de trabajo independiente en   programas de pregrado y de especialización, y tres (3) en programas de maestría  PARÁGRAFO 1.  La  Institución  puede  proponer  el  empleo  de  una  proporción    mayor o menor de horas con acompañamiento directo frente a las independientes.   PARÁGRAFO 2.  La Institución debe sustentar la propuesta que haga y evidenciar   las estrategias adoptadas para que los profesores y estudiantes se apropien del   sistema de créditos.  Art.  36o. Modificaciones al plan de estudio.  El Consejo Académico, previa   recomendación del Consejo de Facultad, podrá introducir las modificaciones   que considere convenientes a los planes de estudio, con el fin de lograr un   mejoramiento en el proceso docente educativo y buscar la actualización de un   programa académico. Estas modificaciones en ningún momento pueden afectar   la  duración  del  programa  para  los  estudiantes  matriculados  a  la  fecha  de  la    modificación.  CAPÍTULO IV  CURSOS Y CUPOS  Art.  37o.   Las  asignaturas,  en  concordancia  con  el  PEP,  son  las  mínimas    unidades  académicas  expresadas  en  competencias,  saberes,  resultados  de    aprendizaje y estrategias metodológicas. Las asignaturas se pueden ofrecer de   manera regular, dirigida e intensiva.  Art. 38. Curso regular.   Es  aquel  que  se  lleva  a  cabo  durante  un  período    académico en las fechas determinadas por el Consejo Académico.  Art. 39o. Curso dirigido.  Es aquel que, por circunstancias excepcionales, no   se puede desarrollar durante el periodo académico determinado por el Consejo   Académico.  Es  programada  por  el  Jefe  de  Departamento  y  aprobada  por  el   \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 27  Consejo  de  Facultad  para  realizarse  dentro  de  un  período  especial,  con  una    interacción entre el docente y el dicente de un 40% de presencialidad. Esta   asignatura tiene todos los efectos académicos e igual número de créditos de un   curso regular.  PARÁGRAFO 1.  Se consideran circunstancias excepcionales las siguientes:  ·   Número reducido de estudiantes.  ·   Desaparición de una asignatura del plan de estudio.  ·   Programas de administración por cohortes.  PARÁGRAFO 2.  Para realizar una asignatura como curso dirigido el estudiante    deberá  elevar  de  manera  escrita  la  solicitud  al  Jefe  de  Departamento  del    programa  respectivo    y  este  al  Consejo  de  Facultad  para  su  aprobación  en  el    momento que se requiera.  Art. 40o. Curso intensivo.  Es aquel que se realiza en un calendario especial,   conservando el contenido programático, objetivos y duración establecidos para   los cursos que se sirven en un período académico ordinario. Serán estudiados   y autorizados por el Consejo de Facultad  previa solicitud escrita del estudiante.  PARÁGRAFO 1.  La solicitud del curso intensivo se deberá hacer cuatro semanas   antes de terminar el semestre ante el Consejo de Facultad, anexando la firma de   los estudiantes solicitantes, quienes asumirán el valor del curso en su totalidad.   Una vez se inicia el curso no se autoriza devolución de dinero.  PARÁGRAFO 2.  La nota final de un curso intensivo se tendrá en cuenta para el   promedio total de la carrera, no para el promedio crédito semestral.  Art.  41o.  Cupos.   Los  cupos  para  ingresar  a  los  diferentes  programas    académicos, se proveerán de acuerdo con las normas legales vigentes y según   el siguiente orden de prioridades:   ·   Estudiantes nuevos.   ·   Estudiantes de reingreso.   ·   Estudiantes de transferencia interna.   ·   Estudiantes de segundo programa.  ·   Estudiantes de transferencia externa.  ·   Estudiantes en situación especiales.  Art.  42o.   El  Consejo  de  Facultad  establecerá  los  cupos  máximos  para  las    asignaturas  regulares,  dirigidas  e  intensivas,  teniendo  en  cuenta  la  capacidad   \nReglamento Estudiantil  www.pascualbravo.edu.co 28  instalada  y  la  disponibilidad  de  equipos  y  materiales  en  cada  uno  de  los    laboratorios y talleres.  Art. 43o.  El desarrollo de las diferentes asignaturas ofrecidas por la Institución   se  hará  conforme  a  lo  establecido  en  el  respectivo  programa  académico.  Al    iniciar  la  asignatura,  el  profesor  dará  a  conocer  a  los  estudiantes  el  programa    con  los  objetivos,  las  competencias,  los  saberes,  resultados  de  aprendizaje,    las estrategias metodológicas, la bibliografía básica y las indicaciones precisas   sobre la forma, temas y valor de las evaluaciones.  CAPÍTULO V  CALIDAD DE ESTUDIANTE  Art. 44o.  Es estudiante de la Institución la persona que tiene matrícula vigente   en alguno de los programas académicos formales que ofrece la Institución en las   diferentes metodologías.   PARÁGRAFO ÚNICO.  Las modalidades ofrecidas por la Institución son:  a.    Modalidad presencial  b.    Modalidad a distancia  c.    Modalidad virtual  Art. 45o.   La calidad de estudiante.  Se adquiere cuando se ejerce el derecho   adquirido mediante el acto voluntario de la matrícula, la cual da la posibilidad a   cursar el programa de formación previsto para el período académico respectivo.  Art. 46o.  La  matrícula  tendrá  vigencia  por  un  período  académico  y  deberá    renovarse por el estudiante dentro de los plazos señalados por la Institución.  Art. 47o.  La calidad de estudiante se termina cuando:   a.   Se haya completado el plan de estudios correspondiente a su programa de   formación.   b.    No se haga uso del derecho de renovación de matrícula, dentro de los plazos   señalados por la Institución.   c.     Se  pierde  el  derecho  a  permanecer  en  la  Institución  por  bajo  rendimiento    académico, de acuerdo con lo establecido en el presente reglamento.   d.   Se haya cancelado la matrícula.   e.     Se  haya  impuesto  una  sanción  académica  o  disciplinaria  que  en  forma    temporal o permanente anule dicha calidad.  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 29  f.    Por motivos de salud, previo dictamen médico que considere inconveniente   la permanencia del estudiante en la Institución.   CAPÍTULO VI  ASISTENCIA A LOS CURSOS Y CANCELACIÓN DE   ASIGNATURAS  Art. 48o.  Al registrar una asignatura, el estudiante adquiere el compromiso de   asistir y participar de las actividades académicas programadas para la misma.  Art. 49o.  Cuando las faltas de asistencia a una asignatura, sea igual o superior   al 20%, sin justificación, se califican con cero punto cero (0.0) y esta nota hará   parte del promedio crédito del nivel académico y no se podrá habilitar.  Art.  50o.   La  cancelación  de  la  totalidad  de  las  asignaturas  implica  la    cancelación de la matrícula. Deberá tramitarse de manera escrita ante la Oficina   de Admisiones, Registro y Control Académico y debe hacer efectiva la entrega   del carné estudiantil.  PARÁGRAFO ÚNICO.  No  se  autoriza  cancelación  de  asignaturas  reprobadas    en  el  periodo  académico  anterior,  salvo  por  enfermedad  comprobada  o  por    exigencia laboral debidamente certificada.  Art. 51o.  Cuando un estudiante se retira de una, varias o de la totalidad de las   asignaturas  sin  la  autorización  de  su  cancelación,  se  le  registrará  la  nota  con    cero punto cero (0,0).   Art. 52o. Modificado. Acuerdo 014 de 2017.  Cancelación  de  asignaturas.    La  cancelación  de  una  o  varias  de  las  asignaturas,  podrá  tramitarse  siempre    y  cuando  no  hayan  transcurrido  más  de  14  semanas  de  clase,  del  periodo   académico en el cual se hace la solicitud.  PARÁGRAFO 1. Cancelación de semestre.  Es la cancelación de la totalidad de   las asignaturas que se podrá realizar hasta la semana 14 del período académico.   El  estudiante  que  realice  este  trámite  deberá,  para  su  reincorporación  a  la    institución, solicitar reingreso en el periodo de inscripciones.  PARÁGRAFO 2.  No se podrán cancelar asignaturas que hayan sido evaluadas el   100% y registradas en el Sistema de Información Académico.    PARÁGRAFO  3.   La  cancelación  del  semestre  para  los  estudiantes  que  se   \nReglamento Estudiantil  www.pascualbravo.edu.co 30  encuentran matriculados en programas que ofrecen las asignaturas de manera   modular,  es  posible  mediante  una  justificación  de  fuerza  mayor  que  será   analizada, evaluada y aprobada en el comité de admisiones”.  PARÁGRAFO 4.   Todos los casos excepcionales que se presenten relacionados   con  la  cancelación  de  asignaturas  o  del  periodo  académico  de  un  estudiante,    que  se  encuentre  por  fuera  de  las  fechas  permitidas  por  este  artículo;  serán    analizados,  evaluados  y  aprobados  por  el  comité  de  admisiones,  siempre  y    cuando existan evidencias de fuerza mayor.  CAPÍTULO VII  SISTEMA DE EVALUACIÓN Y CALIFICACIÓN DE   ASIGNATURAS  Art. 53o. La evaluación.  Es un proceso continuo que busca no sólo apreciar   las  aptitudes,  actitudes,  competencias,  conocimientos  y  destrezas  del    estudiante frente a un determinado programa académico, sino también lograr un   seguimiento permanente que permita establecer el cumplimiento de los objetivos   educacionales  propuestos.  Corresponde  al  Consejo  Académico  determinar    el  calendario  a  desarrollar  en  un  periodo,  determinando  las  actividades    programadas en él.   En el proceso académico, la Institución practicará las siguientes evaluaciones:   a.    Seguimiento  b.    Supletorio  c.    Validación   d.    Habilitación  Art.  54o.    Las  evaluaciones  de  seguimiento  son  las  que  se  realizan  en  el    transcurso  de  cada  período  académico,  tienen  por  objeto  determinar  en  el    estudiante los niveles de asimilación, desarrollo de conocimiento y creatividad,   cumplimiento de logros y objetivos. El número de evaluaciones no debe ser   inferior a seis (6) por asignatura, las cuales pueden ser trabajos de investigación,   talleres,  exámenes  escritos,  relatorías,  informes  de  lecturas,  sustentación  de    trabajos, proyectos de aula, portafolios o las que defina y apruebe el Consejo de   Facultad. Toda actividad evaluativa no presentada dentro de los plazos fijados y   sin justa causa será calificada con cero punto cero (0.0).  Art. 55o.   Para  la  programación  de  evaluaciones  de  seguimiento  y  asignación    de porcentajes, el profesor y los estudiantes concertarán estos aspectos en la  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 31  primera clase. Por ningún motivo el porcentaje de una evaluación de seguimiento   podrá  ser  superior  al  20%.  Dicha  programación  debe  ser  reportada  por  el   profesor a la Jefatura de Departamento correspondiente según la asignatura.   Esta concertación de la evaluación debe responder al reporte de calificaciones    exigido por la Institución para cada una de las modalidades según el calendario   académico.  PARÁGRAFO ÚNICO.  Una vez las notas parciales son digitadas, el estudiante   podrá  verificarlas  en  el  Sistema  de  Información  Académica  y  si  existe   inconformidad en la nota respectiva, el estudiante podrá solicitar corrección de   calificación ante el Jefe de Departamento en los cinco (5) días hábiles siguientes   después de ser publicada.  Art. 56o.  Cuando por diversos motivos analizados por el Consejo Académico en   una o varias asignaturas se haya desarrollado al menos el 70% de su contenido   programático,  las  notas  obtenidas  hasta  ese  momento  se  tomarán  como  nota    definitiva.  Art. 57o. Evaluación de validación.  Es la prueba que se le efectúa a un   estudiante  que  considere  poseer  los  conocimientos,  habilidades  y  destrezas    amplias y suficientes con respecto a una asignatura. Podrá presentar por una   sola vez la evaluación correspondiente a dicha asignatura, la cual no podrá estar   matriculada ni haber sido cursada. Un estudiante podrá validar hasta el 40% de   las asignaturas del plan de estudios.   Art. 58o.  La evaluación de validación constará de dos (2) pruebas escritas y/o   prácticas. La calificación mínima para su aprobación será de tres punto cinco   (3.5), como promedio de las dos pruebas realizadas, si la asignatura presentada   fue reprobada se considerará perdida por primera vez y deberá matricularla en el   semestre inmediatamente siguiente.  PARÁGRAFO ÚNICO:  La nota final de la validación se tendrá en cuenta para   el promedio total de la carrera, no se tendrá en cuenta para el promedio crédito   semestral.  Art.  59o.  Procedimiento  para  la  validación.   El  interesado  en  presentar    examen de validación deberá elevar solicitud por escrito, en las dos últimas   semanas del semestre académico, en la oficina de Admisiones indicando la(s)   asignatura(s) que desee validar.  El Jefe de Admisiones, previo estudio de su hoja   de vida académica y del régimen de prerrequisitos y demás normas del presente   reglamento, dará trámite de la solicitud ante el Jefe de Departamento para que   proceda a programar los exámenes de validación. La Oficina de Admisiones  \nReglamento Estudiantil  www.pascualbravo.edu.co 32  dispondrá  de  tres  días  hábiles  una  vez  finalizadas  las  clases  para  pasar  la   aprobación o no de la o las validaciones.   PARÁGRAFO 1.  Cuando el estudiante no se presente a una de las dos pruebas   sin previa justificación, se calificará con cero punto cero (0.0) y se promediará   con la otra, en caso de haberla presentado, para la calificación definitiva. Al   inscribirse en esta prueba, el estudiante asume la obligación de presentarlas. La   cancelación del examen de validación por razones imputables al estudiante no   genera devolución de dinero.  PARÁGRAFO 2.  Será tiempo hábil para presentar pruebas de validación las dos   semanas siguientes a la terminación del periodo académico.  Art.  60o.  Prueba  supletoria.   Es  aquella  que  sustituye  una  evaluación  de    seguimiento  programada.  Esta  prueba  se  practica  a  un  estudiante  que  ha    padecido  calamidad  doméstica,  por  motivo  laboral  debidamente  comprobado    o por enfermedad certificada. El costo de esta evaluación será asumido por el   estudiante.  PARÁGRAFO ÚNICO.  La prueba supletoria, deberá efectuarse a más tardar en   los cinco (5) días hábiles siguientes al retorno del estudiante a la Institución. La   no presentación de la misma en los plazos fijados, será calificada con cero punto   cero (0.0). Esta debe ser autorizada por el Jefe de Departamento.  Art. 61o. Evaluación de habilitación.   El  examen  de  habilitación  es  el  que    se  práctica  por  una  sola  vez  en  cada  periodo  académico  a  quien  pierda  una    asignatura  teórica  definida  previamente  como  habilitable  por  el  Consejo  de   Facultad  correspondiente al programa.  PARÁGRAFO 1.   El  examen  de  habilitación  se  presentará  en  la  fecha  y  hora    fijada por el calendario Académico aprobado por el Consejo Académico.    PARÁGRAFO 2.  Solo podrán presentar examen de habilitación los estudiantes   que obtuvieron un promedio crédito del semestre de dos punto cinco (2.5) o más   y la nota final de la asignatura no sea inferior a dos punto cero (2.0).  PARÁGRAFO 3.  La nota definitiva para aprobar un examen de habilitación es   tres punto cero (3.0) y la nota máxima que se puede otorgar es tres punto cinco   (3.5) independiente de que en su evaluación haya registrado una nota superior.  PARÁGRAFO 4.   La nota definitiva al reprobar un examen de habilitación es la   obtenida en el examen de habilitación. \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 33  CAPÍTULO VIII  REGISTRO DE CALIFICACIONES Y ASIGNATURAS  Art. 62o.   Todas  las  evaluaciones  o  pruebas  practicadas  en  la  Institución  se    calificarán con notas compuestas por un entero y un decimal, entre cero punto   cero (0.0) y cinco punto cero (5.0), siendo la nota aprobatoria igual o superior a   tres punto cero (3.0), excepto en los casos de validación.  PARÁGRAFO ÚNICO.  Cuando al calificar una evaluación resultare más de un   decimal, con las centésimas se procederá así: de 5 a 9 se aproxima a la décima   inmediatamente superior y de 4 o menos se eliminan las centésimas.  Art. 63o.  Se entiende por nota definitiva la obtenida mediante el promedio de   las evaluaciones realizadas durante un periodo académico estas pueden ser:  a.    Aprobadas  b.    Reprobadas  Art. 64o.  El  profesor  tiene  obligación  de  entregar  a  los  estudiantes  todas  las    pruebas realizadas en el proceso de evaluación en un plazo que no supere dos   semanas.  El estudiante tiene derecho a solicitar revisión de la calificación al   profesor  dentro  de  los  tres  (3)  días  hábiles  siguientes  al  de  la  entrega  de  la    calificación. Para realizar dicha solicitud el estudiante analizará la prueba y será   devuelta al profesor para su revisión.  PARÁGRAFO ÚNICO.  Si de la revisión de una prueba no surge acuerdo entre   el profesor y el estudiante, este deberá devolver la prueba al profesor y solicitar   por escrito al Jefe de Departamento, que se le asigne un segundo calificador en   los tres días hábiles siguientes a la revisión.  El examen para segundo calificador   deberá permanecer en la Jefatura de Departamento y al profesor calificador se   le  entregará  una  fotocopia  del  respectivo  examen  objeto  de  revisión.    La  nota    del segundo calificador será promediada con la primera para obtener la nota   definitiva. Cuando las notas difieran en una (1) unidad o más, se asignará un   tercer calificador y la nota de este será la definitiva. Si el examen cuya revisión   se solicita, fuera una asignatura servida por el Decano o Jefe de Departamento   del programa, la solicitud se elevará ante la Vicerrectoría Académico.  Art. 65o.  Cuando por motivos de fuerza mayor el profesor responsable de una   asignatura no esté disponible para diseñar, practicar y calificar una actividad   académica, el Jefe de Departamento designará a otro profesor competente en   el área.   \nReglamento Estudiantil  www.pascualbravo.edu.co 34  Art. 66o.  Cuando en una prueba pierde el 60% o más de los alumnos  que   presentaron  la  evaluación  de  una  asignatura,  la  Facultad,  previa  solicitud  por    escrito de los alumnos, investigará y ordenará o no la repetición de la misma,   por una sola vez.  Art. 67o.  Cuando una prueba de evaluación sea anulada por fraude, se calificará   con cero punto cero (0.0) y el docente de la asignatura o quien esté supervisando   la prueba, informará al respectivo Jefe de Departamento.  Art. 68o.   Una  vez  el  docente  ingresa  las  notas  parciales  causadas  por    la    evaluación  de  una  asignatura,  el  Sistema  de  Información  Académica  calculará    el 100% de la nota obtenida por cada estudiante,  la cual deberá ser  impresa,   firmada y entregada al Jefe de Departamento, quien las revisará y remitirá a la   oficina de Admisiones, Registro y Control Académico   PARÁGRAFO ÚNICO.  Por ningún motivo se corregirá la nota definitiva, solo se   corregirán notas parciales.  CAPÍTULO IX  RENDIMIENTO ACADÉMICO  Art. 69o. Promedio crédito.  El promedio crédito se obtendrá así: se multiplica   la nota definitiva de cada asignatura por su correspondiente número de créditos   y el resultado de dividir la sumatoria de dichos productos por el total de créditos   registrados  en  el  respectivo  nivel  será  el  promedio  crédito  semestral.  En  el    informe de rendimiento académico se registrará con un entero y (1) decimal,   aproximándose la nota por exceso o por defecto, es decir, se aproxima al número   decimal mayor o al menor más cercano.  Art. 70o.  Si el promedio crédito fue inferior a tres (3.0), el estudiante sale de la   Institución por bajo rendimiento académico.   PARÁGRAFO TRANSITORIO.  El Consejo Académico reglamentará la aplicación   de éste artículo para su implementación inicial.  PARÁGRAFO  ÚNICO.    El  estudiante  que  tenga  retiro  académico  por  bajo    rendimiento,  puede  continuar  estudiando  en  el  semestre  inmediatamente    siguiente,  siempre  y  cuando  se  someta  al  proceso  de  reingreso  automático    determinado por la Institución en el presente reglamento.  Art. 71o.  El estudiante que repruebe por tercera vez una misma asignatura, será  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 35  retirado definitivamente de la Institución por bajo rendimiento académico, salvo   la siguiente excepción:  PARÁGRAFO ÚNICO.   El  estudiante  que  repruebe  por  tercera  vez  una  misma    asignatura, y tenga aprobado el 50% o más de su plan de estudios, hará un   semestre  especial  cursando  esa  asignatura  y  máximo  otras  dos  (2),  siempre    que su promedio académico sea igual o superior a tres (3,0). Si no aprueba la   asignatura cursada por cuarta vez será retirado definitivamente de la Institución.  CAPÍTULO X  TÍTULOS ACADÉMICOS  Art. 72o.  El título es el logro académico que obtiene una persona al culminar el   plan de estudios de un programa de educación superior que lo acredita para el   ejercicio de una profesión, disciplina o arte. El otorgamiento de un título se hará   constar  en  el  acta  de  grado  y  en  el  correspondiente  diploma.  Para  su  validez,    este requiere cumplir con las determinaciones de la Ley.   Art. 73o.  La Institución expedirá los títulos a través de un diploma, en nombre   de la República de Colombia y por autorización del Ministerio de Educación, a   quienes cumplan los siguientes requisitos:   a.    Aprobar la totalidad de las asignaturas del plan de estudios.   b.    Aprobar el trabajo de grado en alguna de las modalidades aprobadas por la   Institución.  c.     El  Consejo  Académico  reglamentará  los  niveles  necesarios  para  cumplir    el  requisito  de  segunda  lengua,  desde  los  Técnicos  Profesionales  hasta  el    último nivel de formación que tenga la Institución.  d.    Certificar  la  presentación  del  examen  de  pruebas  SABER  PRO  (según   Decreto 4216 de 2009), o la que las sustituya.  e.    Y todos los demás requisitos exigidos por la Institución.  PARÁGRAFO  ÚNICO.   El  estudiante  que  mediante  certificación  demuestre   dominio de una segunda lengua, se le aplicará como requisito de grado cumplido   lo establecido en el literal c.  Art. 74o.  El  acta  de  graduación  deberá  ser  suscrita  por  el  Rector,  Vicerrector    Académicos, el Secretario General, el Decano de Facultad, el Jefe de Admisiones,   Registro y Control Académico, por el graduando y deberá contener:   a.    Nombre de la Institución.  \nReglamento Estudiantil  www.pascualbravo.edu.co 36  b.    Fecha y número del acta de grado.   c.    Título otorgado.   d.    Autorización legal en virtud de la cual la Institución confiere el título.   e.    Nombre y apellidos completos de la persona que recibe el título.   f.    Número del documento de identidad.   g.    Requisitos cumplidos por el graduando.  Art. 75o . Un estudiante que aspire a graduarse deberá solicitar a la Oficina de   Admisiones,  Registro  y  Control  Académico,  al  menos  con  25  días  hábiles  de    anticipación, el estudio de su hoja de vida académica.  Art.  76o.    De  acuerdo  con  lo  estipulado  por  la  Ley,  la  Institución  expedirá    duplicados de los diplomas en los que se hará constar, la resolución que autorizó   su expedición y la palabra DUPLICADO. Estos se expedirán únicamente en los   siguientes casos:   ·   Pérdida o destrucción del original.   ·   Deterioro del original.   ·   Cambio de nombre y reconocimiento de filiación natural.   PARÁGRAFO ÚNICO.  Cuando se denuncia la pérdida o destrucción del original,   el interesado deberá presentar ante la oficina de Admisiones, Registro y control   Académico la copia del Acta de Grado si la pérdida corresponde al Diploma,  Si se trata de deterioro del original se deberá acompañar el documento.  Si se trata de error manifiesto de los originales, para la solicitud de la copia,   el egresado entregará los originales.  Art.  77o.    La  Institución  podrá  expedir,  a  petición  de  la  parte  interesada,    certificados de estudio, de calificaciones o de terminación de estudios.  Estos   deberán ser expedidos de conformidad con las normas vigentes y su costo será   fijado por el Consejo Directivo.  Art. 78o.  El Consejo Académico determinará las fechas de las ceremonias de   grado a realizarse en un año y autorizará ceremonia especial a programas por   cohorte.  PARÁGRAFO  ÚNICO.   Se  autoriza  grado  individual  solo  en  caso  que  exista    certificado de empresa donde se especifique la necesidad del título para vincular   al  estudiante  o  aquel  estudiante  que  haya  sido  aceptado  en  un  programa  de    Educación Superior.  Art. 79o. Título Honorífico.   Es  aquel  que  se  entrega  a  los  estudiantes  que   \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 37  hayan sobresalido en el ámbito nacional o internacional por sus múltiples y   relevantes aportes a la ciencia, las artes, las letras, las humanidades, la técnica   y la tecnología.  El Decano deberá elevar la solicitud al Consejo Académico para   su aprobación.  Art. 80o. Título Póstumo.   Es  aquel  que  se  otorga  a  los  estudiantes  de  los    últimos niveles que hayan sobresalido en su trabajo académico y fallecieren sin   culminar sus estudios, siempre y cuando se cumplan los siguientes requisitos.  a.    Que al momento del fallecimiento se encuentre cursando su último semestre   de  su  plan  de  estudios  o  esté  pendiente  de  la  terminación  del  trabajo  de    grado en alguna de las modalidades permitidas.  b.    No tener en su hoja de vida ninguna sanción disciplinaria vigente al momento   del fallecimiento.  c.    Que el Consejo de Facultad, previa solicitud de la familia o compañeros del   estudiante fallecido, recomienden al Consejo Académico el otorgamiento del   título.  PARÁGRAFO ÚNICO.  Los costos de los derechos de grado, en que se incurra   por el otorgamiento del título y reconocimiento serán asumidos por la Institución. \n\nDERECHOS, DEBERES,   ESTÍMULOS Y SERVICIOS \n\nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 41  DERECHOS, DEBERES, ESTÍMULOS Y SERVICIOS  CAPÍTULO I  DERECHOS DE LOS ESTUDIANTES  Art. 81o.   Además  de  los  enunciados  a  través  del  presente  reglamento  son    derechos del estudiante.   a.    Beneficiarse de las prerrogativas que se deriven de la Constitución Política,   de las Leyes, del Estatuto General y demás normas de la Institución. Acogerse   en el caso de sanciones disciplinarias, al reglamento expedido previamente.   La norma permisiva o favorable se aplicará de preferencia sobre la restrictiva   o desfavorable.   b.    El ejercicio responsable de la libertad para estudiar y aprender, acceder a las   fuentes de información científica, investigar los fenómenos de la naturaleza   y de la sociedad, debatir todas las doctrinas e ideologías y participar en la   experimentación de nuevas formas de aprendizaje.   c.    Ser atendido en las solicitudes presentadas, de acuerdo con los reglamentos   y  recibir oportuna respuesta a las mismas.  d.    Elegir y ser elegido en los diferentes órganos colegiados que corresponde a   los estudiantes en armonía con las normas vigentes.   e.    Dentro de la constitución, las leyes de la República y las normas de la   Institución, ejercer el derecho de libre asociación.   f.    Ser oído en descargos e interponer, según proceda los recursos de reposición   y apelación, en caso de que se estime conveniente nombrar un compañero   que lo asista.   g.    Disfrutar de los servicios, descuentos y beneficios contemplados en las leyes   y los reglamentos.   h.     Recibir  un  tratamiento  respetuoso  de  todos  los  miembros  activos  de  la    Institución.   i.    Recibir un alto nivel académico en las asignaturas que ofrece la Institución.   j.      Recibir  el  reglamento  estudiantil  vigente  en  los  medios  dispuestos  por  la    Institución.   k.    Dirigir  sus  peticiones  por  intermedio  de  los  representantes  estudiantiles    legalmente  elegidos,  a  los  diferentes  organismos  asesores  y  de  gobierno    institucional.   l.  Presentar peticiones respetuosas por escrito a las instancias competentes. \nReglamento Estudiantil  www.pascualbravo.edu.co 42  CAPÍTULO II  DEBERES DE LOS ESTUDIANTES  Art. 82o.  Son deberes del estudiante:   a.    Cumplir  las  obligaciones  que  se  deriven  de  la  Constitución  Política,  las    Leyes, el Estatuto General, el presente Reglamento y demás Normas de la   Institución.   b.    Cumplir todas las obligaciones inherentes a su calidad de estudiante.   c.     Asistir  a  las  clases  y  demás  actividades  académicas  a  que  se  ha    comprometido con la Institución.   d.    Dar  tratamiento  respetuoso  a  las  autoridades  académicas,  profesores,    compañeros y demás estamentos de la Institución.   e.    Acatar  las  sanciones  disciplinarias  que  finalmente  le  impongan  las   autoridades competentes de la Institución  f.    No incurrir en fraude en su trabajo académico.   g.     Mantener  un  adecuado  nivel  académico  en  las  asignaturas  que  ofrece  la    Institución.   h.     Respetar el ejercicio del derecho de asociación de las diferentes comunidades   institucionales.   i.    Abstenerse de ejercer actos de discriminación política, racial, religiosa o de   otra índole.   j.      Utilizar  las  instalaciones,  documentos,  materiales  y  bienes  muebles  de  la    Institución sólo para los fines a que han sido destinados.   k.   No presentarse a la Institución en estado de embriaguez o bajo el influjo   de  narcóticos  o  drogas  enervantes,  ni  comercializarlas,  suministrarlas  o    consumirlas en ninguna de las instalaciones de la Institución o actividades   programadas por la Institución fuera de sus instalaciones.   l.    No impedir, ni tratar de impedir el normal ejercicio de las actividades de la   Institución.  m.   Llevar consigo el carné de la Institución e identificarse con él cuando se le   solicite.   n.    No incurrir en el porte ilegal de armas o explosivos.   o.    Acatar las políticas, procesos y procedimientos de la Institución.   p.    Observar buen comportamiento dentro de la Institución y en los sitios, bienes   y actos en donde represente a la misma.  CAPÍTULO III  DE LAS ACTIVIDADES ACADÉMICAS REALIZADAS FUERA DE   LA INSTITUCIÓN \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 43  Art.  83o.   Para  los  fines  del  presente  Reglamento  se  consideran  como   actividades  fuera  de  los  predios  de  la  Institución,  las  siguientes:    prácticas,    salidas  de  campo,  visitas  a  empresas,  visitas  a  obras,  salidas  de  integración,    actividades culturales o deportivas en representación de la Institución u otro tipo   de actividades aprobadas por la respectiva autoridad académica.  PARÁGRAFO  ÚNICO.   El  comportamiento  de  cada  participante  (docente,    monitor,  laboratorista,  empleado,  estudiante)  en  la  totalidad  de  la  actividad    académica realizada fuera de los predios de la Institución, ha de ser consecuente   con el presente reglamento.  Art. 84o.  El  profesor  o  personal  administrativo  a  cargo  de  la  correspondiente    actividad  es  la  máxima  autoridad  académica  y  disciplinaria  en  la  totalidad  de    la  misma.    Es  deber  de  todo  participante  acatar  sus  indicaciones  y  contribuir    para  que  los  demás  participantes  las  cumplan.    A  la  vez,  es  deber  de  dicho    profesor  velar  permanentemente  y  estar  alerta  para  conservar  la  armonía  y  el    buen comportamiento de todos los participantes, paralelamente con la obtención   de los objetivos académicos de la actividad.  PARÁGRAFO ÚNICO.  Toda agresión verbal o de hecho protagonizada por uno o   más participantes, como el consumo de sustancias alcohólicas y/o alucinógenos   se  considera  falta  grave  y  el  implicado  se  le  aplicará  lo  estipulado  en  este    reglamento.  CAPÍTULO IV  INCENTIVOS Y ESTÍMULOS  Art. 85o.  El Consejo Académico establecerá y reglamentará los estímulos a los   estudiantes que se destaquen en las áreas académicas, deportivas y culturales.  Art.  86o.   La  Institución  promoverá  y  apoyará  las  actividades  culturales    previamente solicitadas y estudiará en su momento la conveniencia y forma de   apoyarlas.  Art.  87o.  Matrícula  sobresaliente.    La  Institución  otorgará  matrícula    sobresaliente a los dos estudiantes de cada programa que hayan obtenido mejor   promedio académico, siempre que:  a)     Hayan  aprobado  la  totalidad  de  los  créditos  matriculados,  los  cuales  no    deben ser inferiores al número de créditos correspondientes al nivel que   pertenece. \nReglamento Estudiantil  www.pascualbravo.edu.co 44  b)    No haber habilitado, repetido ni reprobado ninguna asignatura.   c)    No tener sanciones disciplinárias en su hoja de vida.  PARÁGRAFO 1.  El  estudiante  a  quien  se  le  conceda  matrícula  sobresaliente,    cancelará  el  porcentaje  establecido  para  servicios  de  bienestar,  laboratorios  y    materiales, el cual es igual al veinte por ciento (20%) del valor de la matrícula. Esta   matrícula sobresaliente solo podrá ser efectiva en el semestre inmediatamente   siguiente y no habrá derecho a devolución.  PARÁGRAFO  2.   Para  efectos  de  cálculo  y  comparación  de  promedios  se    considerarán las centésimas.  PARÁGRAFO 3.  El Consejo Académico reglamentará el proceso de selección de   los estudiantes que califiquen para este reconocimiento.  Art.  88o.  Estudiantes  destacados  por  la  participación  artística  y   deportiva.  La Institución exonerará de pago semestral de derechos de matrícula   en un cincuenta por ciento (50%), a los estudiantes que integran los grupos   artísticos ad-honorem debidamente organizados y reconocidos por la Institución   y a sus deportistas destacados en representación de la Institución.  PARÁGRAFO  1.    La  exoneración  será  recomendada  por  la  Vicerrectoría    Académico previa recomendación de la sección de Bienestar Universitario una   vez se realice el cierre del semestre. Para tal efecto se emitirá una resolución para   la validación de estímulo y solo se hará efectivo en el semestre inmediatamente   siguiente.  PARÁGRAFO 2.  Para hacerse acreedor a este beneficio, el estudiante deberá   ser de tiempo completo, no haber sido sancionado disciplinariamente y tener un   promedio igual o superior a cuatro punto cero (4.0).  PARÁGRAFO  3.   Igualmente  los  Representantes  a  los  diferentes  Consejos    y  Comités  que  tengan  representación  estudiantil,  tanto  el  principal  como  el    suplente,  serán  exonerados  del  pago  de  derechos  de  matrícula  por  el  período    que  dure  la  representación,  sólo  cancelarán  lo  correspondiente  a  servicios  de    bienestar, laboratorios y materiales, equivalente al 20% del costo total de la   matrícula,  se  hará  en  el  momento  de  la  liquidación  de  matrícula  y  no  habrá    derecho a devolución.  PARÁGRAFO  4.    La  recomendación  deberá  basarse  en  la  participación,    representación e imagen que en los diferentes niveles brinden de la Institución   los estudiantes integrantes de estas actividades. La sola pertenencia a ellos no  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 45  implica la concesión de este reconocimiento.  Art. 89o. Estudiante auxiliar.  Los estudiantes que desarrollan sus prácticas   en una de las dependencias de la Institución en un periodo académico, tendrán   un descuento de su matrícula en un cincuenta por ciento (50%) en la liquidación   de matrícula en el periodo inmediatamente siguiente.    PARÁGRAFO  1.   La  solicitud  de  estudiante  auxiliar  será  estudiada  por  la    Vicerrectoría  Académico  y  se  asignará  de  acuerdo  a  las  necesidades  de  las    dependencias para efectos de la prestación del servicio.  PARÁGRAFO 2.  La intensidad horaria será de diez (10) horas semanales por   dos meses, y deberá haber cursado y aprobado como mínimo el primer nivel.  Art. 90o. Estudiante investigador.  Es  aquel  que  participa  activamente  en    un semillero o grupo de investigación con reconocimiento de la Institución, en   consecuencia recibe un descuento de su matrícula en un cincuenta por ciento   (50%) en la liquidación de matrícula en el periodo inmediatamente siguiente.    Para acceder a este beneficio el estudiante debe cumplir con los siguientes   requisitos:  a.    Demostrar  promedio  crédito  de  cuatro  punto  cero  (4.0)  en  el  semestre   anterior.  b.    Certificación del Director Operativo de Investigación de la participación en el   grupo o semillero de investigación.  Art.  91o.  Mención  de  honor.   Es  aquel  estímulo  conferido  por  el  Consejo    Académico a los estudiantes que hayan obtenido un promedio crédito superior   a 4.5 en el promedio general de todo su plan de estudios y será entregado en   ceremonia pública de grados en resolución rectoral.  Art.  92o.  Mención  de  honor  por  labor  investigativa.   Se  establece  un    reconocimiento a los estudiantes que en su trabajo de grado se hayan destacado   acogiéndose  la  resolución  de  estímulos  y  reconocimientos  de  la  acción    investigativa de la institucional.     Art. 93o. Mención de honor por labor social, cultural y/o deportiva.    Se establece un reconocimiento a los estudiantes que en su trayectoria por la   Institución se hayan destacado en labores sociales, culturales o deportivas con   reconociendo a la Institución. \nReglamento Estudiantil  www.pascualbravo.edu.co 46  CAPÍTULO V  SERVICIOS INSTITUCIONALES  Art. 94o.  El estudiante matriculado es beneficiario de los servicios que ofrece   la Institución.  Art. 95o.  Solamente la Oficina de Admisiones, Registro y Control Académico   expedirá certificados de conducta, matrícula, calificaciones, actas de grado y en   general los que correspondan a su competencia.  Art. 96o.  Los certificados de calificaciones se expedirán con notas aprobatorias,   perdidas o habilitadas de todas las asignaturas que realizó en la Institución y las   reconocidas oficialmente para el programa, provenientes de otras instituciones.   También se informará de los merecimientos a los que se hubiere hecho acreedor.  Art. 97o.  La Institución expedirá certificados a quien apruebe o participe en uno   o  varios  cursos  de  capacitación,  actualización,  seminarios  o  simposios  y  otros    no  conducentes  a  títulos,  pero  que  hubieren  sido  autorizados  por  el  Consejo    Académico.  Art. 98o.  Para la expedición de certificados de calificaciones, deberá hacerse   la solicitud ante la Oficina de Admisiones, Registros y Control Académico y estar   a paz y salvo con la Institución y pagar los derechos establecidos por el Consejo   Directivo. \nNORMAS DISCIPLINARIAS \n\nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 49  NORMAS DISCIPLINARIAS  CAPÍTULO I  CONDUCTAS QUE ATENTAN CONTRA EL ORDEN ACADÉMICO   Y DISCIPLINARIO  Art. 99o. Objetivo de las Normas Disciplinarias.  Las normas disciplinarias   como  parte  estructural  del  proceso  educativo,  tienen  por  objetivo  asegurar  a    la sociedad y a la Institución, una eficiente prestación de los servicios a cargo   del  Estado,  así  como  fomentar  la  responsabilidad  y  el  comportamiento  ético.    Igualmente, garantizar la imparcialidad y brindar a los estudiantes los derechos   que les corresponden.  Art. 100o.  Son conductas que atentan contra el orden académico:   a.      Fraude en actividad evaluativa.  Se  entiende  por  fraude  copiar  o  tratar    de copiar en cualquier actividad evaluativa a un compañero usar o tratar de   usar información sin autorización del profesor o facilitar en cualquier forma   que otros lo hagan.   b.      Sustracción  de  cuestionarios:   Se  entiende  por  sustracción  de    cuestionarios no sólo la sustracción u obtención de ellos para exámenes o   pruebas evaluativas, sino el hecho de beneficiarse de su contenido en forma   deliberada.   c.      Suplantación:  Se entiende por suplantación, la falsificación de un escrito   en forma que se altere el contenido que antes tenía, lo mismo que sustituir   a un estudiante en la presentación de una actividad evaluativa o permitir ser   sustituido en ella.   La falsificación de documentos, exámenes, calificaciones, el uso de documentos   supuestos  y  la  mutación  de  la  verdad  por  cualquier  otro  medio  para  fines   académicos, administrativos y legales.  Art. 101o.  Son conductas que atentan contra el orden disciplinario:   a.     Obstaculizar  o  impedir  el  ejercicio  de  las  actividades  académicas    administrativas y la aplicación de los reglamentos vigentes en la Institución.   b.    Atentar física o moralmente contra los integrantes de la Institución.  \nReglamento Estudiantil  www.pascualbravo.edu.co 50  c.    Impedir la libertad de cátedra o de aprendizaje mediante cualquier tipo de   coacción.   d.    Usar indebidamente con fines diferentes a los que han sido destinadas las   instalaciones, documentos, materiales y bienes muebles e inmuebles de la   Institución.   e.     La  tenencia,  el  comercio,  suministro  o  consumo  de  drogas  enervantes,    estupefacientes  y/o  sustancias  tóxicas,  dentro  de  la  instalación  o  en    actividades programas por la Institución fuera de sus instalaciones.  f.    El comercio o consumo de cigarrillo dentro de las instalaciones.  g.    Todo daño material causado a la planta física o implementos de la Institución.   h.    Coartar la participación de los integrantes de la comunidad educativa en los   procesos de escogencia de sus representantes a los diferentes organismos   de la dirección.   i.    La tenencia o almacenamiento de explosivos o armas de fuego, arma blanca   o cualquier elemento que permita presumir su uso contra la vida o integridad   física  de  las  personas  o  que  se  pueda  emplear  para  destruir  o  dañar  los    bienes de la Institución.   Todas aquellas que estén definidas como delito en las leyes colombianas, y las   que atenten contra la ética y las buenas costumbres, así como todas aquellas   que  a  juicio  de  los  órganos  competentes  sean  acreedoras  a  las  sanciones    previstas en este reglamento.  Art. 102o.  Las faltas de orden académico y disciplinario para efectos de sanción,   se calificarán como graves o leves determinando su naturaleza, el grado de   participación, sus efectos y circunstancias del hecho, los motivos determinantes   y los antecedentes personales del infractor.  Art. 103o.  Se considerarán circunstancias agravantes las siguientes:   a.    Reincidir en las faltas.   b.     Realizar  el  hecho  en  complicidad  con  estudiantes  u  otros  servidores  de  la    Institución.   c.   Cometer la falta aprovechando la confianza depositada en él.   d.    Cometer la falta para ocultar otra.   e.    Evadir la responsabilidad o atribuírsela a otro u otros.   f.    Infringir varias obligaciones con la misma acción u omisión.   g.   Preparar deliberadamente la infracción y las modalidades empleadas en la   misma.  Art. 104o.  Serán circunstancias atenuantes:  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 51  a.    Buena conducta anterior.  b.    Haber sido inducido por un superior docente o administrativo a cometer la   falta.   c.    El confesar la falta oportunamente.   d.     Procurar,  a  iniciativa  propia,  resarcir  el  daño  o  compensar  el  perjuicio    causado antes de iniciarse el procedimiento disciplinario.  CAPÍTULO II  CALIFICACIÓN DE LAS FALTAS Y GRADO DE LA SANCIÓN  Art. 105o.   Los  estudiantes  que  observen  una  conducta  de  las  contempladas    en los artículos 100 y 101 serán objeto de acuerdo con su gravedad, de las   siguientes sanciones:     a.    Amonestación privada.   b.    Suspensión temporal de matrícula.   c.    Negación de matrícula.   d.   Suspensión temporal o definitiva del derecho a optar el título.  e.   Expulsión definitiva de la Institución.  Art. 106o.  Todas las sanciones disciplinarias se harán constar en la hoja de vida   del estudiante.  Art. 107o.  A quien se sorprenda en fraude o intento de fraude en el momento   de una actividad evaluativa, se le calificará con cero, cero (0.0) y se dejará   constancia en su hoja de vida académica.  Art. 108o.  Todas las sanciones disciplinarias serán aplicadas por la Institución   sin perjuicio de las sanciones penales, cuando hubiere lugar a ellas.  CAPÍTULO III COMPETENCIA PARA SANCIONAR  Art.  109o.   La  acción  disciplinaria  se  iniciará  de  oficio  debidamente   fundamentada,  presentada  por  cualquier  persona  ante  el  decano  de  Facultad    del  programa  académico  al  que  corresponda  el  estudiante  comprometido  con    la falta.      Art. 110o.   El  decano  de  la  Facultad  correspondiente  analiza  el  caso  y  si  los    hechos  son  graves  lo  remite  al  Consejo  de  Facultad  una  vez  clasificada  la  \nReglamento Estudiantil  www.pascualbravo.edu.co 52  conducta  debe proceder a iniciar el debido proceso.  Art.  111o.   Las  sanciones  de  amonestación  privada  serán  impuestas  por  el    decano  de  la  Facultad.  La  matrícula  condicional  y  la  negación  de  matrícula,    serán impuestas por el Vicerrector Académico por recomendación del Consejo   de Facultad. La suspensión temporal o definitiva del derecho a optar el título, la   suspensión temporal de la matrícula y la expulsión definitiva, serán impuestas   por el Consejo Académico.  Art.  112o.   Toda  acción  disciplinaria  para  calificar  y  sancionar  un  hecho,   prescribirá en el período académico de tres (3) semestres contados a partir de   la fecha de la comisión del hecho, si este fuere continuado. Los tres (3) períodos   académicos se contarán a partir de la fecha de la realización del último acto.  Art.  113o.   La  acción  disciplinaria  y  la  aplicación  de  las  sanciones  serán    procedentes  aunque  el  estudiante  se  haya  retirado  de  la  Institución.  De  toda    decisión se dejará constancia en la hoja de vida del estudiante.  Art.  114o.   Si  los  hechos  materia  del  procedimiento  disciplinario  fueren    constitutivos  de  delitos  perseguibles  de  oficio,  se  ordenará  ponerlos  en   conocimiento de autoridad competente, acompañando copia de los documentos   pertinentes.  La existencia de un proceso penal en relación con los mismos hechos no dará   lugar a la suspensión de la acción disciplinaria, salvo en el caso de prejudicialidad.  CAPÍTULO IV  PROCEDIMIENTO DISCIPLINARIO  Art. 115o.  Conocida una situación que pudiere constituir falta grave disciplinaria   por  parte  del  estudiante,  el  decano  convocará  al  Consejo  de  Facultad  para    analizar si existen méritos o no para la iniciación de la investigación respectiva.  Si el Consejo de Facultad no encuentra mérito para continuar el procedimiento,   archivará  el  asunto,  sin  más  trámites.  En  caso  contrario,  el  decano  dentro  de    los  cinco  (5)  días  hábiles  siguientes  al  conocimiento  del  hecho,  comunicará  al    estudiante  los  cargos  que  se  le  formulan.  El  estudiante  dispondrá  a  partir  de    la fecha de la notificación, de diez (10) días hábiles para formular descargos y   presentar las pruebas que considere convenientes para su defensa.  Art. 116o.  El Consejo de Facultad dispondrá de quince (15) días hábiles, a partir  \nReglamento Estudiantil  ACUERDO No. 003  Por medio del cual se expide el Reglamento Estudiantil de la Institución Universitaria Pascual Bravo 53  de la convocatoria, para realizar la investigación, allegar las pruebas y efectuar   las diligencias pertinentes con el fin de esclarecer los hechos.  Art. 117o.  Vencido el plazo anterior, el Consejo de Facultad remitirá las pruebas   al Consejo Académico para que objetivamente califiquen la conducta de acuerdo   con la gravedad.  Art. 118o.  El Consejo Académico, una vez calificada la conducta y graduada   la  sanción,  procederá  a  aplicar  esta,  si  es  de  su  competencia,  o  remitirá  el    expediente al decano de Facultad.  Art. 119o.  Contra  los  actos  que  impongan  las  sanciones  de  que  trata  este    reglamento,  cabe  el  recurso  de  reposición  dentro  de  los  seis  (6)  días  hábiles    siguientes a la notificación personal o de fijación del edicto.   Si la sanción fuere de expulsión o suspensión definitiva del derecho a optar   al  título,  además  del  recurso  de  reposición  podrá  interponerse  el  recurso  de    apelación  ante  el  Rector  dentro  de  los  seis  (6)  días  hábiles  siguientes  a  la    notificación de la sanción.  PARÁGRAFO ÚNICO.  La interposición de los recursos debe hacerse por escrito.    Art. 120o.  Las situaciones excepcionales no contempladas en este Reglamento   serán del conocimiento del Consejo Académico quien las evaluará y decidirá de   acuerdo con su competencia.  Art. 121o.  El presente Reglamento es válido a partir de la fecha de expedición y   deroga todas las disposiciones que le sean contrarias, especialmente el Acuerdo   006 del 3 de noviembre de 2004.  Art. 122o.  El presente acuerdo rige a partir de la fecha de su expedición una   vez surtidos los trámites señalados en el parágrafo del artículo 29 de la ley 30   de 1992.   \nReglamento Estudiantil  www.pascualbravo.edu.co 54  PUBLÍQUESE, COMUNÍQUESE Y CÚMPLASE  Dado en Medellín, a los 21 días del mes de marzo de 2013  CLAUDIA PATRICIA   RESTREPO MONTOYA  Presidente  SERGIO   ROLDÁN GUTIÉRREZ  Secretario \n\n\n";
+    const PDF_NAME = "reglamentoestudiantil.pdf";
+    const CHATBOT_THEME = "reglamentoestudiantil";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué regula el Reglamento Estudiantil y a quién expide el Acuerdo que lo crea?","¿Cómo define el reglamento la misión y visión de la Institución (Filosofía Institucional)?","¿Qué requisitos generales debe cumplir un estudiante en relación con inscripción y admisión (Capítulos I y II)?","¿Qué diferencias hay entre estudiante de transferencia interna y transferencia externa según el reglamento?","¿Qué criterios usa el Consejo de Facultad para decidir solicitudes de transferencia externa (cupos, promedio, pruebas, etc.)?","¿Qué condiciones debe cumplir un estudiante para solicitar reingreso y quién estudia esa solicitud?","¿Qué compromisos adquiere el estudiante al registrar una asignatura y cómo influye esto en la asistencia?","¿Qué ocurre si las faltas de asistencia a una asignatura alcanzan o superan el 20% sin justificación?","¿En qué plazo se puede cancelar una o varias asignaturas y qué se prohíbe cancelar (por ejemplo, asignaturas evaluadas al 100%)?","¿Cómo entiende el reglamento la evaluación (seguimiento, supletoria, validación y habilitación) y para qué sirve?","¿Cuáles son algunos derechos del estudiante en el capítulo de “Derechos, deberes, estímulos y servicios”?","¿Cómo es el procedimiento disciplinario y qué recursos puede interponer el estudiante contra una sanción (reposición y apelación)?"];
+    const INITIAL_PALETTE = {"primaryColor":"#e8c030","secondaryColor":"#edcd59","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#e8c030","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>

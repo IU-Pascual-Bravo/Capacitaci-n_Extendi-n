@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot: Magnetismo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.worker.min.js';</script>
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+            options: { processHtmlClass: "tex2jax_process", ignoreHtmlClass: "tex2jax_ignore" }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/docx@7.3.0/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        :root{--primary:#007bff;--secondary:#6c757d;--light:#f8f9fa;--dark:#343a40;--success:#28a745;--danger:#dc3545;--warning:orange;--radius:8px;--font:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;--bg:var(--light);--text:var(--dark);--card:#fff;--border:#ddd;--input:#fff;--iborder:#ccc;--bot-bg:#e9ecef;--bot-text:var(--dark);--user-bg:var(--primary);--user-text:#fff;--sys-bg:#fff3cd;--sys-text:#856404;}
+        body.dark-mode{--bg:#212529;--text:#f8f9fa;--card:#343a40;--border:#495057;--input:#495057;--iborder:#6c757d;--bot-bg:#495057;--bot-text:#f8f9fa;--sys-bg:#332701;--sys-text:#ffeb8f;}
+        body{font-family:var(--font);margin:0;background:var(--bg);color:var(--text);display:flex;flex-direction:column;min-height:100vh;transition:background .3s,color .3s;}
+        .container{width:90%;max-width:800px;margin:20px auto;padding:20px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 12px rgba(0,0,0,.1);flex-grow:1;display:flex;flex-direction:column;gap:15px;}
+        header{text-align:center;border-bottom:1px solid var(--border);padding-bottom:15px;}
+        header h1{color:var(--primary);margin:0;font-size:1.6em;}
+        header p{margin:5px 0 0;font-size:.9em;color:var(--secondary);}
+        .toolbar{display:flex;justify-content:flex-end;align-items:center;gap:10px;flex-wrap:wrap;}
+        button{background:var(--primary);color:#fff;border:none;padding:8px 15px;border-radius:var(--radius);cursor:pointer;font-size:.9em;transition:background .2s;}
+        button:hover{background:#0056b3;}
+        button:disabled{background:var(--secondary)!important;opacity:.65;cursor:not-allowed;}
+        #theme-btn{background:var(--secondary);}
+        #palette-btn{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;}
+        .toolbar-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+        .btn-export{background:var(--primary);color:#fff;border:none;padding:8px 14px;border-radius:var(--radius);cursor:pointer;font-size:.85em;transition:background .2s;}
+        .btn-export:hover{background:#0056b3;}
+        .pdf2-section{padding:10px;border:1px dashed var(--border);border-radius:var(--radius);}
+        .pdf2-section label.title{font-size:.85em;font-weight:bold;display:block;margin-bottom:6px;color:var(--secondary);}
+        .file-row{display:flex;align-items:center;gap:10px;}
+        .file-row input[type=file]{display:none;}
+        .file-label{background:var(--secondary);color:#fff;padding:6px 12px;border-radius:var(--radius);cursor:pointer;font-size:.85em;}
+        .file-label:hover{background:#545b62;}
+        #pdf2-name{font-style:italic;color:var(--secondary);font-size:.85em;}
+        #pdf2-status{font-size:.85em;margin-top:4px;font-weight:bold;}
+        .suggested-questions-row{display:flex;flex-direction:column;gap:6px;}
+        .sq-label{font-size:.85em;font-weight:600;color:var(--secondary);}
+        .questions-select{width:100%;padding:8px;border:1px solid var(--iborder);border-radius:var(--radius);background:var(--input);color:var(--text);font-size:.9em;}
+        .chat-display{height:360px;overflow-y:auto;border:1px solid var(--iborder);border-radius:var(--radius);padding:10px;background:var(--bg);line-height:1.6;}
+        .chat-display .user-message,.chat-display .bot-message,.chat-display .system-message{margin-bottom:10px;word-wrap:break-word;}
+        .chat-display .user-message,.chat-display .bot-message{background:transparent;color:inherit;padding:0;border-radius:0;max-width:100%;text-align:inherit;margin-left:0;}
+        .message{display:flex;align-items:flex-end;gap:10px;margin-bottom:4px;max-width:100%;}
+        .message.user-message{flex-direction:row-reverse;justify-content:flex-start;}
+        .avatar-img{width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;border:1px solid #eee;background-color:#f0f0f0;}
+        body.dark-mode .avatar-img{border-color:#444;background-color:#555;}
+        .message-bubble{padding:10px 15px;border-radius:18px;max-width:85%;word-wrap:break-word;line-height:1.5;display:flex;flex-direction:column;}
+        .user-message .message-bubble.user-bubble{background:var(--user-bg);color:var(--user-text);border-bottom-right-radius:5px;margin-left:auto;}
+        .bot-message .message-bubble.bot-bubble{background:var(--bot-bg);color:var(--bot-text);border-bottom-left-radius:5px;margin-right:auto;}
+        .chat-display .message-bubble strong{color:var(--primary);font-size:.9em;}
+        .chat-display .bot-message .message-bubble p{margin:0 0 8px;}.chat-display .bot-message .message-bubble p:last-child{margin:0;}
+        .chat-display .bot-message .message-bubble pre{background:var(--dark);color:var(--light);padding:10px;border-radius:5px;overflow-x:auto;}
+        .chat-display .bot-message .message-bubble code{background:rgba(0,0,0,.1);padding:2px 4px;border-radius:3px;}
+        body.dark-mode .chat-display .bot-message .message-bubble code{background:rgba(255,255,255,.1);}
+        .chat-display .system-message{background:var(--sys-bg);color:var(--sys-text);text-align:center;font-style:italic;font-size:.9em;padding:8px 12px;border-radius:var(--radius);}
+        .chat-display .system-message.error{background:#f8d7da;color:#721c24;}
+        .thinking-animation{opacity:.75;animation:pulseThink 1s ease-in-out infinite;}
+        @keyframes pulseThink{50%{opacity:1}}
+        .input-area{display:flex;gap:10px;}
+        #question-input{flex-grow:1;padding:10px;border:1px solid var(--iborder);border-radius:var(--radius);font-size:1em;resize:none;background:var(--input);color:var(--text);}
+        #send-button{background:var(--success);padding:0 20px;display:flex;align-items:center;justify-content:center;gap:8px;}
+        #send-button:hover{background:#1e7e34;}
+        .loader{border:3px solid #f3f3f3;border-top:3px solid var(--primary);border-radius:50%;width:16px;height:16px;animation:spin 1s linear infinite;display:none;}
+        @keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+        footer{text-align:center;padding:12px;background:var(--dark);color:var(--light);font-size:.8em;margin-top:20px;}
+        @media(max-width:600px){.input-area{flex-direction:column;}#send-button{width:100%;padding:12px;}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Chatbot PDF Interactivo</h1>
+        <p>Magnetismo</p>
+    </header>
+    <div class="toolbar">
+        <div class="toolbar-actions">
+            <button type="button" id="download-html-session-btn" class="btn-export">📥 Descargar HTML</button>
+            <button type="button" id="download-word-session-btn" class="btn-export">📥 Descargar Word</button>
+            <button type="button" id="theme-btn">🌓 Tema</button>
+            <button type="button" id="palette-btn">🎨 Paleta de colores</button>
+        </div>
+    </div>
+    <div class="pdf2-section">
+        <label class="title">📎 Segundo PDF (opcional)</label>
+        <div class="file-row">
+            <label for="pdf2-upload" class="file-label">+ Seleccionar PDF</label>
+            <input type="file" id="pdf2-upload" accept=".pdf">
+            <span id="pdf2-name">Ningún archivo seleccionado</span>
+        </div>
+        <div id="pdf2-status"></div>
+    </div>
+    <div class="suggested-questions-row">
+        <label for="questions-selector" class="sq-label">Preguntas sugeridas</label>
+        <select id="questions-selector" class="questions-select" title="Elegir una pregunta propuesta">
+            <option value="">— Elige una pregunta —</option>
+        </select>
+    </div>
+    <div id="chat-display" class="chat-display"></div>
+    <div class="input-area">
+        <textarea id="question-input" rows="2" placeholder="Escribe tu pregunta aquí..."></textarea>
+        <button id="send-button">
+            <span id="send-button-text">Enviar</span>
+            <div class="loader" id="loading-spinner"></div>
+        </button>
+    </div>
+</div>
+<footer><p>Diseñado por Juan Guillermo Rivera Berrío con tecnología Gemini 3.1 Pro y la IA agéntica Antigravity</p></footer>
+<script>
+    const PDF_TEXT = "11. Magnetismo.   11.1 Campo magnético  Existen ciertos tipos de minerales como la magnetita que tiene la propiedad de atraer al hierro y a otros metales (niquel, cobalto). Esta propiedad recibe el nombrede magnetismo y la interacción responsable de ella se llama fuerza magnética.  Aparece concentrada en ciertas partes del material que la manifiesta (no está uniformemente distribuida por el cuerpo), donde las fuerzas magnéticas son más intensas y que se llaman polos magnéticos.  Un cuerpo magnetizado se llama imán: Existen ciertos hechos experimentales relacionados con los imanes: • En un imán el magnetismo está concentrado en sus extremos y disminuye al acercarnos al centro  • Ambos extremos difieren porque en ausencia de otras fuerzasuno siempre apunta hacia el norte (que denotamos como polo norte N) y el otro hacia el sur de la Tierra(que denotaremos como polo sur S). • Experimentos con dos imanes colocados como se indica en la figura ⇒ aparece una fuerza atractiva entre polos distintos y repulsiva entre polos idénticos. El experimento sugiere que existen dos tipos de polos magnéticos que designaremos con las letras N y S. 82 \nN N N N S S S   S  Podríamos intentar medir la intensidad de un polo magnéticodefiniendo una “masa” o “carga” magnética (intensidad magnética = F   mag  A  , A = magnitud activa) e investigar cómo depende la fuerza magnética con los polos ⇒ deberíamos poder aislarlos. Sin embargo no es posible aislar un polo magnético norte o sur, ni identificar una partícula fundamental con sólo una clase de magnetismo (N o S).  Los conceptos de polo magnético y masa magnética no son necesarios para describir el magnetismo ya que  la interacción eléctrica y magnética están íntimamente relacionadas y sólo son dos aspectos diferentes de una propiedad de la materia: su carga eléctrica. Las interacciones eléctrica y magnéticas deben considerarse conjuntamente bajo la denominación más general de campo electromagnético.  Dado que entre cuerpos magnetizados las interacciones son adistancia ⇒ un cuerpo magnetizado crea una campo magnético (como el eléctrico y el gravitatorio) en el espacio que lo rodea. Veremos que el campo magnético NO es conservativo, aunque el campo electromagnético en conjunto sí lo es.  11.1.1 Fuerza magnética  Una carga q moviéndose con velocidad ~v en el seno de un campo magnético experimenta una interacción llamada fuerza magnética. Experimentalmente se vió que: La fuerza ejercida por el campo magnético sobre la carga es proporcional a la carga y a su velocidad y la dirección de la fuerza es perpendicular a la ~v de la carga 83 \n⇒ dicha fuerza se escribe como 8   :  ~ F = q~v ∧ ~ B ( Fuerza de Lorentz )   (10)  ~ B es un vector cuyo módulo es la intensidad del campo magnético. Esta expresión satisface los requisitos experimentales siempre que ~ F sea perpendicular al plano que forman ~v y ~ B (ésto depende sólo del campo magnético aplicado en el experimento y del punto y que por tanto se obtiene experimentalmente), porque si no la expresión (10) nunca nos daría la fuerza que siente la partícula.  F  B   v  F    (q>0) (q<0) q  Experimentalmente se encuentra que ~ B es el mismo en cada punto para todas las cargas y velocidades yque varía de un punto a otro ⇒ describe una propiedad característica del campo magnéticoya que sólo depende de las coordenadas y del cuerpo que crea el campo. A la magnitud vectorial ~ B se le llama intensidad del campo magnético y a veces inducción magnética . Si tenemos una carga sometida a un campo eléctrico y a un campo magnético (campo electromagnético) la fuerza que siente una partícula de carga q en su seno es  ~ F = q [ ~ E + ~v ∧ ~ B ]  que representa la fuerza electromagnética: suma de la fuerza electrostática más la fuerza magnética.  8   Conociendo la carga, velocidad que tiene la partícula y la fuerza permite obtener ~ B experimentalmente.  84 \nDe la expresión (10) se obtiene que :  F = q v B sen θ  • Si ~v ‖ ~ B , es decir θ = 0 , 180 ⇒ F = 0  • El valor máximo de F es para ~v ⊥ ~ B ⇒ sen θ = 1 ⇒ F = q v B, de donde las unidades de inducción magnética B = F   q v en el S.I. son 1 N/ ( C × m/s ) = 1 T ( T esla ) . Un Tesla es el campo magnético que produce una fuerza de 1 N sobre una carga de 1 C que se mueve perpendicularmente al campo con una velocidad v = 1 m/s. Es más frecuente utilizar la unidad del sistema c.g.s que es el Gauss, 1 T = 10 4   Gauss  11.1.2 Trabajo realizado por el campo magnético  El trabajo elemental realizado por un fuerza ~ F es   dW = ~ F · d~ l  donde d~ l es el desplazamiento elemental que tiene la misma direcciónque ~v ⇒ como la fuerza magnética es perpendicular al desplazamiento se tiene dW = 0 . La fuerza magnética sobre una carga en movimiento lo que hace es cambiar la dirección de la velocidad pudiendo ocurrir dos cosas: • Que la partícula describa una trayectoria circular  • Que la partícula describa una hélice  Supongamos una partícula con carga q > 0 en el seno de un campo magnético ~ B uniforme (módulo y dirección constante). Seguimos la siguiente notación en el dibujo: 1. Notaremos con ( × ) un campo magnético perpendicular al plano del dibujo y dirección hacia dentro 2. Notaremos por ( • ) un campo magnético perpendicular al plano del dibujo y dirección hacia afuera Tenemos que la fuerza magnética es  ~ F = q ~v ∧ ~ B  con módulo F = q v B sen θ  85 \n• Si la velocidad es perpendicular al campo magnético ⇒ F = q v B sen 90 ◦   = q v B y además como ~ F es perpendicular a ~v, el efecto de la fuerza es cambiar la dirección del vector velocidad de forma que la trayectoria de la partícula, que está en todo momento incluida en el plano, es circular (Ver dibujo). • Si la velocidad no es perpendicular al campo magnético ⇒ ~v tendrá una componente en el plano per- pendicular al campo ~ B (que genera una fuerza magnética) y otra en la dirección del campo ~ B (por tanto paralela a ~ B y que no generaría fuerza magnética). El resultado es una trayectoria circular en la sección perpendicular al campo como antes, pero que ahora no está fijaen el espacio sino que se va moviendo a lo largo de la dirección del campo ~ B, resultando en una trayectoria helicoidal (ver dibujo)  v  F  B  x x x x x x x x x x x x x x x x x x x x  F  B  v  x x x x x x x x x x x x x x x x x x x x  11.1.3 Líneas de Fuerza o de inducción magnética  Como todo campo de fuerzas el campo magnético se representa gráficamente mediante las líneas de fuerza llamadas líneas   de   inducción   magnética que son en cada punto tangentes a ~ B y tienen una orientación de tal modo que nos da en cada punto la dirección y el sentido de ~ B. Como en el caso del campo gravitatorio y eléctrico se sigue el convenio mostrado en el dibujo, es decir sólo se representan unas líneas de inducción de tal modo que su densidad en cada punto coincida con el valor numérico de ~ B en dicho punto. 86 \nB B B  La densidad de líneas de fuerza (en este caso de inducción en el campo magnético) en un punto es por definición el número de las mismas que atraviesan la unidad de superficie, colocada en dicho punto, perpendicular al campo  d   l,i ≡ n   l  S   ⊥ = B ( valor numérico )  (11)  S  B =cte  • Líneas de inducción de un imán recto. Son líneas cerradas, se cierran por dentro del imán  N S  87 \n• Líneas de inducción en un imán en forma de U  S N N S  ◦ Como no se ha desmostrado la existencia de unidades de magnetismo, es decir monopolos magnéticos (sólo existen dipolos magnéticos) ⇒ no hay ni fuentes ni sumideros de magnetismo, es decir las líneas de inducción son cerradas. Desde el punto de vista matemático implica que el campo magnético es un campo solenoidal, es decir deriva de un potencial vector ~ A, es decir ~ B = ~   ∇ ∧ ~ A, a diferencia del campo eléctrico que se podía obtener como el gradiente de un potencial escalar ~ E = − ~   ∇ V .  11.1.4 Fuerza sobre un conductor de corriente eléctrica: momento magnético  Sea un conductor en forma de cilindro por el que que circula una corriente eléctrica (ver dibujo) en el seno de un campo magnético ~ B . Como antes, se define la intensidad de corriente eléctrica (I) en el conductor como la carga que atraviesa una sección cualquiera del mismo en la unidad de tiempo  I =∆ Q  ∆ t  y la corriente instantánea  I = dQ  dt  88 \ndl  F  B    Sea un plano perpendicular al conductor, por el que circula una corriente I y sea un elemento cualesquiera de ese conductor que me define un vector elemental d~ l tangente al conductor en ese punto y sentido el de la corriente en ese punto. A lo largo de d~ l el campo ~ B no cambia demasiado ⇒ lo consideramos constante. De la expresión de la fuerza de Lorentz ⇒ la fuerza que ejerce ~ B sobre la carga neta dQ que se mueven a velocidad  ~v (velocidad de arrastre de las cargas) a lo largo del elementode conductor d~ l en ese punto es  d~ F = dQ ~v ∧ ~ B  pero ~v = d~ l   dt , de donde tenemos  d~ F = I d~ l ∧ ~ B  (12) cuyo módulo es dF = I dl B sen θ (ver dibujo) • Si el conductor es rectilíneo podemos sumar sobre todos loselemento d~ l del conductor de forma que la fuerza total sobre el conductor es  ~ F = I~ l ∧ ~ B  89 \ndonde ~ l es un vector cuya dirección es la del conductor rectilíneo, su sentido el del sentido de la corriente y cuyo módulo es la longitud del conductor ⇒   F = I l B sen θ  (13) donde θ es el ángulo que forma ~ B con el conductor. Si el conductor es paralelo al campo ~ B ⇒ no habría fuerza ( F = 0 ) y si ~ B es perpendicular al conductor ⇒ la fuerza será la máxima ( F = I l B ) • Si el conductor no fuera rectilíneo basta con integrar (12)sobre todos los d~ l del conductor obteniendo  ~ F = ∫   I d~ l ∧ ~ B  Supongamos ahora una espira conductora de forma rectangular como en el dibujo de longitudes a y b , y un campo magnético ~ B = B~ k es decir en al dirección del eje Z .  B  F  S  −F F’  −F’    X Y Z  I  b a  90 \nEl campo ~ B es perpendicular a dos ramas (las paralelas al eje Y ) y forma un ángulo α sobre las otras dos. Sobre éstas el momento ~ M = ~r ∧ ~ F que ejerce la fuerza respecto del centro de la espira es cero pues los vectores ~r y  ~ F ′   son paralelos por lo que el producto vectorial es cero. En cambio sobre las otras dos ramás ~r y ~ F forman un ángulo α . Además sobre cada una de ellas las fuerzas tienen la misma dirección y módulo y sentido contrario luego consituyen un par de fuerzas cuyo momento total es  M = F b sen α  pero utilizando la expresión (13) se tiene F = I a B luego el momento total es  M = I a b B sen α = I S B sen α  donde S es el área encerrada por la espira. Si definimos el vector ~ S aquel vector cuyo módulo es igual a S , la dirección la perpendicular al plano que contiene la espira,y el sentido dado por el de avance de un sacacorchos que gira en la misma dirección de la corriente en el conductorse tiene trivialmente  ~ M = I~ S ∧ ~ B  Si definimos el momento magnético vectorial como ~m = I~ S entonces  ~ M = ~m ∧ ~ B  El efecto del momento ~ M es girar la espira para alinear el momento magnético vectorial ~m en la dirección en la dirección del campo ~ B que es la posición de equilibrio.  EJERCICIO: Demostrar que la energía potencial asociada al trabajo de rotación realizado por ~ M para alinear  ~m y ~ B es  U = − ~m · ~ B  Solución:  dW = Mdθ  91 \nLa energía potencial es máxima si α = 180 ( ~m y ~ B son antiparalelos, | ~ M | = 0 ) y mínima si α = 0 ( ~m y ~ B  son paralelos, | ~ M | = 0 ) ⇒ tomando como referencia de energía potencial U = 0 para α = 90 se tiene  W rot   = ∫   π/ 2  α  Mdθ = U ( α ) − U ( π/ 2) = U ( α )  U ( α ) = − mB ∫   π/ 2  α  sen θdθ U ( α ) = − mB cos α = − ~m · ~ B  el signo menos se ha introducido pues el momento es contrarioal sentido del giro que hemos considerado.  11.1.5 Flujo y circulación  Definimos a continuación dos conceptos muy importantes en elestudio de los campos vectoriales, como es el campo electromagnético: los conceptos de Flujo y Circulación  A) Flujo del campo magnético:   Sea un campo magnético representado por sus líneas de inducción que atraviesan una superficie S (ver dibujo). Elegimos un dS que es tan pequeño que lo podemos considerar plano y además ~ B es casi constante en dS . Definimos el vector d~ S (vector superficie elemental) como aquel vector cuyo módulo | d~ S | = dS la dirección es la perpendicular a la superficie dS y sentido hacia afuera de la superficie.   B  dS    92 \nSe define el flujo elemental del campo magnético ~ B a través de dS, esto es d Φ , como el producto escalar  d Φ = ~ B · d~ S  El flujo total a través de toda la superficie S se obtendrá sumando sobre todas estas contribuciones elementales,  Φ = ∑   d Φ = ∫   S ~ B · d~ S  • Supongamos un campo uniforme que atraviesa una superficie recta S (ver dibujo).  B =cte  S  S     Se tiene entonces que  Φ = ∫   S ~ B · d~ S = ∫   S B dS cos θ = B cos θ ∫   S dS  Φ = B S cos θ  Si definimos el vector ~ S como aquel vector que tiene | ~ S | = S , cuya dirección es perpendicular a S y sentido arbitrario, de lo anterior trivialmente se tiene  Φ = ~ B · ~ S  ◦ Si θ < 90 ⇒ Φ > 0  ◦ Si θ > 90 ⇒ Φ < 0  93 \nDel dibujo se tiene que S cos θ = S   ⊥ luego se tiene trivialmente  Φ = B S   ⊥  De la definición de la densidad de líneas de inducción (11) tenemos que  d   l,i = n   li  S   ⊥ = B ⇒ Φ = n   li  el flujo representa el   número   de   líneas   de   inducción   que   atraviesan   una   superficie   dada   inmersa   en   un campo magnético.  • Si la superficie en cuestión es cerrada, el flujo es siempre cero: hay el mismo número de líneas de inducción que entran y que salen de la superficie ⇒ el número neto de líneas de inducción que atraviesan la superficie es cero (ver dibujo)  dS  dS  N S  • Si la superficie S es perpendicular al campo uniforme ~ B ⇒ Φ = B S de donde trivialmente tenemos  la unidad de flujo del campo magnético es, en el S.I. 1 T esla × 1 m 2   = 1 W b (Weber). 1 W b es el flujo magnético que atraviesa una superficie de 1 m 2   colocada perpendicularmente a un campo magnético de  1 T esla .  B) Circulación de un campo magnético a lo largo de una curva:   Dado un campo magnético y sea una curva C en su seno. Denotamos por d~ l un elemento de la curva orientado de A a B (ver dibujo). De nuevo d~ l es tan pequeño que podemos ~ B es uniforme a lo largo de todo el elemento de curva. Se define la circulación elemental del campo ~ B en el elemento de curva d~ l y lo representamos por d Γ  como el producto escalar  d Γ = ~ B · d~ l  94 \nB  dl    A B  La circulación total a lo largo de la curva C entre los puntos A y B será la suma de todas estas contribuciones elementales  Γ = ∑   d Γ = ∫   B C,A ~ B · d~ l  (14) • Como hemos visto en otros sitios si en vez de ~ B tuvieramos un vector fuerza ~ F entonces la integral anterior coincidiría con el trabajo realizado por la fuerza. • En el caso del campo eléctrico o gravitatorio hemos visto integrales similares en las que en vez de ~ B  teniamos por ejemplo ~ E y veíamos en ese caso que la integral no dependía de la curva sino sólo de los puntos inicial y final, lo que era un signo de que el campo es conservativo. En este caso la integral evalua el trabajo realizado por el campo sobre la unidad de magnitudactiva. En el caso que nos ocupa ahora, campo magnético, resulta que la integral (14) SI depende del camino, ⇒ el campo magnético NO ES CONSERVATIVO. En el caso del campo magnético éste no representa la fuerza por unidad de magnitud activa, unidad de magnetismo, ya que no existe tal unidad magnética, y por lo tanto dicha integral no nos dá el trabajo realizado por el campo sobre la unidad de magnetismo. 95 \n11.1.6 Campos magnéticos creados por corriente eléctricas.  I  El primero en ver que las corrientes eléctricas pueden producir campos magnéticos fue Oersted: haciendo pasar una corriente eléctrica por un conductor delgado vió como la aguja de una brújula al lado del conductor se desviaba del norte magnético terrestre 9   y se orientaba perpendicularmente al condutor cuando pasaba la corriente ⇒ dedujo que toda corriente eléctrica crea una campo magnético.  Jean Biot and Felix Savart dedujeron en 1820 una ecuación que permite calcular el campomagnético ~ B creado por un conductor cualesquiera recorrido por una corriente de intensidad I y que se conoce como Ley de Biot, o también Ley de Biot y Savart y la vamos a introducir a continuación:  A) Campo magnético creado por una carga en movimiento:  • Experimentos muestran que una carga q en movimiento con velocidad ~v crea un campo magnético en cualquier punto del espacio que es proporcional a q y a v = | ~v | e inversamente proporcional al cuadrado de la distancia r a la carga desde dicho punto. Además, la dirección del campo creado ~ B es perpendicular al plano que forman ~v y línea que une la carga con el punto en cuestión, y su intensidad es proporcional al seno del ángulo θ que forman estas dos direcciones, en definitiva (ver dibujo)  B = k ′ q v sen θ  r 2  donde k ’ es una constante de proporcionalidad. En el S.I el valor numérico de k ′   se asigna de forma arbitraria para que valga k ′   = 10 − 7   T esla × m/A de forma que la constante que aparece en la ley de  9   Notad que el polo norte magnético terrestre está en el hemisferio norte pero en realidad desde el punto de vista físico se corresponde con el polo sur pues las líneas de inducción magnética apuntan hacia él. Lo mismo ocurre con el polo sur magnético que aunque está en el hemisferio sur se correponde físicamente con el polo norte pues la líneas de inducción magnéticas terrestre se alejande él.  96 \nCoulomb K y k ′   son tales que K/k ′   es igual al cuadrado de la velocidad de la luz en el vacío ⇒ sugiriendo una relación entre magnetismo, electricidad y velocidad dela luz. Al igual que tomabamos K ≡ 1  4 πǫ   0 que definía la constante dieléctrica ǫ   0 del vacío, podemos definir k ′   = μ   0  4 π que define la permeabilidad magnética  μ   0 del vacío ⇒ μ   0 = 4 π 10 − 7   T esla × m/A y permite escribir la ecuación anterior en forma vectorial  ~ B = μ   0  4 πq ~v ∧ ~u   r  r 2  ~u   r = ~r   r y ~r es el vector de posición del punto donde estamos midiendo el campo ~ B respecto a la carga  B B  v  r  +    P  q  B) Campo magnético creado por un elemento de corriente en un conductor (Ley de Biot)  • El campo magnético creado en un punto cualesquiera por la corriente de un conductor es la resultante (suma vectorial) de los campos creados por todas las cargas móviles del conductor. Dividamos el conductor por el que circula una corriente en segmentos cortos dl con volumen S dl donde S es la sección del conductor 97 \nr    P  I   dl dB dB  Si el conductor contiene n cargas q por unidad de volumen la carga móvil en el segmento dl es  dQ = n q S dl  que se mueve con una velocidad igual a la velocidad de arrastre ~v. Aplicando el resultado anterior dicha carga crea un campo d~ B en cualquier punto del espacio cuyo valor numérico es  dB = μ   0  4 πdQ v sen θ  r 2  = μ   0  4 πn q v S dl sen θ  r 2  pero I = dQ  dt = n q S dl   dt = n q S v por lo que   dB = μ   0  4 πI dl sen θ  r 2  o de forma vectorial  d~ B = μ   0  4 πI d~ l ∧ ~u   r  r 2  (15) donde d~ l es un vector de módulo dl. La expresión anterior se conoce como Ley de Biot.  98 \n◦ Sumando sobre todos los elementos de corriente que forman elconductor el campo magnético resul- tante creado por el conductor es  ~ B = μ   0  4 π ∫   I d~ l ∧ ~u   r  r 2  ( Ley de Biot y Savart )  ◦ Notad que en la expresión anterior la integral se extiende sobre la geometría del conductor.  C) Campo magnético creado por una corriente eléctrica a través de un conductor rectilíneo “indefinido”  • Es “indefinido” en el sentido de que consideremos un conductor rectilíneo tal que la distancia al conductor es mucho menor que la longitud del mismo (por lo que a afectos prácticos se puede considerar como si fuera infinito). Experimentalmente se observa que una corriente eléctrica a través de dicho conductor crea un campo magnético cuya dirección en cada punto del espacio es tangente a una circunferencia perpendicular al conductor y cuyo centro está en el conductor. El sentido del campo viene dado por la del giro de un sacacorchos cuando avanza en el sentido de la corriente. Las líneas de fuerza son líneas circulares concéntricas perpendiculares al campo  B  I  a  99 \nEl valor numérico del campo creado por una corriente eléctrica indefinida en un punto que dista del conductor una distancia a es  B = μI  2 πa  (16) y se conoce como Ley de Biot y Savart. Esta ley es una ley experimental pero se puede obtener a partir de la Ley de Biot (15) Hacerlo como ejercicio (ver dibujo)  B  B  r  dl = dy j  I    z a Y X Z  ◦ μ es una constante que depende del medio y se denomina permeabilidad magnética. En el vacío como hemos visto antes μ   0 = 4 πk ′   = 4 π × 10 − 7   T esla × m/A  ◦ Definimos la permeabilidad magnética relativa μ ′   de un medio cualquiera respecto del vacío como  μ ′   = μ   μ   0  y por tanto es un número adimensional. Nos dice cuantas veceses mayor la permeabilidad de ese medio que la del vacío. Trivialmente se tiene de (16) que  B = μ   0 μ ′  2 πaI  100 \n◦ μ ′   ( aire ) ≈ μ ′    0 = 1 ⇒ μ ′   ( aire ) = 1  ◦ La expresión anterior nos ayuda a definir el Amperio como unidad de corriente. Supongamos dos conductores rectilíneos paralelos con corriente I e I ′   ⇒ la fuerza magnética del campo que crea uno sobre el otro conductor I ′   es como vimos antes  ~ F = I ′   ~ l ′   ∧ ~ B  pero al ser paralelos se tiene que ~ B es perpendicular al conductor por lo tanto F = I ′   l ′   B = μ   0 I I ′   l ′  2 πa  con lo que la fuerza por unidad de longitud del conductor es  F   l ′ = μ   0 I I ′  2 πa  Sobre el otro conductor existe exactamente la misma fuerza por unidad de longitud pero de sentido opuesto. Usando la regla del producto vectorial y teniendo en cuenta los sentidos de las corriente I e  I ′   , es decir de los vectores ~ l y ~ l ′   se puede demostrar que dicha es atractiva si las corrientes tienen el mismo sentido y repulsiva si tienen sentidos opuestos.  Se   define   el   Amperio   como   la   corriente   invariable   que   si   está   presente   en   dos   conductores paralelos de longitud infinita y separados por una distanciade un metro en el vacío, produce sobre cada conductor una fuerza de exactamente 2 × 10 − 7   N por metro de longitud  D) Ley de Ampere  ◦ El caso del campo creado por un conductor rectilíneo nos sirve para introducir la Ley de Ampere  ∮   ~ B · d~ l = μ   0 I  análoga a la Ley de Gauss para el campo eléctrico. Aquí ~ B es el campo magnético creado por el conductor en un punto del espacio y d~ l es un elemento de longitud de una curva que rodea al conductor y que pasa por ese punto. Establece que la circulación del campo magnético creado por un conductor a lo largo de una curva cerrada que lo rodea es proporcional a la corriente que circula por dicho conductor. Se puede demostrar trivialmente para el caso del conductor rectilíneo y trayectoria un círculo de radio a pues ~ B · d~ l = Bdl = μ   0 I  2 πa dl como hemos visto antes (ver dibujo) 101 \nB  dl   r  I  a  luego  ∮   ~ B · d~ l = μ   0 I  2 πa ∮   dl = μ   0 I  Si la trayectoria no es circular entonces ~ B · d~ l = Bdl cos θ = B a dφ (ver dibujo)  dl   r   d   B d   I  a  de donde al integrar sobre nos sale otra vez el mismo resultado  ∮   ~ B · d~ l = ∮  μ   0 I  2 πa ( ~r ) cos θdl = ∮  μ   0 I  2 πa ( ~r ) a ( ~r ) dφ = μ   0 I  Se puede así mismo demostrar su validez para conductores y trayectorias cerradas de cualquier forma.  E) Campo magnético de una espira circular  • Muchos dispositivos eléctricos que utilizan una corriente para establecer un campo magnético lo hacen mediante un conductor enrollado en forma de espiras circulares como un electroimán o una bobina. El caso más sencillo es una sóla espira conductora circular de radio a que transporta una corriente I que entra y sale de la espira. 102 \ndB  dl  r  I  Z Y X    Oa  • En los tramos rectos I circula en sentido opuesto en cada uno ⇒ sus efectos magnéticos se cancelan mútuamente. Usamos la Ley de Biot para calcular el ~ B generado por la espira sobre una línea perpendicular al plano que contiene la espira  d~ B = μ   0  4 πI d~ l ∧ ~u   r  r 2  pero d~ l = dl~ k y ~u   r = ~r   r = x~ i − a~ j  √   x 2   + a 2 y usando que ~ k ∧ ~ i = ~ j y ~ k ∧ ~ j = − ~ i ⇒ d~ B es un vector contenido en el plano x,y de módulo  dB = μ   0  4 π I dl  x 2   + a 2  pues d~ l ⊥ ~u   r y componentes  dB   x = dB sen θ = μ   0  4 π I dl  x 2   + a 2 ·  a  √   x 2   + a 2  dB   y = dB cos θ = μ   0  4 π I dl  x 2   + a 2 ·  x  √   x 2   + a 2  Si integramos sobre toda la geometría de la espira vemos que B   x siempre vale lo mismo, no cambia es constante y además las suma sobre todas las componentes perpendiculares a eje X se anulan luego sólo nos queda componente X del campo magnético es decir ~ B = B   x ~ i con  B   x = μ   0  4 π I  x 2   + a 2 ·  a  √   x 2   + a 2 ∫   dl = μ   0  2  I  x 2   + a 2 ·  a 2  √   x 2   + a 2  103 \n◦ Justo en el centro de la espira x = 0 se tiene   B   x = μ   0 I  2 a  ◦ Si en vez de una espira tenemos N espiras próximas entre sí el campo resultante en el centro es  B   x = μ   0 I N  2 a  E) Campo magnético creado en el interior de un solenoide  • Un solenoide o bobina es un conjunto de N espiras colocado una a continuación de otra en una o varias capas, como en el dibujo. Si la longitud L es mucho mayor que el radio de las espiras ⇒ un solenoide indefinido  I  L  B = μ I N  L  ( interior ) = cte  como μ = μ ′   μ   0 ⇒ B = μ ′   μ   0 I N  L  . La demostración es sencilla utilizando la Ley de Ampere (EJERCICIO). En el vacío B = μ   0 I N  L  . El sentido de las líneas de inducción que nos indica el polo norte y sur del solenoide viene dado por el de avance de un sacacorchos que avanza en el mismo sentido que la corriente I . 104 \n11.1.7 Fenómenos de inducción electromagnética: Leyes de Lenz y Faraday  Cuando una corriente pasa por un conductor se crea una campo magnético ⇒ ¿puede ocurrir el fenómeno inverso, es decir crear campos eléctricos a partir de campos magnéticos?  Sea una espira conductora (ver dibujo) ⇒ al mover un imán a lo largo de la espira a la que se conectaba un amperímetro en serie se vió que aparecía una corriente eléctrica inducida al producirse una desviación de la aguja del amperímetro en un sentido (Ver dibujo).  N S  N S  V  A  Si el imán se orientaba contrariamente y se movía con una cierta velocidad aparecía de nuevo una corriente eléctrica pero ahora la aguja se movía en el sentido contrario ⇒ la corriente inducida tenía sentido contrario al primer caso.  Esta corriente se debe a que los electrones en la espira se mueven respecto al imán ⇒ los electrones sienten una fuerza que viene dado por la fuerza de Lorentz   ~ F = q~v ∧ ~ B  que como sabemos es de carácter no electrostático. Podemos decir que es como si los electrones en la espira estuvieran afectados por un campo no electrostático ~ E   n = ~v ∧ ~ B tal que ~ F = q~ E, y que en cada punto de la 105 \nespira es paralelo a ella con módulo E   n = vB sen θ ⇒ el trabajo que esa fuerza no electrostática realiza a lo largo de toda la espira es W = ∫   espira ~ F · d~ l = ∫   espira F dl = qvBl sen θ y la fuerza electromotriz inducida es  E = W   q = vBl sen θ. En general se suele definir la fuerza electromotriz inducidacomo  E = ∫   b a  ~ E   n · d~ l = ∫   b a ( ~v ∧ ~ B ) · d~ l  Todas estas experiencias llevaron a Lenz a enunciar la ley que lleva su nombre y que dice:  “El sentido de la corriente inducida es tal que tiende a oponerse en todo momento a la variación del flujo magnético que la produce”  N S  V  B   i  B  I  N S  V  B   i  B  I  A A  Al acercar el imán a la espira aumenta el flujo magnético del campo magnético que produce ~ B y al contrario si lo retiramos ⇒ se crea una corriente que produce un campo magnético inducido ~ B   i cuyo flujo se opone a la varición del flujo de ~ B.  Faraday observó que para que se produzca una I inducida sólo es necesario 106 \n• ~ B 6 = cte  • La espira se deforma   • Cambios en la orientación de la espira En los tres casos se produce una variación del flujo magnéticoque atraviesa la espira ⇒ se crea una fuerza electromotriz inducida que produce la corriente. En definitiva la ley de Faraday establece que  “La fuerza electromotriz inducida en una espira es directamente proporcional y de signo contrario a la variación del flujo magnético por unidad de tiempo que la atraviesa”  E = − d Φ  dt  Vamos a verlo. Supongamos una espira conductora que se alejade un imán con velocidad ~v.  N S  V ds  dl  B  ds  V  B  v   B  ^  I  dx     107 \nEn un tiempo dt la espira se ha desplazado una distancia dx = vdt lo que produce una variación del flujo magnético d Φ ≡ ∫   espira dφ a lo largo de toda la longitud de la espira l ⇒ en un elemento dl de la espira la variación de flujo que se produce es  dφ = ~ B · d~ S = BdS cos θ  con dS = dl dx de donde  dφ = Bdx cos θdl  Si ahora integramos sobre toda la espira la variación del flujo a lo largo de toda la espira es  d Φ = B l dx cos θ  Aquí se ha tenido en cuenta que a lo largo de la espira por tenersimetría circular en cada punto el ángulo que forman ~ B y d~ S es el mismo por lo que lo podemos considerar constante. Dividiendo por dt se tiene  d Φ  dt = B l v cos θ  (17)  La fuerza electromotriz inducida en la espira por la existencia del campo ~ B es (como hemos visto)  E = ∫   espira ( ~v ∧ ~ B ) · d~ l  pero el vector ~v ∧ ~ B es paralelo a d~ l luego su producto escalar es el producto de los módulos por loque se tiene  E = ∫   espira | ~v ∧ ~ B | dl = ∫   espira vB sen αdl  (18) Como la espira es circular y el campo magnético forma el mismoángulo α con ~v a lo largo de toda la espira se puede saca de la integral y obtener   E = ∫   espira | ~v ∧ ~ B | dl = vB l sen α  108 \npero como ~v ⊥ d~ S el ángulo que forma ~ B con cada uno de estos vectores, es decir α y θ verifican la relación  α + θ = 3 π   2 por lo que se verifica sen α = -cos θ luego finalmente usando (17) y (18) obtenemos  E = − d Φ  dt  Cuando tenemos un solenoide con N vueltas entonces  E = − Nd Φ  dt  pues el flujo varía al mismo ritmo en todas ellas y además las fem inducidas están en serie por lo que fem total es la suma de las fem inducidas en cada vuelta.  La ley de Faraday es de gran utilidad pues relaciona la varición del flujo del campo mangético con la creación de una fuerza electromotriz ⇒ fabricar generadores de electricidad, generador de corriente alterna, etc.  11.2 Materiales magnéticos  Hemos estudiado los campos magnéticos creados por cargas enmovimiento o por corrientes eléctricas que circulan por los conductores cuando las cargas o los conductores están en el aire (o mejor dicho en el vacío).  Sin embargo hemos hablado del campo magnético creado por imanes que origina dicho campo sin movimiento o circulación aparente de cargas. Los imanes están formados por materiales que se denominan ferromagnéticos , es decir son materiales que forman dipolos magnéticos.  Las propiedades magnéticas no son exclusivas de los materiales ferromagnéticos sino que están presentes, en mucho menor grado, en todas las demás sustancias.  En presencia de un campo magnético intenso, algunas sustancias, como el hierro, son atraidas hacia la región más intensa del campo. Estos materiales se denominan paramagnéticos . Otras en cambio son empujadas hacia donde el campo es más débil y reciben el nombre de diamagnéticas.  109 \nUn solenoide con una barra de un cierto material en su interior ⇒ se observa que una pequeña variación de la corriente la fem inducida es diferente que cuando no hay nada ⇒ la variación del flujo magnético no es la misma. Además la variación del flujo es mucho mayor si la varilla es ferromagnética que si no hay nada. Si la varilla es paramagnética la variación es ligeramente mayory si la varilla es diamagnética es ligeramente menor.  11.2.1 Permeabilidad magnética  Según la ley de Biot nos daba, el campo magnético creado por lacorriente I que circula por un conductor indefinido a una distancia a es  B = μI  2 πa  que me define la permeabilidad μ y que es diferente si el conductor está inmerso en un fluido, siel conductor está rodeando un material como en un solenoide, o si está en elaire o en el vacío. Más concretamente se define la permeabilidad relativa  μ ′   = B   B   0  es decir el cociente entre el campo magnético creado por el conductor cuando rodea a un material dado o está inmerso en un fluido dado, y el campo magnético creado por el conductor en el vacío ⇒  μ = μ ′   μ   0  (19) • Propiedades de μ ′   y μ  ◦ Es igual a 1 para el vacío  ◦ ligeramente mayor que 1 para materiales paramagnéticos  ◦ ligeramente menor que 1 para materiales diamagnéticos  ◦ a menuno mucho mayor que 1 para materiales ferromagnéticos  ◦ De estas propiedades y de la identidad (19) se deducen las propiedades generales para μ  110 \n11.2.2 Teoría molecular del magnetismo  Cuando se descubrió que los efectos magnéticos pueden ser originados tanto por corrientes eléctricas como por imanes permanentes, Ampère sugirió que las propiedades magnéticas de un material proceden de un gran número de diminutos circuitos cerrados dentro del material ⇒ el campo magnético total en un material sería la suma del campo creado por una corriente externa y el campo adicional creado por estas corrientes microscópicas.  En los materiales diamagnéticos la dirección de este campo adicional sería opuesto a la del campo de la corriente externa (disminuyendo el campo total), y en los paramagnéticos sería el mismo por lo que sumarían sus efectos dando una campo mayor que el de corriente externa.  Hoy en día se sabe que realmente esto es lo que ocurre. De hecholos circuitos de corriente microscópicos están asociados al movimiento de los electrones dentro de los átomos. Éstos tienen un momento magnético asociado  ~m, como ya hemos visto en el caso de un conductor macroscópico.  En un material paramagnético, cada átomo o molécula tiene un cierta distribución de corriente neta y un momento magnético resultante del movimiento combinado de todos sus electrones. En ausencia de un campo externo ~ B estas corrientes y momentos están orientados aleatoriamente y no originan campo magnético neto 10   .  En presencia de un campo externo (como el producido por un solenoide en cuyo interior está el material) dicho campo tiende a alinear todos los momentos magnéticos en su dirección, de forma que el campo inducido por todas estas corrientes se suman generando un campo magnético que se suma al externo de forma que el campo total es mayor que el campo externo.  S  I I I  10   Más bien habría que decir que la resultante de todos los campos magnéticos inducidos es cero.  111 \nla alineación de las corrientes electrónicas hace que las corrientes adyacentes, con direcciones opuestas, se cancelen y no contribuyan al campo total. Solo sobreviven los tramos superficiales que dan lugar a una corriente neta superficial I   S alrededor del material.  En un material diamagnético sin campo externo, las corrientes electrónicas para cada molécula suman cero y no hay momento magnético neto. Sin embargo cuando hay un campo magnético externo el movimiento de los electrones se altera por la creación de una fem inducida debido a la variación de flujo magnético, que a su vez crea un campo magnético inducido (en virtud de la ley de Lenz) que se opone a esta variación de flujo.  De este modo la variación del movimiento de los electrones en un material diamagnetico situado en un campo magnético causa siempre un campo adicional en dirección opuesta al campo externo.  Los efectos diamagnéticos son en general muy pequeños, del orden de 10 5   veces menor, y aparecen en todos los materiales incluyo en los paramagnéticos, pero en este caso el efecto paramagnético siempre enmascara los efectos diamagnéticos.  11.2.3 Magnetización e intensidad magnética  El campo magnético neto en un material se debe al efecto conjunto de la corriente que circula en conductores externos y a corrientes microscópicas dentro del material con sus momentos magnéticos asociado cuya contri- bución la podemos caracterizar introduciendo el concepto de magnetización que no es más que la densidad de momento magnético de un material  Sea un volumen V y sea ~m   i el momento magnético molecular típico de la corriente microscópica i . El momento magnético total dentro de V es la suma vectorial de todos los ~m. Definimos la magnetización 11  ~ M = ∑   i ~m   i  V  • Por definición es una densidad de momento magnético  11   No confundirlo con el momento de una fuerza que también lo hemos denotado por la misma letra.  112 \n• Si los ~m   i están orientados al azar (material paramagnetico) o si no hay ninguno ~m   i (material diamagnético) se tiene ~ M = 0  • Sea una varilla de sección S y longitud l , imantada por la corriente I que circula por un conductor solenoidal. En el interior de la varilla y lejos de los bordesel campo magnético ~ B a través del material es uniforme y está creado por la corriente que circula por el conductor I y por la corriente superficial I   s en el material producida por la alineación de las corrientes microscópicas. Definiendo el momento magnético  m = I   s S ⇒ la magnetización es  M = I   s S  l S = I   s   l = j   s  donde j   s es la corriente superficial por unidad de longitud. • Dada una trayectoria cerrada perpendicular atravesada perpendicularmente por las espiras del solenoide, se demuestra trivialmente que la integral a lo largo de dichatrayectoria  ∮   ~ M · d~ l = I   s  la demostración es trivial para una trayectoria cuadrada delado l , usando el hecho de que ~ M es uniforme en el interior del solenoide y cero fuera del solenoide. Además a lo largo de la trayectoria ~ M y d~ l son perpendiculares en dos de los lados (luego su contribución ala integral es cero) y paralelos en otros dos, en uno de los cuales da una contribución Ml (en el que está dentro del solenoide) y cero en el otro pues  M = 0 fuera del solenoide. La demostración se puede generalizar para otras trayectorias más generales y la ley anterior se denomina Ley de Ampere del vector magnetización ~ M  • Por otra parte de la ley de Ampere tenemos   ∮   ~ B · d~ l = μ   0 I  pero como ahora el campo ~ B en la varilla se debe a la corriente en las espiras del solenoide y a las corrientes superficiales  ∮   ~ B · d~ l = μ   0 ( I + I   s )  113 \nque podemos poner como  ∮   ~ B · d~ l = μ   0 ( I + ∮   ~ M · d~ l )  de donde definiendo la intensidad magnética como ~ H ≡ ~ B   μ   0 − ~ M tenemos finalmente  ∮   ~ H · d~ l = I  que es una relación análoga en su forma a la ley de Ampère, pero ahora no contiene las corrientes microscópicas . Al igual que el campo ~ B se representa por líneas de inducción, el campo ~ H se representa por líneas de intensidad magnética.  • En el espacio libre (por ejemplo en el exterior del solenoide) donde no hay material magnético y por tanto no hay magnetización ⇒ ~ B = μ   0 ~ H ⇒ las líneas de intensidad magnéticas son similares a las líneas de inducción. En el interior las dos pueden ser muy diferentes. • En definitiva todas estas expresiones nos permiten ver que los campos vectoriales ~ H,~ B y ~ M son propor- cionales. En general la relación entre ~ M y ~ M se expresa mediante la suceptibilidad magnética χ de forma que  ~ M = χ~ H  que como [ ~ M ] = [ ~ H ] se tiene que χ es adimensional.  ◦ La suceptibilidad de los materiales paramagnéticos disminuye con el aumento de la temperatura debido al efecto desorientador del movimiento térmico  ◦ La suceptibilidad de los materiales diamagnéticos es prácticamente independiente de la temperatura. • Tenemos entonces que  ~ B = μ   0 ( ~ H + ~ M ) = μ   0 (1 + χ ) ~ H  la permeabilidad relativa μ ′   = 1 + χ por lo que   ~ B = μ   0 μ ′   ~ H ~ B = μ~ H  114 \n11.2.4 Ferromagnetismo y antiferromagnetismo  Los materiales ferromagnéticos difieren de los paramagnéticos y de los diamagnéticos en tres aspectos: • Presentan un campo magnético intrínseco cientos o miles deveces mayor que el campo externo. • La relación entre ~ M y ~ H no es de proporcionalidad → la razón entre estas dos magnitudes, es decir, la suceptibilidad es muy grande y no es constante. • Pueden presentar imantación permanente incluso en ausencia de campo externo.  A temperatura ambiente los únicos materiales ferromagnéticos son el hierro, niquel, cobalto y el gadolinio (me- tales). A temperaturas bajas otros materiales y aleacionespueden presentar comportamiento ferromagnéticas.  Origen miscroscópico del ferromagnetismo: en la mayor parte de los metales los e −   de las últimas capas están desapareados y pueden girar en un sentido u en otro creando dipolos magnéticos que apuntan en dos sentidos opuestos y que pueden interaccionar entre sí, p.e., en dos iones metálicos adyacentes. Cada dipolo crea un campo magnético que tiende a alinear a los momentos magnéticos de los e −   adyacentes en su misma dirección.  En la mayoría de los metales los e −   desapareados giran la mitad en una dirección y la otra mitad en la otra  ⇒ la polarización magnética (interacción magnética) que unoinduce sobre otro no es suficiente para alinear todos los dipolos vecinos ⇒ el metal es magnéticamente neutro.  En metales como el hierro, en cada ión hay dos e −   desapareados que crean dipolos magnéticos en la misma dirección ⇒ puede hacer que la polarización magnética sea muy importante y tienda a alinear los dipolos magnéticos de los e −   de los iones vecinos en su misma dirección creando dominios magnéticos con magnetización permanente. Ocurre incluso para campos magnéticos externos muy débiles ⇒ en una misma muestra de material aparecen dominios con momentos magnéticos orientados en cada dominio en una dirección diferente  ⇒ magnetización total nula. En presencia de un campo magnético fuerte todos los dominos orientan sus dipolos en la misma dirección ⇒ magnetización no nula. Una muestra de hierro está saturada magnéticamente si todos los e −   desapareados están girando con sus ejes (dipolo magnético)en la dirección del campo magnético.  Hay materiales donde los momentos magnéticos de iones adyacentes se orientan de forma antiparalela y se llaman antiferromagnéticos.  115 \nA temperaturas muy altas todos los materiales dejan de ser ferromagnéticos ⇒ hay una temperatura crítica para los materiales ferromagnéticos, llamada temperatura de Curie, por encima de la cual un material ferromagnético se convierte en paramagnético. A la temperatura de Curie la energía de las agitaciones térmicas es grande comparada con las energías de interacción responsable de laalineación espontánea de los momentos magnéticos en un dominio y ésta desaparece. A la temperatura de Curie no hay magnetización espontánea. La transición del comportamiento ferromagnético a paramagnético constituye un cambio de fase.  11.2.5 Histéresis  Cuando se estudia el comportamiento de la densidad de flujo magnético B en función del intensidad magnética  H se obtiene una curva como la de la figura apareciendo el fenómeno de la histéresis. Es decir al magnetizar un material ferromagnético utilizando un campo externo, elmaterial presenta magnetización tras eliminar el campo magnético que la ha inducido. Es necesario aplicar un campo en la dirección contraria para hacer de nuevo la magnetización igual a cero, es decir existe un cierto retraso de la densidad de flujo o inducción B  respecto de la intensidad de campo H . Esta propiedad se utiliza para el almacenamiento de información en los núcleos de ferrita de los discos duros o flexibles de los ordenadores.  B H  Una consecuencia de la histéresis es la disipación de energía dentro de una sustancia ferromagnética al recorrer su ciclo de histéresis. Puede demostrarse que la energía disipada por unidad de volumen del material en una vuelta al ciclo de histéresis es proporcional al área del mismo. 116 \n";
+    const PDF_NAME = "Magnetismo.pdf";
+    const CHATBOT_THEME = "Magnetismo";
+    const PDF2_TEXT_EMBEDDED = "";
+    const PDF2_NAME_EMBEDDED = "";
+    const MODEL = "openai";
+    const PROPOSED_QUESTIONS = ["¿Qué propiedades de la magnetita hacen que aparezca el magnetismo y qué es una fuerza magnética?","¿Por qué se dice que los polos magnéticos están concentrados en los extremos de un imán?","¿Qué concluyen los experimentos con dos imanes sobre los tipos de polos y sus interacciones?","¿Por qué no se pueden aislar polos magnéticos norte o sur, y cómo se relaciona esto con el carácter eléctrico del magnetismo?","¿Cómo se define la fuerza magnética sobre una carga en movimiento y qué forma tiene la fuerza de Lorentz?","¿En qué casos la fuerza sobre una carga en un campo magnético es nula o máxima, y cómo se obtiene el significado de 1 tesla?","¿Cómo se define el flujo magnético y qué interpretación física tiene que una superficie cerrada tenga flujo nulo?","¿Cómo se calcula la circulación del campo magnético y qué dice la ley de Ampère sobre la corriente encerrada?","¿Qué ocurre con el campo magnético en los tramos rectos de una espira y cómo se obtiene el momento magnético m a partir de I, S y B?","¿Qué relación existe entre el trabajo rotacional del momento magnético y la energía potencial U asociada a alinear m con B?","¿Qué es la permeabilidad magnética y cómo se usa la permeabilidad relativa μ′ para comparar vacío, paramagnetismo, diamagnetismo y ferromagnetismo?","¿Qué diferencia microscópicamente el ferromagnetismo del antiferromagnetismo y qué papel juega la temperatura de Curie y la histéresis en el magnetismo?"];
+    const INITIAL_PALETTE = {"primaryColor":"#c030e8","secondaryColor":"#cd59ed","bgColor":"#ffffff","textColor":"#111827","cardBgColor":"#ffffff","cardBorderColor":"#d1d5db","inputBgColor":"#ffffff","inputBorderColor":"#cbd5e1","chatBubbleBotBg":"#f3f4f6","chatBubbleBotText":"#111827","chatBubbleUserBg":"#c030e8","chatBubbleUserText":"#f8fafc","headerBorderColor":"#d1d5db","systemMessageBg":"#fef3c7","systemMessageText":"#92400e"};
+
+    let pdf2Text = PDF2_TEXT_EMBEDDED;
+    let pdf2Name = PDF2_NAME_EMBEDDED;
+    let isProcessing = false;
+    let conversationHistory = [];
+
+    const BACKEND_BASE = 'https://node.proyectodescartes.org';
+    function extractTextFromBackendResponse(raw) {
+        if (raw == null) return '';
+        const s = String(raw).trim();
+        if (!s) return '';
+        try {
+            const j = JSON.parse(s);
+            if (Array.isArray(j)) return JSON.stringify(j);
+            if (j && typeof j === 'object') {
+                const c = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+                if (typeof c === 'string') return c.trim();
+                if (typeof j.content === 'string') return j.content.trim();
+                if (typeof j.text === 'string') return j.text.trim();
+            }
+            if (typeof j === 'string') return j;
+        } catch (e) {}
+        return s;
+    }
+    async function postBackendText(payload) {
+        const body = { model: payload.model || 'openai-fast', prompt: payload.prompt };
+        if (payload.system) body.system = payload.system;
+        if (payload.json) body.json = true;
+        const res = await fetch(BACKEND_BASE + '/api/ia/text', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const raw = await res.text();
+        if (!res.ok) throw new Error('Error de API: ' + res.status + ' ' + res.statusText + '. ' + raw.substring(0, 200));
+        return extractTextFromBackendResponse(raw);
+    }
+
+    const chatDisplay = document.getElementById('chat-display');
+    const questionInput = document.getElementById('question-input');
+    const sendButton = document.getElementById('send-button');
+    const sendButtonText = document.getElementById('send-button-text');
+    const loadingSpinner = document.getElementById('loading-spinner');
+    const themeBtn = document.getElementById('theme-btn');
+    const paletteBtn = document.getElementById('palette-btn');
+    const pdf2Upload = document.getElementById('pdf2-upload');
+    const pdf2NameDisplay = document.getElementById('pdf2-name');
+    const pdf2StatusDisplay = document.getElementById('pdf2-status');
+    const questionsSelector = document.getElementById('questions-selector');
+
+    function getAvatarUrl(type) {
+        const fallbackSvg = function(letter) {
+            return 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#6c757d"/><text x="50" y="68" text-anchor="middle" fill="#fff" font-size="44" font-family="system-ui,sans-serif">' + letter + '</text></svg>');
+        };
+        return type === 'bot' ? fallbackSvg('B') : fallbackSvg('U');
+    }
+
+    PROPOSED_QUESTIONS.forEach(function(q, i) {
+        const opt = document.createElement('option');
+        opt.value = String(i);
+        const label = q.length > 72 ? q.substring(0, 69) + '...' : q;
+        opt.textContent = label;
+        opt.title = q;
+        questionsSelector.appendChild(opt);
+    });
+    questionsSelector.addEventListener('change', function(e) {
+        const v = e.target.value;
+        if (v !== '') {
+            questionInput.value = PROPOSED_QUESTIONS[Number(v)];
+            questionInput.focus();
+            questionsSelector.value = '';
+        }
+    });
+
+    // Theme and palette
+    let currentTheme = localStorage.getItem('theme') || 'light';
+    let currentPalette = null;
+
+    function hexToRgb(hex) {
+        const normalized = String(hex || '#000000').replace('#', '');
+        const full = normalized.length === 3 ? normalized.split('').map(ch => ch + ch).join('') : normalized;
+        const value = parseInt(full, 16);
+        return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 };
+    }
+    function rgbToHex(r, g, b) {
+        const toHex = (value) => Math.max(0, Math.min(255, Math.round(value))).toString(16).padStart(2, '0');
+        return '#' + toHex(r) + toHex(g) + toHex(b);
+    }
+    function mixColors(colorA, colorB, amount) {
+        const a = hexToRgb(colorA);
+        const b = hexToRgb(colorB);
+        return rgbToHex(a.r + (b.r - a.r) * amount, a.g + (b.g - a.g) * amount, a.b + (b.b - a.b) * amount);
+    }
+    function getLuminance(hex) {
+        const { r, g, b } = hexToRgb(hex);
+        const toLinear = (value) => {
+            const s = value / 255;
+            return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+        };
+        return 0.2126 * toLinear(r) + 0.7152 * toLinear(g) + 0.0722 * toLinear(b);
+    }
+    function hslToHex(h, s, l) {
+        const hue = ((h % 360) + 360) % 360;
+        const saturation = Math.max(0, Math.min(100, s)) / 100;
+        const lightness = Math.max(0, Math.min(100, l)) / 100;
+        const hueToRgb = (p, q, t) => {
+            let temp = t;
+            if (temp < 0) temp += 1;
+            if (temp > 1) temp -= 1;
+            if (temp < 1 / 6) return p + (q - p) * 6 * temp;
+            if (temp < 1 / 2) return q;
+            if (temp < 2 / 3) return p + (q - p) * (2 / 3 - temp) * 6;
+            return p;
+        };
+        const q = lightness < 0.5 ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+        const p = 2 * lightness - q;
+        const r = hueToRgb(p, q, hue / 360 + 1 / 3);
+        const g = hueToRgb(p, q, hue / 360);
+        const b = hueToRgb(p, q, hue / 360 - 1 / 3);
+        return rgbToHex(r * 255, g * 255, b * 255);
+    }
+    function getReadableTextColor(bgColor) { return getLuminance(bgColor) > 0.56 ? '#111827' : '#f8fafc'; }
+    function generatePalette() {
+        const hue = Math.floor(Math.random() * 360);
+        const bg = hslToHex(hue, 45 + Math.floor(Math.random() * 20), 16 + Math.floor(Math.random() * 70));
+        const text = getReadableTextColor(bg);
+        const isDark = getLuminance(bg) < 0.5;
+        const accent = hslToHex((hue + 35 + Math.floor(Math.random() * 60)) % 360, 80, isDark ? 55 : 45);
+        const card = isDark ? mixColors(bg, '#ffffff', 0.08) : mixColors(bg, '#000000', 0.05);
+        const border = isDark ? mixColors(card, '#ffffff', 0.18) : mixColors(card, '#000000', 0.12);
+        const input = isDark ? mixColors(card, '#ffffff', 0.07) : mixColors(card, '#000000', 0.04);
+        const inputBorder = isDark ? mixColors(border, '#ffffff', 0.12) : mixColors(border, '#000000', 0.1);
+        const botBg = isDark ? mixColors(bg, '#ffffff', 0.12) : mixColors(bg, '#000000', 0.06);
+        return {
+            bgColor: bg,
+            textColor: text,
+            cardBgColor: card,
+            cardBorderColor: border,
+            inputBgColor: input,
+            inputBorderColor: inputBorder,
+            chatBubbleBotBg: botBg,
+            chatBubbleBotText: text,
+            chatBubbleUserBg: accent,
+            chatBubbleUserText: getReadableTextColor(accent),
+            primaryColor: accent,
+            secondaryColor: isDark ? mixColors(accent, '#ffffff', 0.2) : mixColors(accent, '#000000', 0.2),
+            headerBorderColor: border,
+            systemMessageBg: isDark ? mixColors(bg, '#fde68a', 0.2) : mixColors(bg, '#fde68a', 0.28),
+            systemMessageText: isDark ? '#fef3c7' : '#78350f'
+        };
+    }
+    function buildThemePalette(theme, palette) {
+        const base = palette || {
+            primaryColor: '#2563eb',
+            secondaryColor: '#6b7280',
+            bgColor: '#ffffff',
+            textColor: '#1f2937',
+            cardBgColor: '#ffffff',
+            cardBorderColor: '#d1d5db',
+            inputBgColor: '#ffffff',
+            inputBorderColor: '#cbd5e1',
+            chatBubbleBotBg: '#f3f4f6',
+            chatBubbleBotText: '#1f2937',
+            chatBubbleUserBg: '#2563eb',
+            chatBubbleUserText: '#ffffff',
+            headerBorderColor: '#e5e7eb',
+            systemMessageBg: '#fef3c7',
+            systemMessageText: '#92400e'
+        };
+        const isDark = theme === 'dark';
+        const bgColor = isDark ? mixColors(base.bgColor || '#ffffff', '#000000', 0.72) : '#ffffff';
+        const textColor = getReadableTextColor(bgColor);
+        const cardBgColor = isDark ? mixColors(bgColor, '#ffffff', 0.08) : '#ffffff';
+        const cardBorderColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.16) : '#d1d5db';
+        const inputBgColor = isDark ? mixColors(cardBgColor, '#ffffff', 0.06) : '#ffffff';
+        const inputBorderColor = isDark ? mixColors(cardBorderColor, '#ffffff', 0.12) : '#cbd5e1';
+        const chatBubbleBotBg = isDark ? mixColors(bgColor, '#ffffff', 0.12) : '#f3f4f6';
+        const chatBubbleBotText = textColor;
+        const headerBorderColor = cardBorderColor;
+        const systemMessageBg = isDark ? mixColors(bgColor, '#fde68a', 0.2) : '#fef3c7';
+        const systemMessageText = isDark ? '#fef3c7' : '#92400e';
+        return {
+            ...base,
+            bgColor,
+            textColor,
+            cardBgColor,
+            cardBorderColor,
+            inputBgColor,
+            inputBorderColor,
+            chatBubbleBotBg,
+            chatBubbleBotText,
+            headerBorderColor,
+            systemMessageBg,
+            systemMessageText
+        };
+    }
+    function setPaletteVariables(target, palette) {
+        if (!palette) return;
+        target.style.setProperty('--primary', palette.primaryColor || '#007bff');
+        target.style.setProperty('--secondary', palette.secondaryColor || '#6c757d');
+        target.style.setProperty('--bg', palette.bgColor || '#f8f9fa');
+        target.style.setProperty('--text', palette.textColor || '#343a40');
+        target.style.setProperty('--card', palette.cardBgColor || '#ffffff');
+        target.style.setProperty('--border', palette.cardBorderColor || '#dddddd');
+        target.style.setProperty('--input', palette.inputBgColor || '#ffffff');
+        target.style.setProperty('--iborder', palette.inputBorderColor || '#cccccc');
+        target.style.setProperty('--bot-bg', palette.chatBubbleBotBg || '#e9ecef');
+        target.style.setProperty('--bot-text', palette.chatBubbleBotText || '#343a40');
+        target.style.setProperty('--user-bg', palette.chatBubbleUserBg || '#007bff');
+        target.style.setProperty('--user-text', palette.chatBubbleUserText || '#ffffff');
+        target.style.setProperty('--sys-bg', palette.systemMessageBg || '#fff3cd');
+        target.style.setProperty('--sys-text', palette.systemMessageText || '#856404');
+    }
+    function applyPalette(palette) {
+        currentPalette = palette;
+        applyTheme(currentTheme);
+        localStorage.setItem('downloaded-palette', JSON.stringify(palette));
+    }
+    function applyTheme(t) {
+        currentTheme = t;
+        document.body.classList.toggle('dark-mode', t === 'dark');
+        themeBtn.textContent = t === 'dark' ? '☀️ Tema' : '🌙 Tema';
+        const effectivePalette = buildThemePalette(t, currentPalette);
+        setPaletteVariables(document.body, effectivePalette);
+        setPaletteVariables(document.documentElement, effectivePalette);
+        document.body.style.backgroundColor = effectivePalette.bgColor;
+        document.body.style.color = effectivePalette.textColor;
+        localStorage.setItem('theme', t);
+    }
+    themeBtn.addEventListener('click', () => { const n = currentTheme === 'dark' ? 'light' : 'dark'; applyTheme(n); });
+    paletteBtn.addEventListener('click', () => { applyPalette(generatePalette()); });
+    const savedPalette = JSON.parse(localStorage.getItem('downloaded-palette') || 'null');
+    if (savedPalette) { applyPalette(savedPalette); }
+    else if (INITIAL_PALETTE) { applyPalette(INITIAL_PALETTE); }
+    else { applyPalette(generatePalette()); }
+    applyTheme(currentTheme);
+
+    // Second PDF (embedded or user-loaded)
+    if (pdf2Text) { pdf2NameDisplay.textContent = pdf2Name + ' (incluido)'; pdf2StatusDisplay.textContent = '"' + pdf2Name + '" ya incluido.'; pdf2StatusDisplay.style.color = 'var(--success)'; }
+    pdf2Upload.addEventListener('change', async (ev) => {
+        const file = ev.target.files[0]; if (!file) return;
+        if (!(file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))) {
+            pdf2StatusDisplay.textContent = 'No es un PDF válido.'; pdf2StatusDisplay.style.color = 'var(--danger)'; return;
+        }
+        pdf2Name = file.name; pdf2NameDisplay.textContent = file.name;
+        pdf2StatusDisplay.textContent = 'Procesando...'; pdf2StatusDisplay.style.color = 'var(--warning)';
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const pdf = await pdfjsLib.getDocument({ data: new Uint8Array(e.target.result) }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const tc = await page.getTextContent();
+                    tc.items.forEach(item => text += item.str + ' ');
+                    text += '\n';
+                }
+                pdf2Text = text;
+                pdf2StatusDisplay.textContent = '"' + pdf2Name + '" cargado.'; pdf2StatusDisplay.style.color = 'var(--success)';
+                addMsg('Segundo documento "' + pdf2Name + '" listo.', 'system');
+            } catch(err) { pdf2StatusDisplay.textContent = 'Error al procesar.'; pdf2StatusDisplay.style.color = 'var(--danger)'; pdf2Text = ''; }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    function dismissThinkingAsSystem(text, asError) {
+        const el = document.getElementById('thinking-msg');
+        if (!el) return;
+        el.className = 'system-message' + (asError ? ' error' : '');
+        el.textContent = text;
+        el.removeAttribute('id');
+    }
+
+    function addMsg(message, sender, isThinking = false) {
+        const el = document.createElement('div');
+        el.classList.add(sender === 'user' ? 'user-message' : sender.includes('system') ? 'system-message' : 'bot-message');
+        if (sender.includes('error')) el.classList.add('error');
+        if (sender === 'bot' && !isThinking) {
+            const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+            const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else if (sender === 'bot') {
+            const botAvatarUrl = getAvatarUrl('bot');
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong> <span class="thinking-animation">' + message + '</span></div></div>';
+            el.id = 'thinking-msg';
+        } else if (sender === 'user') {
+            const userAvatarUrl = getAvatarUrl('user');
+            el.innerHTML = '<div class="message user-message"><div class="message-bubble user-bubble"></div><img class="avatar-img" src="' + userAvatarUrl + '" alt=""></div>';
+            el.querySelector('.user-bubble').textContent = message;
+        } else {
+            el.textContent = message;
+        }
+        chatDisplay.appendChild(el); chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+    function updateLastMsg(message) {
+        const el = document.getElementById('thinking-msg');
+        const botAvatarUrl = getAvatarUrl('bot');
+        const processedMessage = message.replace(/\[/g, '\\[').replace(/\]/g, '\\]').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
+        const html = marked.parse ? marked.parse(processedMessage) : processedMessage;
+        if (el) {
+            el.className = 'bot-message';
+            el.innerHTML = '<div class="message"><img class="avatar-img" src="' + botAvatarUrl + '" alt=""><div class="message-bubble bot-bubble"><strong>Chatbot:</strong><div class="tex2jax_process" style="margin-top:5px;">' + html + '</div><div style="margin-top:10px;font-size:.8em;color:var(--secondary);font-style:italic;">Modelo: ' + MODEL + '</div></div></div>';
+            el.removeAttribute('id');
+            if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([el]).catch(err => console.error(err));
+        } else addMsg(message, 'bot');
+        chatDisplay.scrollTop = chatDisplay.scrollHeight;
+    }
+
+    async function sendQuestion() {
+        const question = questionInput.value.trim();
+        if (!question || isProcessing) return;
+        addMsg(question, 'user'); questionInput.value = '';
+        conversationHistory.push({ role: 'user', content: question });
+        isProcessing = true; sendButton.disabled = true; questionInput.disabled = true;
+        loadingSpinner.style.display = 'inline-block'; sendButtonText.textContent = 'Enviando';
+        addMsg('Pensando...', 'bot', true);
+        const maxLen = 800000;
+        const t1 = PDF_TEXT.length > maxLen ? PDF_TEXT.substring(0, maxLen) + '... (truncado)' : PDF_TEXT;
+        const systemInstructions = 'Eres un asistente que SOLO debe ayudar con preguntas relacionadas con el contenido del/los documento(s) PDF de esta sesión y con el tema del chatbot: «' + CHATBOT_THEME + '». ' +
+            'No respondas temas claramente ajenos (vida personal sin relación, otros libros o materiales no incluidos, programación o tareas arbitrarias no vinculadas al texto, cotilleo, política o entretenimiento sin conexión con el PDF, etc.). ' +
+            'Si la pregunta no guarda relación razonable con el documento ni con ese tema, responde ÚNICAMENTE con UNA línea que empiece exactamente con [FUERA_DE_ALCANCE] seguida de una frase breve en español. ' +
+            'Para preguntas válidas, fundamenta la respuesta en los textos del documento; si falta información en el PDF, dilo con claridad.';
+
+        let prompt = 'Instrucciones del sistema:\n' + systemInstructions + '\n\n';
+        prompt += 'Documento 1 ("' + PDF_NAME + '"): "' + t1 + '"\n\n';
+        if (pdf2Text) {
+            const t2 = pdf2Text.length > maxLen ? pdf2Text.substring(0, maxLen) + '... (truncado)' : pdf2Text;
+            prompt += 'Documento 2 ("' + pdf2Name + '"): "' + t2 + '"\n\n';
+        }
+        prompt += '(Instrucción: Para expresiones matemáticas, utiliza SÓLO el formato $$...$$ para bloque y $...$ para texto en línea.)\n\n';
+
+        // Incluir el historial completo de la conversación para dar contexto al modelo
+        var historyBlock = conversationHistory.slice(0, -1).map(function(turn, index) {
+            var speaker = turn.role === 'user' ? 'Usuario' : 'Asistente';
+            return '[Turno ' + (index + 1) + '] ' + speaker + ': ' + turn.content;
+        }).join('\n\n');
+        if (historyBlock) {
+            prompt += 'Conversación previa (historial del chat):\n' + historyBlock + '\n\n';
+        }
+
+        prompt += 'Pregunta: ' + question + '\n\nRespuesta:';
+        try {
+            const raw = (await postBackendText({
+                model: MODEL,
+                prompt: prompt,
+                system: systemInstructions
+            }) || '').trim();
+            if (raw.startsWith('[FUERA_DE_ALCANCE]')) {
+                const texto = raw.replace('[FUERA_DE_ALCANCE]', '').trim();
+                conversationHistory.push({ role: 'assistant', content: texto });
+                dismissThinkingAsSystem(texto, true);
+            } else {
+                conversationHistory.push({ role: 'assistant', content: raw });
+                updateLastMsg(raw || 'La IA no proporcionó una respuesta.');
+            }
+        } catch(err) { updateLastMsg('Lo siento, ocurrió un error: ' + err.message); }
+        finally {
+            isProcessing = false; sendButton.disabled = false; questionInput.disabled = false;
+            loadingSpinner.style.display = 'none'; sendButtonText.textContent = 'Enviar'; questionInput.focus();
+        }
+    }
+    function escapeHtml(s) {
+        if (s === undefined || s === null) return '';
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function getSessionHTML() {
+        const clone = chatDisplay.cloneNode(true);
+        const exportStyles =
+            'body{font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;line-height:1.65;padding:28px;color:#333;max-width:880px;margin:0 auto;background:#fafafa;}' +
+            'h1{color:#007bff;font-size:1.45em;margin-bottom:6px;}' +
+            '.meta{color:#444;margin:6px 0;font-size:.95em;}' +
+            'hr{border:none;border-top:1px solid #dee2e6;margin:22px 0;}' +
+            '.chat-export{padding:4px 0;}' +
+            '.chat-export .user-message,.chat-export .bot-message,.chat-export .system-message{margin-bottom:18px;}' +
+            '.chat-export .system-message{text-align:center;color:#555;font-style:italic;padding:10px 14px;background:#fff3cd;border-radius:10px;border:1px solid #ffeaa7;}' +
+            '.chat-export .system-message.error{background:#f8d7da;color:#721c24;border-color:#f5c6cb;}' +
+            '.chat-export .message{display:flex;align-items:flex-end;gap:12px;}' +
+            '.chat-export .message.user-message{flex-direction:row-reverse;}' +
+            '.chat-export .avatar-img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:1px solid #e0e0e0;}' +
+            '.chat-export .message-bubble{padding:12px 16px;border-radius:18px;max-width:78%;box-shadow:0 1px 2px rgba(0,0,0,.06);}' +
+            '.chat-export .user-bubble{background:#007bff;color:#fff;}' +
+            '.chat-export .bot-bubble{background:#e9ecef;color:#212529;}' +
+            '.chat-export .bot-bubble strong{color:#007bff;}' +
+            '.chat-export .bot-bubble p{margin:0 0 10px;}.chat-export .bot-bubble p:last-child{margin:0;}' +
+            '.chat-export pre{background:#2d2d2d;color:#f8f8f2;padding:12px;border-radius:8px;overflow-x:auto;font-size:.9em;}' +
+            '.chat-export code{background:#eee;padding:2px 6px;border-radius:4px;font-size:.9em;}' +
+            '.chat-export ul,.chat-export ol{margin:8px 0;padding-left:22px;}';
+        return '<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sesión de chat</title><style>' + exportStyles + '</style></head><body>' +
+            '<h1>Sesión de chat</h1>' +
+            '<p class="meta"><strong>Documento:</strong> ' + escapeHtml(PDF_NAME) + '</p>' +
+            '<p class="meta"><strong>Tema del chatbot:</strong> ' + escapeHtml(CHATBOT_THEME) + '</p>' +
+            '<p class="meta"><strong>Modelo:</strong> ' + escapeHtml(MODEL) + '</p>' +
+            '<hr><div class="chat-export">' + clone.innerHTML + '</div></body></html>';
+    }
+
+    function downloadSessionHtml() {
+        const blob = new Blob([getSessionHTML()], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Sesion_Chat_' + Date.now() + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    function processHtmlToDocx(htmlContent) {
+        const paragraphs = [];
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = htmlContent;
+        const elements = tempDiv.children;
+        if (elements.length === 0 && htmlContent.replace(/\s/g, '').length > 0) {
+            return [new docx.Paragraph({ text: tempDiv.textContent || htmlContent, spacing: { after: 200 } })];
+        }
+        for (let i = 0; i < elements.length; i++) {
+            const element = elements[i];
+            const tagName = element.tagName.toLowerCase();
+            const text = element.textContent || element.innerText || '';
+            if (tagName === 'h1' || tagName === 'h2') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: tagName === 'h1' ? docx.HeadingLevel.HEADING_1 : docx.HeadingLevel.HEADING_2,
+                    spacing: { before: 400, after: 200 }
+                }));
+            } else if (tagName === 'h3') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    heading: docx.HeadingLevel.HEADING_3,
+                    spacing: { before: 300, after: 200 }
+                }));
+            } else if (tagName === 'ul' || tagName === 'ol') {
+                const listItems = element.querySelectorAll('li');
+                listItems.forEach(function(li) {
+                    paragraphs.push(new docx.Paragraph({
+                        text: li.textContent,
+                        bullet: { level: 0 },
+                        spacing: { after: 100 }
+                    }));
+                });
+            } else if (tagName === 'p') {
+                const textRuns = [];
+                if (element.children.length === 0) {
+                    textRuns.push(new docx.TextRun({ text: text }));
+                } else {
+                    processInlineElements(element, textRuns);
+                }
+                paragraphs.push(new docx.Paragraph({
+                    children: textRuns.length > 0 ? textRuns : [new docx.TextRun({ text: text })],
+                    spacing: { after: 200 }
+                }));
+            } else if (tagName === 'blockquote') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    italics: true,
+                    indent: { left: 720 },
+                    spacing: { after: 200 },
+                    border: { left: { color: 'CCCCCC', size: 6, style: docx.BorderStyle.SINGLE } }
+                }));
+            } else if (tagName === 'code') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: 'F5F5F5' },
+                    spacing: { after: 100 }
+                }));
+            } else if (tagName === 'pre') {
+                paragraphs.push(new docx.Paragraph({
+                    text: text,
+                    font: 'Courier New',
+                    shading: { type: docx.ShadingType.SOLID, color: '2D2D2D' },
+                    color: 'FFFFFF',
+                    spacing: { after: 200 }
+                }));
+            } else {
+                paragraphs.push(new docx.Paragraph({ text: text, spacing: { after: 200 } }));
+            }
+        }
+        return paragraphs;
+    }
+
+    function processInlineElements(element, textRuns) {
+        for (let j = 0; j < element.childNodes.length; j++) {
+            const node = element.childNodes[j];
+            if (node.nodeType === Node.TEXT_NODE) {
+                textRuns.push(new docx.TextRun({ text: node.textContent }));
+            } else if (node.nodeType === Node.ELEMENT_NODE) {
+                const tagName = node.tagName.toLowerCase();
+                const nodeText = node.textContent || '';
+                if (tagName === 'strong' || tagName === 'b') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, bold: true }));
+                } else if (tagName === 'em' || tagName === 'i') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, italics: true }));
+                } else if (tagName === 'u') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, underline: {} }));
+                } else if (tagName === 'code') {
+                    textRuns.push(new docx.TextRun({
+                        text: nodeText,
+                        font: 'Courier New',
+                        shading: { type: docx.ShadingType.SOLID, color: 'F0F0F0' }
+                    }));
+                } else if (tagName === 'a') {
+                    textRuns.push(new docx.TextRun({ text: nodeText, color: '0066CC', underline: {} }));
+                } else {
+                    processInlineElements(node, textRuns);
+                }
+            }
+        }
+    }
+
+    function downloadSessionWord() {
+        if (typeof docx === 'undefined' || typeof saveAs === 'undefined') {
+            alert('Las librerías para exportar Word aún se están cargando. Espera unos segundos e inténtalo de nuevo.');
+            return;
+        }
+        const chatMessages = chatDisplay.querySelectorAll('.user-message, .bot-message, .system-message');
+        const children = [];
+        children.push(new docx.Paragraph({
+            text: 'Sesión de Chat (documento PDF)',
+            heading: docx.HeadingLevel.HEADING_1,
+            alignment: docx.AlignmentType.CENTER,
+            spacing: { after: 400 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Documento: ', bold: true }),
+                new docx.TextRun({ text: PDF_NAME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Tema del chatbot: ', bold: true }),
+                new docx.TextRun({ text: CHATBOT_THEME })
+            ],
+            spacing: { after: 100 }
+        }));
+        children.push(new docx.Paragraph({
+            children: [
+                new docx.TextRun({ text: 'Modelo: ', bold: true }),
+                new docx.TextRun({ text: MODEL })
+            ],
+            spacing: { after: 200 }
+        }));
+        children.push(new docx.Paragraph({
+            text: '________________________________________________________________________________________________',
+            spacing: { after: 400 }
+        }));
+
+        chatMessages.forEach(function(msg) {
+            if (msg.classList.contains('system-message')) {
+                children.push(new docx.Paragraph({
+                    text: msg.textContent,
+                    italics: true,
+                    alignment: docx.AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                    color: '666666'
+                }));
+            } else if (msg.classList.contains('user-message')) {
+                const ub = msg.querySelector('.user-bubble');
+                const userText = ub ? ub.textContent.trim() : msg.textContent.replace(/^Usuario:\s*/i, '').trim();
+                children.push(new docx.Paragraph({
+                    children: [
+                        new docx.TextRun({ text: 'Usuario: ', bold: true, color: '0066CC' }),
+                        new docx.TextRun({ text: userText })
+                    ],
+                    spacing: { after: 200 },
+                    alignment: docx.AlignmentType.RIGHT,
+                    shading: { type: docx.ShadingType.SOLID, color: 'E3F2FD' }
+                }));
+            } else if (msg.classList.contains('bot-message')) {
+                const botBubble = msg.querySelector('.message-bubble');
+                if (botBubble) {
+                    const contentDiv = botBubble.querySelector('.tex2jax_process') || botBubble.querySelector('div[style*="margin-top:5px"]');
+                    const modelInfoEl = botBubble.querySelector('div[style*="font-size:0.8em"]');
+                    const modelInfo = modelInfoEl ? modelInfoEl.textContent : '';
+                    if (contentDiv) {
+                        const formatted = processHtmlToDocx(contentDiv.innerHTML);
+                        formatted.forEach(function(paragraph) { children.push(paragraph); });
+                        if (modelInfo) {
+                            children.push(new docx.Paragraph({
+                                children: [new docx.TextRun({ text: modelInfo, italics: true, size: 20, color: '666666' })],
+                                spacing: { after: 200 }
+                            }));
+                        }
+                    } else {
+                        let plain = botBubble.textContent || '';
+                        if (modelInfo) plain = plain.split(modelInfo).join('').trim();
+                        plain = plain.replace(/^Chatbot:\s*/i, '').trim();
+                        children.push(new docx.Paragraph({ text: plain, spacing: { after: 200 } }));
+                    }
+                }
+            }
+        });
+
+        const doc = new docx.Document({
+            sections: [{ properties: {}, children: children }]
+        });
+        docx.Packer.toBlob(doc).then(function(blob) {
+            saveAs(blob, 'Sesion_Chat_' + Date.now() + '.docx');
+        });
+    }
+
+    sendButton.addEventListener('click', sendQuestion);
+    questionInput.addEventListener('keypress', e => { if (e.key==='Enter' && !e.shiftKey) { e.preventDefault(); sendQuestion(); } });
+    document.getElementById('download-html-session-btn').addEventListener('click', downloadSessionHtml);
+    document.getElementById('download-word-session-btn').addEventListener('click', downloadSessionWord);
+    addMsg('Documento "' + PDF_NAME + '" listo. Solo respondo preguntas sobre este contenido o el tema «' + CHATBOT_THEME + '». ¡Puedes empezar!', 'system');
+    questionInput.focus();
+</script>
+</body>
+</html>
